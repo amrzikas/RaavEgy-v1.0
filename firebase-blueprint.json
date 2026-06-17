@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Premium apparel product listing details",
+      "type": "object",
+      "properties": {
+        "nameAr": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "descriptionAr": { "type": "string" },
+        "descriptionEn": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "image": { "type": "string" },
+        "sizes": { "type": "array" },
+        "colors": { "type": "array" },
+        "inStock": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["nameAr", "nameEn", "price", "category", "image"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order purchase record",
+      "type": "object",
+      "properties": {
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "customerAddress": { "type": "string" },
+        "customerCity": { "type": "string" },
+        "customerNotes": { "type": "string" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["customerName", "customerPhone", "customerAddress", "customerCity", "items", "total"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account registration metadata profile info",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["name", "phone", "address", "city"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Customer rating and comment review for specified products",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["productId", "userId", "userName", "rating", "comment"]
+    },
+    "AdminConfigSetup": {
+      "title": "AdminConfigSetup",
+      "description": "Configuration metadata to register system admin UID",
+      "type": "object",
+      "properties": {
+        "isInitialized": { "type": "boolean" },
+        "adminUid": { "type": "string" },
+        "adminEmail": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["isInitialized", "adminUid", "adminEmail"]
+    },
+    "ShippingPlan": {
+      "title": "ShippingPlan",
+      "description": "Shipping rate plan configuration",
+      "type": "object",
+      "properties": {
+        "companyNameAr": { "type": "string" },
+        "companyNameEn": { "type": "string" },
+        "price": { "type": "number" },
+        "deliveryTimeAr": { "type": "string" },
+        "deliveryTimeEn": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["companyNameAr", "companyNameEn", "price", "deliveryTimeAr", "deliveryTimeEn", "isActive"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System or order status notification for customers",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "messageAr": { "type": "string" },
+        "messageEn": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "isRead": { "type": "boolean" },
+        "type": { "type": "string" },
+        "orderId": { "type": "string" }
+      },
+      "required": ["userId", "messageAr", "messageEn", "createdAt", "isRead", "type"]
+    }
+  },
+  "firestore": {
+    "/products2/{productId}": {
+      "schema": "Product",
+      "description": "Contains items catalog details"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Orders submitted by clients or guests, manageable by admins"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User specific accounts data profiles"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Apparel feedback review text and star count by logged-in users"
+    },
+    "/notifications/{notifId}": {
+      "schema": "Notification",
+      "description": "Contains in-app notifications on order status changes or product alerts"
+    },
+    "/admin_config/setup": {
+      "schema": "AdminConfigSetup",
+      "description": "Singleton configuration document to establish admin claims"
+    },
+    "/shipping_plans/{planId}": {
+      "schema": "ShippingPlan",
+      "description": "Shipping plans and rates managed by admins"
+    },
+    "/settings/{settingId}": {
+      "schema": "object",
+      "description": "System settings (payment, loyalty, etc.) managed by admins and readable by clients"
+    }
+  }
+}

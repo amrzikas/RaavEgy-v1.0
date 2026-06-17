@@ -1,0 +1,6 @@
+{
+  "name": "RAAV EGY",
+  "description": "An elegant e-commerce platform for Women's, Men's, and Kids' clothing, plus accessories, featuring a fully functional Admin Dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
