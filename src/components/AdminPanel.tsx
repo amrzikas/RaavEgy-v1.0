@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Lock, ShieldAlert, Sparkles, Plus, Edit, Trash2, CheckCircle, Clock, Truck, 
   FileText, Activity, ArrowLeft, Check, PlusCircle, ShoppingBag, Landmark, Database,
-  Gift, Wallet, Award, CreditCard, ChevronRight, CheckSquare, PlusSquare, ArrowUpDown
+  Gift, Wallet, Award, CreditCard, ChevronRight, CheckSquare, PlusSquare, ArrowUpDown,
+  Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -30,9 +31,15 @@ import {
   saveLoyaltyConfig,
   getPaymentConfig,
   savePaymentConfig,
-  subscribeToAllCustomerProfiles
+  subscribeToAllCustomerProfiles,
+  subscribeToAllConversations,
+  subscribeToConversationMessages,
+  sendConversationMessage,
+  getSettlements,
+  saveSettlements,
+  markOrdersAsSettled
 } from '../dbService';
-import { Product, Order, OrderStatus, ShippingPlan, LoyaltyConfig, PaymentConfig, WalletDetail, InstaPayDetail } from '../types';
+import { Product, Order, OrderStatus, ShippingPlan, LoyaltyConfig, PaymentConfig, WalletDetail, InstaPayDetail, SettlementPeriod } from '../types';
 import { PRESET_COLORS } from '../utils';
 
 interface AdminPanelProps {
@@ -67,8 +74,8 @@ export default function AdminPanel({
   const [authLoading, setAuthLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Sub-navigation tabs: 'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments'
-  const [activeTab, setActiveTab] = useState<'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments'>('stats');
+  // Sub-navigation tabs: 'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts'
+  const [activeTab, setActiveTab] = useState<'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts'>('stats');
 
   // Products manager state variables
   const [showProductForm, setShowProductForm] = useState(false);
@@ -106,6 +113,12 @@ export default function AdminPanel({
   });
   const [customers, setCustomers] = useState<any[]>([]);
 
+  // Special Custom Orders & Conversations state
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [selectedConversationId, setSelectedConversationId] = useState<string>('');
+  const [conversationMessages, setConversationMessages] = useState<any[]>([]);
+  const [adminReplyDraft, setAdminReplyDraft] = useState('');
+
   // Sub-forms & states for Shipping management
   const [showShippingForm, setShowShippingForm] = useState(false);
   const [editingShipping, setEditingShipping] = useState<ShippingPlan | null>(null);
@@ -118,10 +131,16 @@ export default function AdminPanel({
     isActive: true
   });
 
+  // Financial settlements and reconciliation states
+  const [settlements, setSettlements] = useState<SettlementPeriod[]>([]);
+  const [settlementFromDate, setSettlementFromDate] = useState('');
+  const [settlementToDate, setSettlementToDate] = useState('');
+
   // Fetch configs and set active Firestore live listeners
   useEffect(() => {
     let unsubPlans: (() => void) | undefined;
     let unsubCust: (() => void) | undefined;
+    let unsubConversations: (() => void) | undefined;
 
     if (adminUser && isOpen) {
       getAdminSetupStatus().then((status) => {
@@ -132,6 +151,9 @@ export default function AdminPanel({
           unsubCust = subscribeToAllCustomerProfiles((list) => {
             setCustomers(list);
           });
+          unsubConversations = subscribeToAllConversations((convs) => {
+            setConversations(convs);
+          });
         }
       }).catch((err) => {
         console.error("Admin check failed", err);
@@ -139,13 +161,30 @@ export default function AdminPanel({
 
       getLoyaltyConfig().then(c => setLoyaltyConfig(c)).catch(() => {});
       getPaymentConfig().then(p => setPaymentConfig(p)).catch(() => {});
+      getSettlements().then(s => setSettlements(s)).catch(() => {});
     }
 
     return () => {
       if (unsubPlans) unsubPlans();
       if (unsubCust) unsubCust();
+      if (unsubConversations) unsubConversations();
     };
   }, [adminUser, isOpen]);
+
+  // Handle active message listener
+  useEffect(() => {
+    let unsubMessages: (() => void) | undefined;
+    if (selectedConversationId && isOpen && adminUser) {
+      unsubMessages = subscribeToConversationMessages(selectedConversationId, (msgs) => {
+        setConversationMessages(msgs);
+      });
+    } else {
+      setConversationMessages([]);
+    }
+    return () => {
+      if (unsubMessages) unsubMessages();
+    };
+  }, [selectedConversationId, isOpen, adminUser]);
 
   // Orders search filter state
   const [orderFilter, setOrderFilter] = useState<'all' | OrderStatus>('all');
@@ -778,6 +817,35 @@ export default function AdminPanel({
             >
               <Wallet size={14} />
               <span>{isArabic ? "طرق الدفع المتاحة" : "Payment Options"}</span>
+            </button>
+
+            <button
+              onClick={() => { setActiveTab('conversations'); setShowProductForm(false); }}
+              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                activeTab === 'conversations'
+                  ? "bg-amber-400 text-black shadow-md"
+                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+              }`}
+            >
+              <Sparkles size={14} />
+              <span>{isArabic ? "طلبات مخصصة ورسائل" : "Special Orders & Chat"}</span>
+              {conversations.length > 0 && (
+                <span className="bg-zinc-800 text-amber-400 rounded-full text-[9px] px-1.5 py-0.5 font-bold font-mono">
+                  {conversations.length}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => { setActiveTab('accounts'); setShowProductForm(false); }}
+              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                activeTab === 'accounts'
+                  ? "bg-amber-400 text-black shadow-md"
+                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+              }`}
+            >
+              <Landmark size={14} />
+              <span>{isArabic ? "الحسابات والتسويات" : "Financial Accounts"}</span>
             </button>
 
             <div className="hidden md:block mt-auto pt-4 border-t border-zinc-800 text-center">
@@ -2094,7 +2162,7 @@ export default function AdminPanel({
                   </div>
 
                   {/* Submission actions */}
-                  <div className="flex justify-end pt-4 border-t border-zinc-800">
+                  <div className="flex justify-end pt-4 border-t border-zinc-805">
                     <button
                       type="submit"
                       className="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 text-black font-black rounded-xl text-xs sm:text-sm transition duration-200 cursor-pointer shadow-md flex items-center gap-2"
@@ -2104,6 +2172,713 @@ export default function AdminPanel({
                     </button>
                   </div>
                 </form>
+              </div>
+            )}
+
+            {/* SPECIAL CUSTOM ORDERS & CONVERSATIONS TAB */}
+            {activeTab === 'conversations' && (
+              <div className="space-y-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h3 className="text-xl font-black text-white tracking-tight text-right sm:text-right">
+                      {isArabic ? "طلبات التفصيل الخاصة والمشاورات" : "Custom Special Orders & Consulting"}
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-1 text-right sm:text-right">
+                      {isArabic 
+                        ? "استقبل المحادثات المباشرة مع العملاء واضبط الأسعار وحالة الطلب لخدمات التفصيل والفساتين اليدوية الخاصة." 
+                        : "Engage in direct bespoke counseling, configure pricing models, and progress individual couture states."}
+                    </p>
+                  </div>
+                </div>
+
+                {conversations.length === 0 ? (
+                  <div className="bg-zinc-900 border border-zinc-850 p-12 text-center rounded-2xl text-zinc-500">
+                    <Sparkles size={48} className="mx-auto text-zinc-650 mb-3 animate-pulse" />
+                    <p className="text-sm font-semibold">{isArabic ? "لا توجد أي طلبات تفصيل مخصصة حتى الآن" : "No custom couture requests lodged yet"}</p>
+                    <p className="text-xs text-zinc-500 mt-1">{isArabic ? "ستظهر رسائل وتفاصيل طلبات العملاء المخصصة هنا حال تقديمها من الموقع." : "Customer bespoke inquiries will initialize streams here on submission."}</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    
+                    {/* Conversations Sidebar List */}
+                    <div className="lg:col-span-4 bg-zinc-900 border border-zinc-800 rounded-3xl p-4 space-y-3 max-h-[600px] overflow-y-auto">
+                      <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest pb-2 border-b border-zinc-800 text-right">
+                        {isArabic ? "قائمة طلبات التفصيل الواردة" : "Bespoke Channels"}
+                      </h4>
+                      <div className="space-y-2">
+                        {conversations.map((conv) => {
+                          const isSelected = conv.id === selectedConversationId;
+                          const linkedOrder = orders.find(o => o.id === conv.orderId || o.linkedConversationId === conv.id);
+                          return (
+                            <button
+                              key={conv.id}
+                              onClick={() => setSelectedConversationId(conv.id)}
+                              className={`w-full text-right p-3.5 rounded-2xl border transition duration-150 cursor-pointer ${
+                                isSelected 
+                                  ? "bg-amber-400 border-amber-400 text-black shadow" 
+                                  : "bg-zinc-950 border-zinc-850 hover:border-zinc-700 text-white"
+                              }`}
+                            >
+                              <div className="flex justify-between items-start gap-2">
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                                  isSelected ? "bg-black/15 text-black" : "bg-amber-500/10 text-amber-400"
+                                }`}>
+                                  {linkedOrder ? (isArabic ? "طلب مخصص" : "Bespoke") : (isArabic ? "مشاورة" : "Consult")}
+                                </span>
+                                <span className={`text-[10px] font-mono ${isSelected ? "text-zinc-800" : "text-zinc-500"}`}>
+                                  {new Date(conv.updatedAt || conv.createdAt || Date.now()).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')}
+                                </span>
+                              </div>
+                              <h5 className="font-extrabold text-sm mt-1.5 truncate">
+                                {conv.customerName || (isArabic ? "عميل راف" : "RAAV Buyer")}
+                              </h5>
+                              <p className={`text-[11px] mt-1 line-clamp-1 ${isSelected ? "text-zinc-800" : "text-zinc-400"}`}>
+                                {conv.topic || (isArabic ? "بلا عنوان" : "No topic details")}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Active Conversation details and chat */}
+                    <div className="lg:col-span-8 space-y-4">
+                      {(() => {
+                        const currentConv = conversations.find(c => c.id === selectedConversationId);
+                        if (!currentConv) {
+                          return (
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-12 text-center text-zinc-500">
+                              {isArabic ? "اختر طلباً مخصصاً من القائمة الجانبية للبدء بالمراقبة والمحادثة" : "Select a bespoke customer inquiry to access live workspace"}
+                            </div>
+                          );
+                        }
+
+                        const linkedOrder = orders.find(o => o.id === currentConv.orderId || o.linkedConversationId === currentConv.id);
+
+                        return (
+                          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden flex flex-col min-h-[500px]">
+                            
+                            {/* Chat Header and Actions segment */}
+                            <div className="p-5 border-b border-zinc-800 bg-zinc-900/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-right">
+                              <div>
+                                <h4 className="font-extrabold text-white text-base">
+                                  {currentConv.customerName}
+                                </h4>
+                                <p className="text-xs text-zinc-400 mt-0.5">
+                                  {isArabic ? "الموضوع: " : "Topic: "} <strong className="text-amber-400 font-bold">{currentConv.topic}</strong>
+                                </p>
+                              </div>
+
+                              {/* Operations on linked special order */}
+                              {linkedOrder && (
+                                <div className="flex flex-wrap gap-2 items-center">
+                                  <div className="text-xs font-mono text-zinc-400 bg-zinc-950 px-3 py-1.5 rounded-xl border border-zinc-805">
+                                    {isArabic ? "السعر:" : "Price:"} {linkedOrder.agreedPrice || linkedOrder.total || 0} ج.م
+                                  </div>
+                                  <button
+                                    onClick={async () => {
+                                      const priceStr = prompt(isArabic ? "أدخل السعر المتفق عليه لهذا التفصيل المخصص (ج.م):" : "Enter Agreed Price for this Custom Couture (EGP):", String(linkedOrder.agreedPrice || linkedOrder.total || 3000));
+                                      if (priceStr !== null) {
+                                        const price = Number(priceStr);
+                                        if (!isNaN(price)) {
+                                          const { doc, updateDoc } = await import('firebase/firestore');
+                                          const { db: firestoreDB } = await import('../firebase');
+                                          await updateDoc(doc(firestoreDB, 'orders', linkedOrder.id), { agreedPrice: price, total: price });
+                                          alert(isArabic ? "تم تحديث السعر بنجاح!" : "Agreed price updated successfully!");
+                                        }
+                                      }
+                                    }}
+                                    className="px-3.5 py-1.5 bg-zinc-850 hover:bg-zinc-800 border border-zinc-800 text-amber-400 font-bold text-xs rounded-xl cursor-pointer transition"
+                                  >
+                                    {isArabic ? "تعديل السعر" : "Adjust Price"}
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      const states: OrderStatus[] = ['pending', 'preparing', 'shipped', 'delivered', 'cancelled'];
+                                      const currentIdx = states.indexOf(linkedOrder.status);
+                                      if (currentIdx !== -1) {
+                                        const nextIdx = (currentIdx + 1) % states.length;
+                                        await updateOrderStatus(linkedOrder.id, states[nextIdx]);
+                                      }
+                                    }}
+                                    className="px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-black font-black text-xs rounded-xl cursor-pointer transition flex items-center gap-1.5"
+                                  >
+                                    <span>{isArabic ? "حالة الحركة:" : "State:"} {linkedOrder.status}</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Linked order parameters specification shelf */}
+                            {linkedOrder && (
+                              <div className="bg-zinc-950 p-4 border-b border-zinc-800 text-xs text-zinc-350 space-y-2 text-right">
+                                <h5 className="font-extrabold text-[10px] uppercase tracking-wider text-zinc-500 mb-1">{isArabic ? "تفاصيل الطلب الخاص ومواصفات قطعة الملابس:" : "Bespoke Piece Specifications Shelf:"}</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                  <div><span className="text-zinc-500">{isArabic ? "الخامة المطلوبة:" : "Material:"}</span> <strong className="text-zinc-200">{linkedOrder.customMaterial}</strong></div>
+                                  <div><span className="text-zinc-500">{isArabic ? "اللون المحدد:" : "Color tones:"}</span> <strong className="text-zinc-200">{linkedOrder.customColor}</strong></div>
+                                  <div><span className="text-zinc-500">{isArabic ? "الميزانية المخصصة:" : "Budget limit:"}</span> <strong className="text-amber-400 font-mono">{linkedOrder.customBudget} ج.م</strong></div>
+                                </div>
+                                <div className="border-t border-zinc-900 pt-2 mt-2">
+                                  <span className="text-zinc-500">{isArabic ? "الهاتف الشاحن:" : "Buyer Phone:"}</span> <strong className="text-zinc-200 select-all">{linkedOrder.customerPhone}</strong>
+                                  <span className="mx-2 text-zinc-750">|</span>
+                                  <span className="text-zinc-500">{isArabic ? "المحافظة الموجهة:" : "City Destination:"}</span> <strong className="text-zinc-200">{linkedOrder.customerCity}</strong>
+                                </div>
+                                <div>
+                                  <span className="text-zinc-500">{isArabic ? "الرسالة التفصيلية والمقاسات:" : "Size description:"}</span>
+                                  <p className="mt-1 text-[11px] leading-relaxed bg-zinc-904/50 bg-zinc-900 p-2.5 rounded-lg border border-zinc-800 text-zinc-300 select-text whitespace-pre-wrap">{linkedOrder.customDescription}</p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Chat Messages Stream */}
+                            <div className="flex-1 max-h-[350px] overflow-y-auto p-5 space-y-4 bg-zinc-950 text-right">
+                              {conversationMessages.length === 0 ? (
+                                <div className="text-center text-zinc-600 text-sm py-12">
+                                  {isArabic ? "بدء الدردشة مع العميل الآن..." : "Begin conversation with patron now..."}
+                                </div>
+                              ) : (
+                                conversationMessages.map((msg) => {
+                                  const isAdmin = msg.senderRole === "admin";
+                                  return (
+                                    <div key={msg.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+                                      <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-xs sm:text-sm shadow-md text-right ${
+                                        isAdmin 
+                                          ? "bg-amber-400 text-black font-medium" 
+                                          : "bg-zinc-900 text-zinc-100 border border-zinc-800"
+                                      }`}>
+                                        <div className={`text-[9px] uppercase tracking-wider font-extrabold mb-1.5 ${isAdmin ? "text-zinc-800" : "text-amber-500"}`}>
+                                          {msg.senderName}
+                                        </div>
+                                        <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                                        <span className={`block text-[8px] mt-2 ${isAdmin ? "text-zinc-700 font-mono" : "text-zinc-500 font-mono"}`}>
+                                          {new Date(msg.createdAt || Date.now()).toLocaleTimeString(isArabic ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
+
+                            {/* Reply input form */}
+                            <form 
+                              onSubmit={async (e) => {
+                                e.preventDefault();
+                                if (!adminReplyDraft.trim()) return;
+                                try {
+                                  await sendConversationMessage(currentConv.id, {
+                                    senderId: adminUser.uid,
+                                    senderRole: 'admin',
+                                    senderName: isArabic ? 'إدارة راف RAAV' : 'RAAV Studio Admin',
+                                    text: adminReplyDraft.trim()
+                                  });
+                                  setAdminReplyDraft('');
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }} 
+                              className="p-4 bg-zinc-900 border-t border-zinc-805 flex gap-2 text-right"
+                            >
+                              <input
+                                type="text"
+                                placeholder={isArabic ? "اكتب ردك وملاحظاتك الرسمية للعميل..." : "Reply to bespoke inquiry guidelines..."}
+                                className="flex-1 bg-zinc-950 border border-zinc-800 focus:border-amber-400 focus:outline-none rounded-xl px-4 py-2.5 text-xs text-white text-right"
+                                value={adminReplyDraft}
+                                onChange={(e) => setAdminReplyDraft(e.target.value)}
+                              />
+                              <button
+                                type="submit"
+                                disabled={!adminReplyDraft.trim()}
+                                className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 disabled:bg-zinc-800 disabled:text-zinc-550 text-black text-xs font-black transition duration-150 cursor-pointer shadow flex items-center gap-1"
+                              >
+                                <Send size={12} />
+                                <span>{isArabic ? "إرسال" : "Send"}</span>
+                              </button>
+                            </form>
+
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* FINANCIAL ACCOUNTS & RECONCILIATIONS TAB */}
+            {activeTab === 'accounts' && (
+              <div className="space-y-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                {/* Header Section */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="text-right w-full">
+                    <h3 className="text-xl font-black text-white tracking-tight">
+                      {isArabic ? "الحسابات والتسويات المالية" : "Financial Accounts & Settlements"}
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-1">
+                      {isArabic 
+                        ? "إدارة المقبوضات النقدية مع شركة الشحن وتسوية الفترات، ومتابعة رصيد ومبيعات المحافظ الإلكترونية وإنستاباي." 
+                        : "Track collected shipping cash, settle fiscal periods, and manage electronic wallets & InstaPay reserves."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Grid row 1: Wallets & InstaPay Reserves */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* InstaPay reserve card */}
+                  {paymentConfig.instaPayActive && (
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 relative overflow-hidden">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1 text-right">
+                          <span className="text-[10px] bg-indigo-500/10 text-indigo-400 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            InstaPay
+                          </span>
+                          <h4 className="font-extrabold text-white text-base mt-1">
+                            {isArabic ? "حساب إنستا باي" : "InstaPay Address"}
+                          </h4>
+                          <p className="text-xs font-mono text-zinc-400">{paymentConfig.instaPay.username}</p>
+                          <p className="text-[11px] text-zinc-500 font-mono">{paymentConfig.instaPay.phone}</p>
+                        </div>
+                        <div className="bg-zinc-950 p-2.5 rounded-2xl border border-zinc-805">
+                          <Landmark size={20} className="text-indigo-400" />
+                        </div>
+                      </div>
+
+                      <div className="mt-5 pt-4 border-t border-zinc-800 space-y-4">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-zinc-400">{isArabic ? "إجمالي مبيعات إنستا باي المحصلة:" : "Total Sales Collected:"}</span>
+                          <span className="font-bold text-white font-mono">
+                            {orders
+                              .filter(o => o.status === 'delivered' && o.paymentMethod === 'InstaPay Transfer')
+                              .reduce((sum, o) => sum + (o.agreedPrice || o.total || 0), 0)
+                              .toLocaleString()} {isArabic ? "ج.م" : "EGP"}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5 pt-1 text-right">
+                          <label className="text-[11px] text-zinc-400 block font-medium">
+                            {isArabic ? "الرصيد الفعلي المتوفر بالبنك حالياً:" : "Current Available Balance:"}
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              placeholder="0"
+                              value={paymentConfig.instaPay.availableBalance ?? ''}
+                              onChange={(e) => {
+                                const newBalance = parseFloat(e.target.value) || 0;
+                                setPaymentConfig({
+                                  ...paymentConfig,
+                                  instaPay: {
+                                    ...paymentConfig.instaPay,
+                                    availableBalance: newBalance
+                                  }
+                                });
+                              }}
+                              className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-400 focus:outline-none rounded-xl px-3 py-1.5 text-xs text-white font-bold font-mono text-center"
+                            />
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await savePaymentConfig(paymentConfig);
+                                  alert(isArabic ? "تم تحديث رصيد إنستا باي بنجاح!" : "InstaPay balance updated successfully!");
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs rounded-xl cursor-pointer transition flex items-center gap-1 active:scale-95 shrink-0"
+                            >
+                              <Check size={12} />
+                              <span className="hidden sm:inline">{isArabic ? "حفظ" : "Save"}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dyn Wallets loop */}
+                  {paymentConfig.walletsActive && paymentConfig.wallets.map((wallet) => {
+                    const totalWalletSales = orders
+                      .filter(o => {
+                        if (o.status !== 'delivered') return false;
+                        const pMethod = o.paymentMethod || '';
+                        return pMethod.includes(wallet.nameAr) || pMethod.includes(wallet.nameEn) || (wallet.id === 'vf-cash' && pMethod.toLowerCase().includes('vodafone'));
+                      })
+                      .reduce((sum, o) => sum + (o.agreedPrice || o.total || 0), 0);
+
+                    return (
+                      <div key={wallet.id} className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 relative overflow-hidden">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1 text-right">
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              E-Wallet
+                            </span>
+                            <h4 className="font-extrabold text-white text-base mt-1 text-right">
+                              {isArabic ? wallet.nameAr : wallet.nameEn}
+                            </h4>
+                            <p className="text-xs font-mono text-zinc-400 text-right">{wallet.phone}</p>
+                          </div>
+                          <div className="bg-zinc-950 p-2.5 rounded-2xl border border-zinc-805">
+                            <Wallet size={20} className="text-emerald-400" />
+                          </div>
+                        </div>
+
+                        <div className="mt-5 pt-4 border-t border-zinc-800 space-y-4">
+                          <div className="flex justify-between items-center text-xs text-right">
+                            <span className="text-zinc-400">{isArabic ? "إجمالي مبيعات المحفظة المحصلة:" : "Total Sales Collected:"}</span>
+                            <span className="font-bold text-white font-mono">
+                              {totalWalletSales.toLocaleString()} {isArabic ? "ج.م" : "EGP"}
+                            </span>
+                          </div>
+
+                          <div className="space-y-1.5 pt-1 text-right">
+                            <label className="text-[11px] text-zinc-400 block font-medium">
+                              {isArabic ? "الرصيد الفعلي المتوفر في المحفظة:" : "Current Available Balance:"}
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                placeholder="0"
+                                value={wallet.availableBalance ?? ''}
+                                onChange={(e) => {
+                                  const newBalance = parseFloat(e.target.value) || 0;
+                                  const updatedWallets = paymentConfig.wallets.map(w => 
+                                    w.id === wallet.id ? { ...w, availableBalance: newBalance } : w
+                                  );
+                                  setPaymentConfig({
+                                    ...paymentConfig,
+                                    wallets: updatedWallets
+                                  });
+                                }}
+                                className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-400 focus:outline-none rounded-xl px-3 py-1.5 text-xs text-white font-bold font-mono text-center"
+                              />
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await savePaymentConfig(paymentConfig);
+                                    alert(isArabic ? `تم تحديث رصيد ${wallet.nameAr} بنجاح!` : `Balance for ${wallet.nameEn} saved!`);
+                                  } catch (err) {
+                                    console.error(err);
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs rounded-xl cursor-pointer transition flex items-center gap-1 active:scale-95 shrink-0"
+                              >
+                                <Check size={12} />
+                                <span className="hidden sm:inline">{isArabic ? "حفظ" : "Save"}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Section 2: COD & SHIPPING COMPANY SETTLEMENTS */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 space-y-6">
+                  <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b border-zinc-800">
+                    <div className="text-right">
+                      <h4 className="font-extrabold text-white text-base">
+                        {isArabic ? "تسويات شركة الشحن (الدفع عند الاستلام)" : "Shipping Company CODs & Settlements"}
+                      </h4>
+                      <p className="text-xs text-zinc-400 mt-0.5">
+                        {isArabic 
+                          ? "استعرض الطلبات التي تم تسليمها وتوقف تحصيلات شركة الشحن، وفلتر بالتواريخ لتسوية الحسابات وإغلاق دورة توريد معينة." 
+                          : "Review delivered cash-on-delivery files, isolate target durations, and close settled accounts."}
+                      </p>
+                    </div>
+
+                    {/* Date filter inputs */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <span className="text-zinc-400">{isArabic ? "من:" : "From:"}</span>
+                        <input
+                          type="date"
+                          value={settlementFromDate}
+                          onChange={(e) => setSettlementFromDate(e.target.value)}
+                          className="bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs text-white text-center focus:outline-none focus:border-amber-400 select-none"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <span className="text-zinc-400">{isArabic ? "إلى:" : "To:"}</span>
+                        <input
+                          type="date"
+                          value={settlementToDate}
+                          onChange={(e) => setSettlementToDate(e.target.value)}
+                          className="bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs text-white text-center focus:outline-none focus:border-amber-400 select-none"
+                        />
+                      </div>
+                      
+                      {(settlementFromDate || settlementToDate) && (
+                        <button
+                          onClick={() => {
+                            setSettlementFromDate('');
+                            setSettlementToDate('');
+                          }}
+                          className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] uppercase font-bold rounded-lg cursor-pointer transition duration-150"
+                        >
+                          {isArabic ? "إعادة تعيين" : "Reset"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Calculations & active settlements tools */}
+                  {(() => {
+                    // Filter Cash on Delivery standard/custom orders that are 'delivered'
+                    const codOrders = orders.filter(o => {
+                      if (o.status !== 'delivered') return false;
+                      
+                      // Check method is COD
+                      const method = (o.paymentMethod || '').toLowerCase();
+                      const isCOD = method.includes('cod') || method.includes('cash') || method === '' || method.includes('الاستلام');
+                      if (!isCOD) return false;
+
+                      // Date filtering
+                      if (settlementFromDate) {
+                        const fromLimit = new Date(settlementFromDate).setHours(0, 0, 0, 0);
+                        if (o.createdAt < fromLimit) return false;
+                      }
+                      if (settlementToDate) {
+                        const toLimit = new Date(settlementToDate).setHours(23, 59, 59, 999);
+                        if (o.createdAt > toLimit) return false;
+                      }
+
+                      return true;
+                    });
+
+                    // Split into unsettled (not yet in closed period) and settled
+                    const unsettledCODs = codOrders.filter(o => !o.settled);
+                    const settledCODs = codOrders.filter(o => o.settled);
+
+                    const unsettledTotalSum = unsettledCODs.reduce((sum, o) => sum + (o.agreedPrice || o.total || 0), 0);
+                    const settledTotalSum = settledCODs.reduce((sum, o) => sum + (o.agreedPrice || o.total || 0), 0);
+
+                    const handleClosePeriod = async () => {
+                      if (unsettledCODs.length === 0) {
+                        alert(isArabic ? "لا توجد أي طلبات غير مسواة لإغلاقها الآن!" : "No unsettled orders available in this filter to lock down.");
+                        return;
+                      }
+
+                      const periodNotes = prompt(
+                        isArabic 
+                          ? `سيتم إغلاق وتسوية عدد (${unsettledCODs.length}) طلبات محصلة بإجمالي مبلغ: ${unsettledTotalSum} ج.م.\nيرجى كتابة اسم أو وصف لهذه الدفعة الاستلامية (مثال: توريد الأسبوع الأول من يونيو):` 
+                          : `You are closing settlement for (${unsettledCODs.length}) orders with sum ${unsettledTotalSum} EGP.\nEnter a reference title or date label for this closure (e.g. Early June Settlement Batch):`
+                      );
+
+                      if (periodNotes === null) return; // user cancelled
+
+                      const settleId = 'settle_' + Date.now();
+                      const timestamps = unsettledCODs.map(o => o.createdAt);
+                      const minTimestamp = Math.min(...timestamps);
+                      const maxTimestamp = Math.max(...timestamps);
+
+                      const newPeriod: SettlementPeriod = {
+                        id: settleId,
+                        startDate: minTimestamp,
+                        endDate: maxTimestamp,
+                        totalAmount: unsettledTotalSum,
+                        createdAt: Date.now(),
+                        orderIds: unsettledCODs.map(o => o.id),
+                        notes: periodNotes.trim() || (isArabic ? `تسوية بتاريخ ${new Date().toLocaleDateString('ar-EG')}` : `Settlement on ${new Date().toLocaleDateString()}`)
+                      };
+
+                      try {
+                        // 1. Mark orders as settled in Firestore
+                        await markOrdersAsSettled(newPeriod.orderIds, settleId);
+                        
+                        // 2. Save settlements array in Firestore settings
+                        const updatedPeriods = [...settlements, newPeriod];
+                        await saveSettlements(updatedPeriods);
+                        
+                        // 3. Update local state
+                        setSettlements(updatedPeriods);
+                        
+                        // Update order properties in local orders list so it updates instant
+                        unsettledCODs.forEach(o => {
+                          o.settled = true;
+                          o.settledInPeriodId = settleId;
+                        });
+
+                        alert(isArabic ? "تم تسوية وإغلاق فترة التوريد بنجاح وبدء فترة مبيعات جديدة!" : "Settlement period sealed securely! Fresh fiscal term seeded.");
+                      } catch (err) {
+                        console.error(err);
+                        alert(isArabic ? "حدث خطأ أثناء حفظ التسوية!" : "Error sealing settlement packet.");
+                      }
+                    };
+
+                    return (
+                      <div className="space-y-6 text-right">
+                        {/* Summary Bento Row */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="bg-zinc-950/60 p-4 border border-zinc-805 rounded-2xl flex flex-col justify-between text-right">
+                            <span className="text-[11px] text-zinc-400 font-bold block">
+                              {isArabic ? "مستحقات التوريد الحالية (غير مسواة):" : "Current Pending Collection:"}
+                            </span>
+                            <div className="flex justify-between items-baseline mt-2">
+                              <span className="text-2xl font-black text-amber-400 font-mono">
+                                {unsettledTotalSum.toLocaleString()} ج.م
+                              </span>
+                              <span className="text-[11px] text-zinc-500 font-bold">
+                                {unsettledCODs.length} {isArabic ? "طلبات" : "orders"}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-zinc-500 mt-2">
+                              {isArabic ? "المبالغ التي حصلتها شركة الشحن من العميل ولم توردها بعد." : "Delivered cash on hand with couriers awaiting trade closure."}
+                            </p>
+                          </div>
+
+                          <div className="bg-zinc-950/60 p-4 border border-zinc-805 rounded-2xl flex flex-col justify-between text-right">
+                            <span className="text-[11px] text-zinc-400 font-bold block">
+                              {isArabic ? "مجموع التسويات المغلقة السابقة:" : "Historial Closed / Settled:"}
+                            </span>
+                            <div className="flex justify-between items-baseline mt-2">
+                              <span className="text-2xl font-black text-emerald-400 font-mono">
+                                {settlements.reduce((sum, s) => sum + s.totalAmount, 0).toLocaleString()} ج.م
+                              </span>
+                              <span className="text-[11px] text-zinc-500 font-bold">
+                                {settlements.length} {isArabic ? "دورات وتوريدات" : "settlement cycles"}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-zinc-500 mt-2">
+                              {isArabic ? "المبالغ التي تم توريدها بالفعل وإغلاق فتراتها التم تم تحصيلها." : "Previously transferred sums locked and filed in ledger."}
+                            </p>
+                          </div>
+
+                          {/* Action Button Box */}
+                          <div className="bg-amber-400 text-black p-4 rounded-2xl flex flex-col justify-between text-right">
+                            <div>
+                              <span className="text-[10px] font-black uppercase tracking-wider block opacity-70">
+                                {isArabic ? "أقفل الفترة الحالية بالتوريد" : "Settle Period Ledger"}
+                              </span>
+                              <p className="text-[11px] leading-tight font-bold mt-1">
+                                {isArabic 
+                                  ? `تقفيل وتجميد مبلغ ${unsettledTotalSum.toLocaleString()} ج.م من شركة الشحن وتسهيل بدء التوريد القادم.` 
+                                  : `Freeze pending ${unsettledTotalSum.toLocaleString()} EGP, marking orders as completely paid.`}
+                              </p>
+                            </div>
+                            <button
+                              onClick={handleClosePeriod}
+                              disabled={unsettledCODs.length === 0}
+                              className="mt-3.5 w-full py-2 bg-black hover:bg-zinc-900 border border-black text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 shadow-md active:scale-95"
+                            >
+                              {isArabic ? "إغلاق وتسوية الدفعة الحالية" : "Lock & Settle Current Unsettled"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Unsettled orders table section */}
+                        <div className="space-y-3">
+                          <h5 className="font-extrabold text-sm text-white flex items-center gap-1.5 text-right">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                            {isArabic 
+                              ? `التوريد الحالي: الطلبات المتبقية لشركات الشحن (${unsettledCODs.length})` 
+                              : `Unsettled Delivered Files (${unsettledCODs.length})`}
+                          </h5>
+
+                          {unsettledCODs.length === 0 ? (
+                            <div className="text-zinc-650 bg-zinc-950 p-6 rounded-2xl border border-zinc-850 text-center text-xs">
+                              {isArabic ? "لا توجد أي طلبات تم تسليمها وغير مسواة في هذه الفترة الفلترية" : "No open delivered cash orders listed under these filter dates."}
+                            </div>
+                          ) : (
+                            <div className="bg-zinc-950 border border-zinc-850 rounded-2xl overflow-hidden">
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-right text-xs text-zinc-300">
+                                  <thead>
+                                    <tr className="bg-zinc-900 border-b border-zinc-805 text-zinc-400 text-[10px] uppercase font-black tracking-wider">
+                                      <th className="p-3.5">{isArabic ? "رقم الطلب" : "Order ID"}</th>
+                                      <th className="p-3.5">{isArabic ? "العميل والمدينة" : "Patron & Locality"}</th>
+                                      <th className="p-3.5">{isArabic ? "تاريخ التوصيل" : "Delivered Date"}</th>
+                                      <th className="p-3.5">{isArabic ? "طريقة الدفع" : "Pay Mode"}</th>
+                                      <th className="p-3.5 text-left p-3.5">{isArabic ? "القيمة الاجمالية" : "Grand Total"}</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-zinc-900">
+                                    {unsettledCODs.map((ord) => (
+                                      <tr key={ord.id} className="hover:bg-zinc-900/40 transition">
+                                        <td className="p-3.5 font-mono text-zinc-400">
+                                          #{ord.id.substring(0, 7)}
+                                        </td>
+                                        <td className="p-3.5 font-bold">
+                                          <div>{ord.customerName}</div>
+                                          <div className="text-[10px] text-zinc-500 font-medium font-mono">{ord.customerCity}</div>
+                                        </td>
+                                        <td className="p-3.5 font-mono text-[11px] text-zinc-400">
+                                          {new Date(ord.createdAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')}
+                                        </td>
+                                        <td className="p-3.5">
+                                          <span className="text-[10px] px-2 py-0.5 rounded-lg bg-orange-400/10 text-orange-400 font-bold">
+                                            {isArabic ? "الدفع عند الاستلام (COD)" : "COD"}
+                                          </span>
+                                        </td>
+                                        <td className="p-3.5 text-left font-black text-amber-400 font-mono">
+                                          {(ord.agreedPrice || ord.total || 0).toLocaleString()} ج.م
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Previously closed periods */}
+                        <div className="pt-4 border-t border-zinc-800 space-y-3">
+                          <h5 className="font-extrabold text-sm text-zinc-400 text-right">
+                            {isArabic ? "سجل دورات وتوريدات شركات الشحن المغلقة السابقة" : "History of Settled Shipping Cycles"}
+                          </h5>
+
+                          {settlements.length === 0 ? (
+                            <div className="text-zinc-600 p-4 border border-dashed border-zinc-800 rounded-2xl text-center text-xs">
+                              {isArabic ? "لا توجد أي تسويات مغلقة سابقة في الأرشيف المالي." : "No archived settlement cycles found."}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {settlements.map((settle) => (
+                                <div key={settle.id} className="bg-zinc-950 border border-zinc-855 p-4 rounded-2xl space-y-3 relative text-right">
+                                  <div className="flex justify-between items-start">
+                                    <div className="text-right">
+                                      <h6 className="font-black text-white text-xs">
+                                        {settle.notes}
+                                      </h6>
+                                      <span className="text-[9px] text-zinc-500 font-mono">
+                                        ID: {settle.id.substring(0, 10)}
+                                      </span>
+                                    </div>
+                                    <span className="text-[10px] text-zinc-400 font-bold bg-zinc-900 px-2 py-0.5 rounded-lg font-mono border border-zinc-805">
+                                      {new Date(settle.createdAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')}
+                                    </span>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2 text-[11px] bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-805/40 text-zinc-400">
+                                    <div className="text-right">
+                                      <span className="text-zinc-500 block">{isArabic ? "تاريخ البداية:" : "Start Date:"}</span>
+                                      <span className="font-bold text-white font-mono">{new Date(settle.startDate).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')}</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <span className="text-zinc-500 block">{isArabic ? "تاريخ النهاية:" : "End Date:"}</span>
+                                      <span className="font-bold text-white font-mono">{new Date(settle.endDate).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex justify-between items-center text-xs pt-1">
+                                    <span className="text-zinc-500 font-bold">{settle.orderIds.length} {isArabic ? "طلب مالي" : "orders"}</span>
+                                    <span className="font-extrabold text-emerald-400 font-mono">
+                                      {settle.totalAmount.toLocaleString()} ج.م
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+                    );
+                  })()}
+                </div>
+
               </div>
             )}
 

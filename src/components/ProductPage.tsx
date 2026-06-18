@@ -17,18 +17,31 @@ import {
   User 
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { addReview, subscribeToProductReviews } from '../dbService';
+import { addReview, subscribeToProductReviews, toggleProductFavorite, subscribeToUserProfile } from '../dbService';
 
 interface ProductPageProps {
   product: Product;
+  products: Product[];
+  onSelectProduct: (product: Product) => void;
   onBack: () => void;
   onAddToCart: (product: Product, size: string, color: string, quantity: number) => void;
   isArabic: boolean;
   currentUser?: any;
   onGoToAuth?: () => void;
+  onSelectCategory?: (category: string) => void;
 }
 
-export default function ProductPage({ product, onBack, onAddToCart, isArabic, currentUser, onGoToAuth }: ProductPageProps) {
+export default function ProductPage({ 
+  product, 
+  products = [], 
+  onSelectProduct, 
+  onBack, 
+  onAddToCart, 
+  isArabic, 
+  currentUser, 
+  onGoToAuth,
+  onSelectCategory
+}: ProductPageProps) {
   const [activeImgUrl, setActiveImgUrl] = useState<string>(product.image);
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'M');
   const [selectedColor, setSelectedColor] = useState<string>(product.colors[0] || '#ffffff');
@@ -44,7 +57,46 @@ export default function ProductPage({ product, onBack, onAddToCart, isArabic, cu
     setSelectedColor(product.colors[0] || '#ffffff');
   }, [product]);
 
+  // Sync real-time favorite status from database
+  useEffect(() => {
+    if (!currentUser) {
+      setIsFavorite(false);
+      return;
+    }
+    const unsubscribe = subscribeToUserProfile(currentUser.uid, (uData) => {
+      if (uData && uData.favorites) {
+        setIsFavorite(uData.favorites.some((f: any) => f.productId === product.id));
+      } else {
+        setIsFavorite(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [currentUser, product.id]);
+
+  const handleToggleFavorite = async () => {
+    if (!currentUser) {
+      if (onGoToAuth) {
+        onGoToAuth();
+      }
+      return;
+    }
+    try {
+      await toggleProductFavorite(currentUser.uid, product.id);
+    } catch (e) {
+      console.error("Error toggling favorite:", e);
+    }
+  };
+
   const { current, original, hasDiscount } = getProductPrice(product);
+
+  const relatedProducts = React.useMemo(() => {
+    let list = (products || []).filter((p) => p.id !== product.id && p.category === product.category);
+    if (list.length < 4) {
+      const extra = (products || []).filter((p) => p.id !== product.id && p.category !== product.category);
+      list = [...list, ...extra];
+    }
+    return list.slice(0, 4);
+  }, [products, product]);
 
   // Reviews states
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -130,11 +182,38 @@ export default function ProductPage({ product, onBack, onAddToCart, isArabic, cu
           </button>
           
           <div className="hidden sm:flex items-center gap-2 text-[10px] uppercase font-bold text-zinc-400 tracking-wider font-mono">
-            <span>RAAV</span>
+            <button
+              onClick={() => {
+                if (onSelectCategory) {
+                  onSelectCategory('all');
+                } else {
+                  onBack();
+                }
+              }}
+              className="hover:text-amber-500 hover:underline transition duration-200 cursor-pointer"
+            >
+              RAAV
+            </button>
             <span>/</span>
-            <span>{product.category}</span>
+            <button
+              onClick={() => {
+                if (onSelectCategory) {
+                  onSelectCategory(product.category);
+                } else {
+                  onBack();
+                }
+              }}
+              className="hover:text-amber-500 hover:underline transition duration-200 cursor-pointer"
+            >
+              {product.category === 'men' && (isArabic ? 'رجالي' : 'MEN')}
+              {product.category === 'women' && (isArabic ? 'حريمي' : 'WOMEN')}
+              {product.category === 'kids' && (isArabic ? 'أطفالي' : 'KIDS')}
+              {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'ACCESSORIES')}
+            </button>
             <span>/</span>
-            <span className="text-zinc-650">{isArabic ? product.nameAr : product.nameEn}</span>
+            <span className="text-zinc-650 truncate max-w-[150px]">
+              {isArabic ? product.nameAr : product.nameEn}
+            </span>
           </div>
         </div>
 
@@ -359,7 +438,7 @@ export default function ProductPage({ product, onBack, onAddToCart, isArabic, cu
                 </motion.button>
 
                 <button
-                  onClick={() => setIsFavorite(!isFavorite)}
+                  onClick={handleToggleFavorite}
                   className={`w-12 h-12 rounded-full border flex items-center justify-center cursor-pointer transition ${
                     isFavorite 
                       ? "bg-rose-50 border-rose-200 text-rose-500 scale-103" 
@@ -573,6 +652,24 @@ export default function ProductPage({ product, onBack, onAddToCart, isArabic, cu
                   </div>
                 )}
               </div>
+
+              {/* Reviews Section Mini Ad Banner */}
+              <div className="mt-6 pt-6 border-t border-zinc-100 bg-amber-500/5 p-5 rounded-2xl border border-amber-500/10 space-y-2" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                <div className="flex justify-start">
+                  <span className="text-[8px] font-black uppercase text-amber-700 bg-amber-500/20 px-2 py-0.5 rounded">
+                    {isArabic ? "ضمان راف الأصيل" : "RAAV GENUINE SHIELD"}
+                  </span>
+                </div>
+                <h4 className="text-xs font-bold text-zinc-900 leading-snug">
+                  {isArabic ? "قطن مصري طويل التيلة ١٠٠٪" : "100% Long-Staple Egyptian Cotton"}
+                </h4>
+                <p className="text-[10px] text-zinc-550 font-light leading-relaxed">
+                  {isArabic 
+                    ? "نحن نضمن أن كافة ملابسنا منسوجة يدوياً من أفخم محاصيل القطن العضوي في شرق الدلتا ومعقمة بالكامل لسلامة بشرتك." 
+                    : "Every centimeter of thread is hand-pulled, certified organic, and steam-cleansed to withstand generations."}
+                </p>
+              </div>
+
             </div>
 
             {/* Reviews List (7 cols) */}
@@ -636,6 +733,94 @@ export default function ProductPage({ product, onBack, onAddToCart, isArabic, cu
               )}
             </div>
 
+          </div>
+        </div>
+
+        {/* Related Products Section ("قد يعجبك أيضاً") */}
+        <div className="mt-16 border-t border-zinc-100 pt-16">
+          <div className="flex justify-between items-center mb-8" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+            <h3 className="text-xl font-serif font-medium text-zinc-900 flex items-center gap-2">
+              <span className="text-amber-500 font-bold font-sans">✦</span>
+              <span>{isArabic ? "منتجات قد تعجبك أيضاً" : "You May Also Like"}</span>
+            </h3>
+            <span className="text-xs text-zinc-400 uppercase tracking-widest font-mono">
+              {isArabic ? "تشكيلة مختارة لك" : "Curated recommendations"}
+            </span>
+          </div>
+
+          {relatedProducts.length === 0 ? (
+            <p className="text-xs text-zinc-400 text-center py-6">
+              {isArabic ? "لا توجد منتجات مشابهة حالياً." : "No related products at the moment."}
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {relatedProducts.map((relProduct) => (
+                <div
+                  key={relProduct.id}
+                  onClick={() => {
+                    onSelectProduct(relProduct);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="group bg-white rounded-2xl overflow-hidden border border-zinc-100 hover:border-zinc-200 hover:shadow-xs transition duration-300 cursor-pointer flex flex-col h-full relative"
+                  style={{ textAlign: isArabic ? 'right' : 'left' }}
+                >
+                  <div className="aspect-[4/5] bg-zinc-50 overflow-hidden relative">
+                    <img
+                      src={relProduct.image}
+                      alt={isArabic ? relProduct.nameAr : relProduct.nameEn}
+                      className="w-full h-full object-cover transition duration-700 group-hover:scale-102"
+                      referrerPolicy="no-referrer"
+                    />
+                    {!relProduct.inStock && (
+                      <div className="absolute inset-0 bg-white/70 backdrop-blur-3xs flex items-center justify-center">
+                        <span className="px-2.5 py-1 bg-zinc-950 text-white font-sans text-[8px] font-bold uppercase rounded tracking-widest shadow-xs">
+                          {isArabic ? "نفذت" : "Sold Out"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3.5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mb-0.5">
+                        {relProduct.category === 'men' && (isArabic ? 'رجالي' : 'Men')}
+                        {relProduct.category === 'women' && (isArabic ? 'حريمي' : 'Women')}
+                        {relProduct.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
+                        {relProduct.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
+                      </span>
+                      <h4 className="text-xs font-medium text-zinc-900 leading-snug line-clamp-1 group-hover:text-black transition">
+                        {isArabic ? relProduct.nameAr : relProduct.nameEn}
+                      </h4>
+                    </div>
+                    <div className="mt-2 text-xs font-bold text-zinc-900 font-serif">
+                      {relProduct.price} ج.م
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Elegant Fashion Member Ad inside Product Detail Page */}
+        <div className="mt-12 relative rounded-[2rem] overflow-hidden bg-zinc-950 border border-zinc-900 text-white min-h-[140px] flex flex-col md:flex-row items-center justify-between p-6 md:p-8" style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}>
+          <div className="absolute inset-0 bg-cover bg-center opacity-10" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=800')" }} />
+          <div className="relative z-10 space-y-2 max-w-xl">
+            <span className="text-[8px] font-bold tracking-[0.15em] bg-amber-400/20 text-amber-400 px-2 py-0.5 rounded border border-amber-400/30 inline-block font-sans uppercase">
+              {isArabic ? "عضوية راف المتميزة" : "RAAV PRIVÉ MEMBERSHIP"}
+            </span>
+            <h3 className="text-md md:text-lg font-serif font-medium leading-snug">
+              {isArabic ? "انضم لنادي النخبة واحصل على قياس كوتور سنوي مجاني" : "Secure Annual Artisanal Fittings & Styling Advising"}
+            </h3>
+            <p className="text-[10px] text-zinc-400 font-light max-w-lg leading-relaxed">
+              {isArabic 
+                ? "خصائص النخبة تشمل استرداد نقدي 5%، وأخصائي تصميم أزياء لكل المناسبات، وطلب معاينة أي موديل هاتفياً." 
+                : "Unlock complimentary physical adjustments, seasonal catalog previews, and a personal fashion concierge thread."}
+            </p>
+          </div>
+          <div className="relative z-10 mt-4 md:mt-0 select-none">
+            <button className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-bold rounded-full transition shadow-md cursor-pointer">
+              {isArabic ? "انضم مجاناً الآن" : "Apply for Member Card"}
+            </button>
           </div>
         </div>
 

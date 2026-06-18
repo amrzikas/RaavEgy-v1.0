@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShoppingBag, Trash2, ArrowLeft, CheckCircle, Package, Send, CreditCard, Landmark, Wallet, AlertCircle } from 'lucide-react';
+import { X, ShoppingBag, Trash2, ArrowLeft, CheckCircle, Package, Send, CreditCard, Landmark, Wallet, AlertCircle, MapPin } from 'lucide-react';
 import { OrderItem, PaymentConfig, ShippingPlan, SavedAddress } from '../types';
 import { createOrder, getPaymentConfig, getShippingPlans, getUserProfile } from '../dbService';
 import { auth } from '../firebase';
@@ -61,6 +61,7 @@ export default function CartSlider({
 
   // Brand new integrations: Saved Addresses dropdown & payment proof input
   const [userAddresses, setUserAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [paymentProofImage, setPaymentProofImage] = useState<string | null>(null);
 
   // Auto load configurations and saved addresses
@@ -83,30 +84,65 @@ export default function CartSlider({
         }
       });
 
-      // Quick load user addresses
+      // Quick load user addresses and personal details
       if (auth.currentUser) {
         getUserProfile(auth.currentUser.uid).then(profile => {
-          if (profile && profile.addresses) {
-            setUserAddresses(profile.addresses);
+          if (profile) {
+            // First, set defaults from basic profile info if available
+            if (profile.name) {
+              setCustomerName(profile.name);
+            } else if (auth.currentUser?.displayName) {
+              setCustomerName(auth.currentUser.displayName);
+            }
             
-            // Auto inject default saved address if it exists
-            const defaultAddr = profile.addresses.find((a: any) => a.isDefault);
-            if (defaultAddr) {
-              setCustomerName(defaultAddr.recipientName);
-              setCustomerPhone(defaultAddr.phone);
-              setCustomerCityId(defaultAddr.cityId);
-              setCustomerAddress(defaultAddr.addressDetails);
-            } else if (profile.addresses.length > 0) {
-              const firstAddr = profile.addresses[0];
-              setCustomerName(firstAddr.recipientName);
-              setCustomerPhone(firstAddr.phone);
-              setCustomerCityId(firstAddr.cityId);
-              setCustomerAddress(firstAddr.addressDetails);
+            if (profile.phone) {
+              setCustomerPhone(profile.phone);
+            }
+
+            if (profile.address) {
+              setCustomerAddress(profile.address);
+            }
+
+            if (profile.city) {
+              const matchedCity = EGYPTIAN_CITIES.find(
+                c => c.id === profile.city.toLowerCase() || 
+                     c.nameEn.toLowerCase().includes(profile.city.toLowerCase()) || 
+                     c.nameAr.includes(profile.city)
+              );
+              if (matchedCity) {
+                setCustomerCityId(matchedCity.id);
+              }
+            }
+
+            // Next, if they have multiple custom registered addresses, use them!
+            if (profile.addresses && profile.addresses.length > 0) {
+              setUserAddresses(profile.addresses);
+              
+              // Try to find default address first
+              const defaultAddr = profile.addresses.find((a: any) => a.isDefault);
+              if (defaultAddr) {
+                setCustomerName(defaultAddr.recipientName || profile.name || auth.currentUser?.displayName || '');
+                setCustomerPhone(defaultAddr.phone || profile.phone || '');
+                setCustomerCityId(defaultAddr.cityId || 'cairo');
+                setCustomerAddress(defaultAddr.addressDetails || profile.address || '');
+                setSelectedAddressId(defaultAddr.id);
+              } else {
+                const firstAddr = profile.addresses[0];
+                setCustomerName(firstAddr.recipientName || profile.name || auth.currentUser?.displayName || '');
+                setCustomerPhone(firstAddr.phone || profile.phone || '');
+                setCustomerCityId(firstAddr.cityId || 'cairo');
+                setCustomerAddress(firstAddr.addressDetails || profile.address || '');
+                setSelectedAddressId(firstAddr.id);
+              }
+            } else {
+              setUserAddresses([]);
+              setSelectedAddressId('');
             }
           }
         });
       } else {
         setUserAddresses([]);
+        setSelectedAddressId('');
       }
     }
   }, [isOpen]);
@@ -116,13 +152,11 @@ export default function CartSlider({
   const itemsPriceTotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   
   // Decide active plan attributes
-  const selectedPlanObj = shippingPlans.find(p => p.id === selectedCarrierPlanId);
   const selectedCityInfo = EGYPTIAN_CITIES.find(c => c.id === customerCityId) || EGYPTIAN_CITIES[0];
-  const isCustomShippingActive = shippingPlans.length > 0;
 
-  const deliveryFee = isCustomShippingActive && selectedPlanObj
-    ? selectedPlanObj.price
-    : (itemsPriceTotal > 1200 && (customerCityId === 'cairo' || customerCityId === 'giza') ? 0 : selectedCityInfo.fee);
+  const deliveryFee = itemsPriceTotal > 1200 && (customerCityId === 'cairo' || customerCityId === 'giza') 
+    ? 0 
+    : selectedCityInfo.fee;
 
   const grandTotal = itemsPriceTotal + deliveryFee;
 
@@ -156,14 +190,11 @@ export default function CartSlider({
         customerName,
         customerPhone,
         customerAddress,
-        customerCity: isCustomShippingActive && selectedPlanObj
-          ? (isArabic ? selectedPlanObj.companyNameAr : selectedPlanObj.companyNameEn)
-          : (isArabic ? selectedCityInfo.nameAr.split(' ')[0] : selectedCityInfo.nameEn.split(' ')[0]),
+        customerCity: isArabic ? selectedCityInfo.nameAr.split(' ')[0] : selectedCityInfo.nameEn.split(' ')[0],
         customerNotes: customerNotes.trim() || undefined,
         items: cartItems,
         total: grandTotal,
         paymentMethod: resolvedPaymentMethod,
-        shippingPlanId: isCustomShippingActive && selectedPlanObj ? selectedPlanObj.id : undefined,
         paymentProof: paymentProofImage || undefined
       });
 
@@ -273,6 +304,40 @@ export default function CartSlider({
                   </button>
 
                   <div className="space-y-3">
+                    {/* Saved Addresses Dropdown */}
+                    {userAddresses && userAddresses.length > 0 && (
+                      <div className="bg-amber-50/20 border border-amber-250 p-3 rounded-xl space-y-1.5 text-right">
+                        <label className="block text-[10px] font-bold text-amber-900 uppercase tracking-widest flex items-center gap-1 justify-end">
+                          <span>{isArabic ? "استيراد من العناوين المحفوظة" : "Use Saved Address"}</span>
+                          <MapPin size={11} className="text-amber-600" />
+                        </label>
+                        <select
+                          className="w-full bg-white border border-zinc-200 hover:border-amber-300 rounded-lg px-2.5 py-1.5 text-xs text-zinc-800 focus:outline-none focus:border-black transition cursor-pointer"
+                          value={selectedAddressId}
+                          onChange={(e) => {
+                            const addrId = e.target.value;
+                            setSelectedAddressId(addrId);
+                            if (addrId) {
+                              const chosen = userAddresses.find(a => a.id === addrId);
+                              if (chosen) {
+                                setCustomerName(chosen.recipientName);
+                                setCustomerPhone(chosen.phone);
+                                setCustomerCityId(chosen.cityId);
+                                setCustomerAddress(chosen.addressDetails);
+                              }
+                            }
+                          }}
+                        >
+                          <option value="" disabled>--- {isArabic ? "اضغط لاختيار عنوانك المحفوظ للاستيراد" : "Select saved address to import"} ---</option>
+                          {userAddresses.map((addr) => (
+                            <option key={addr.id} value={addr.id}>
+                              {addr.recipientName} - {addr.phone} ({addr.addressDetails.slice(0, 30)}...)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     {/* Customer Name */}
                     <div>
                       <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
@@ -303,46 +368,23 @@ export default function CartSlider({
                       />
                     </div>
 
-                    {/* Shipping Carrier / Plan Picker */}
-                    {isCustomShippingActive ? (
-                      <div>
-                        <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
-                          {isArabic ? "اختر شركة الشحن للتوصيل *" : "Select Shipping Courier *"}
-                        </label>
-                        <select
-                          className="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2.5 text-xs text-zinc-900 focus:outline-none focus:bg-white focus:border-black transition-all"
-                          value={selectedCarrierPlanId}
-                          onChange={(e) => setSelectedCarrierPlanId(e.target.value)}
-                        >
-                          {shippingPlans.map((plan) => (
-                            <option key={plan.id} value={plan.id}>
-                              {isArabic 
-                                ? `${plan.companyNameAr} - ${plan.price} ج.م (${plan.deliveryTimeAr})` 
-                                : `${plan.companyNameEn} - ${plan.price} EGP (${plan.deliveryTimeEn})`
-                              }
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ) : (
-                      /* Egyptian Province Selection fallback */
-                      <div>
-                        <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
-                          {isArabic ? "المحافظة للتوصيل *" : "Select Governorate *"}
-                        </label>
-                        <select
-                          className="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2.5 text-xs text-zinc-900 focus:outline-none focus:bg-white focus:border-black transition-all"
-                          value={customerCityId}
-                          onChange={(e) => setCustomerCityId(e.target.value)}
-                        >
-                          {EGYPTIAN_CITIES.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {isArabic ? c.nameAr : c.nameEn}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+                    {/* Egyptian Province Selection (Governorate) */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                        {isArabic ? "المحافظة للتوصيل (تضاف قيمة الشحن تلقائياً) *" : "Select Governorate (Delivery Fee Calculated Automatically) *"}
+                      </label>
+                      <select
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2.5 text-xs text-zinc-900 focus:outline-none focus:bg-white focus:border-black transition-all cursor-pointer"
+                        value={customerCityId}
+                        onChange={(e) => setCustomerCityId(e.target.value)}
+                      >
+                        {EGYPTIAN_CITIES.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {isArabic ? c.nameAr : c.nameEn}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
                     {/* Detailed Street Address */}
                     <div>
@@ -477,6 +519,68 @@ export default function CartSlider({
                             return null;
                           })()
                         )}
+                        
+                        {/* Unified Payment Proof Upload widget */}
+                        {selectedPaymentMethod !== 'cod' && (
+                          <div className="p-4 bg-amber-50/30 border border-dashed border-amber-300 rounded-xl space-y-2 mt-3 text-right">
+                            <h5 className="font-serif font-black text-xs text-amber-900 flex items-center gap-1 justify-end">
+                              <span>{isArabic ? "إرفاق صورة أو لقطة شاشة من إيصال التحويل *" : "Attach Receipt/Payment Proof Screenshot *"}</span>
+                              <AlertCircle size={14} className="text-amber-700" />
+                            </h5>
+                            <p className="text-[10px] text-zinc-500 mb-2">
+                              {isArabic 
+                                ? "لكي يتم تأكيد الأوردر من قبل الإدارة، يرجى إرسال لقطة شاشة تدل على إتمام عملية الدفع بنجاح." 
+                                : "To confirm your order by management, please attach a screenshot confirming payment completion."}
+                            </p>
+                            
+                            <div className="flex flex-col items-center justify-center p-3 border border-zinc-200 bg-white rounded-lg">
+                              {paymentProofImage ? (
+                                <div className="space-y-2 text-center">
+                                  <img 
+                                    src={paymentProofImage} 
+                                    alt="Payment proof" 
+                                    className="w-32 h-32 object-contain mx-auto rounded border border-zinc-200" 
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setPaymentProofImage(null)}
+                                    className="text-[10px] text-red-650 hover:text-red-800 font-semibold underline block mx-auto cursor-pointer"
+                                  >
+                                    {isArabic ? "حذف وإرفاق صورة أخرى" : "Remove and select different proof"}
+                                  </button>
+                                </div>
+                              ) : (
+                                <label className="w-full flex flex-col items-center justify-center py-4 border border-dashed border-zinc-200 hover:border-black rounded-lg cursor-pointer transition">
+                                  <Send size={18} className="text-zinc-400 mb-1" />
+                                  <span className="text-xs text-zinc-650 font-medium">
+                                    {isArabic ? "اضغط هنا لاختيار الصورة" : "Click here to choose reference image"}
+                                  </span>
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        try {
+                                          const base64 = await new Promise<string>((resolve, reject) => {
+                                            const reader = new FileReader();
+                                            reader.readAsDataURL(file);
+                                            reader.onload = () => resolve(reader.result as string);
+                                            reader.onerror = error => reject(error);
+                                          });
+                                          setPaymentProofImage(base64);
+                                        } catch (err) {
+                                          console.error("Failed to parse proof image:", err);
+                                        }
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -495,7 +599,7 @@ export default function CartSlider({
                         ) : `${deliveryFee} ج.م`}
                       </span>
                     </div>
-                    {itemsPriceTotal < 1200 && (customerCityId === 'cairo' || customerCityId === 'giza') && !isCustomShippingActive && (
+                    {itemsPriceTotal < 1200 && (customerCityId === 'cairo' || customerCityId === 'giza') && (
                       <p className="text-[10px] text-amber-900 italic mt-1 font-light">
                         {isArabic 
                           ? `أضف بـ ${1200 - itemsPriceTotal} ج.م قطع ملابس أخرى لتحصل على شحن مجاني بمحافظتي القاهرة والجيزة!` 

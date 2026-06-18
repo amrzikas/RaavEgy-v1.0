@@ -85,7 +85,7 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
   }, [products, selectedCategory, searchQuery, selectedSize, selectedColor, minPrice, maxPrice, sortBy]);
 
   return (
-    <div className="bg-[#fbfcff] min-h-screen pt-24 pb-16 font-sans text-right" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+    <div id="shop-top-anchor" className="bg-[#fbfcff] min-h-screen pt-24 pb-16 font-sans text-right" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Banner Title */}
@@ -116,6 +116,48 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
               <SlidersHorizontal size={14} />
               <span>{isArabic ? "الفلاتر والألوان" : "Filters"}</span>
             </button>
+          </div>
+        </div>
+
+        {/* Elegant Wide Top Promotion Banner Ad */}
+        <div className="mb-8 relative rounded-[2rem] overflow-hidden bg-zinc-950 border border-zinc-800 text-white min-h-[160px] md:min-h-[180px] flex flex-col justify-center p-6 md:p-8 shadow-md" style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}>
+          {/* Abstract decorative graphic elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 left-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+          
+          <div className="relative z-10 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-[55%] xl:max-w-[60%] space-y-2">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-400 font-sans border border-amber-400/40 px-2.5 py-1 rounded-full bg-amber-400/5 inline-block">
+              {isArabic ? "عرض حصري محدود" : "LIMITED LUXURY EXCLUSIVE"}
+            </span>
+            
+            <h2 className="text-lg md:text-xl font-serif font-medium tracking-tight">
+              {isArabic ? "شحن مجاني وخدمة قياس منزلي مجانية بالكامل" : "Free Hometry & Express Shipping"}
+            </h2>
+            
+            <p className="text-[10px] md:text-xs text-zinc-400 font-light leading-relaxed">
+              {isArabic 
+                ? "اطلب الآن قطعتين أو أكثر ونقوم بتوصيلها مع مندوب متخصص ليقوم بقياس الموديل معك في المنزل قبل إتمام الدفع." 
+                : "Order any 2 pieces and our dedicated stylist delivers them alongside professional measuring tape to verify size perfection."}
+            </p>
+
+            <div className="pt-2 flex items-center gap-3">
+              <span className="text-[10px] bg-white text-zinc-950 font-bold px-3 py-1.5 rounded-lg font-mono">
+                {isArabic ? "كود: FREECOUTURE" : "CODE: FREECOUTURE"}
+              </span>
+              <span className="text-[9px] text-zinc-400">
+                {isArabic ? "* متاح لتوريدات القاهرة والجيزة" : "* Active within Cairo & Giza boundaries"}
+              </span>
+            </div>
+          </div>
+
+          {/* Absolutely positioned banner design model image */}
+          <div className={`hidden lg:block absolute bottom-0 h-[92%] w-44 select-none pointer-events-none ${isArabic ? 'left-8 lg:left-12' : 'right-8 lg:right-12'}`}>
+            <img 
+              src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=400" 
+              alt="RAAV couture collection"
+              className="w-full h-full object-cover rounded-t-3xl object-top border-t border-x border-zinc-800"
+              referrerPolicy="no-referrer"
+            />
           </div>
         </div>
 
@@ -263,6 +305,37 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
               </div>
             </div>
 
+            {/* Elegant Sidebar Banner Ad */}
+            <div className="pt-6 border-t border-zinc-100 space-y-3" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+              <div className="flex justify-between items-center bg-amber-500/10 px-2 py-1 rounded-md w-fit">
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#b45309]">
+                  {isArabic ? "برعاية راف كوتور" : "Sponsored by RAAV Couture"}
+                </span>
+              </div>
+              <div className="relative rounded-2xl overflow-hidden aspect-[3/4] group border border-zinc-100 shadow-xs">
+                <img 
+                  src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=400" 
+                  alt="RAAV bespoke tailoring"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-4 text-white">
+                  <h4 className="font-serif text-sm font-bold tracking-tight leading-snug">
+                    {isArabic ? "تصميم وتفصيل حسب قياسك الخاص" : "Artesanal Bespoke Tailoring"}
+                  </h4>
+                  <p className="text-[10px] text-zinc-300 font-light mt-1 max-w-xs leading-relaxed">
+                    {isArabic 
+                      ? "احصل على قطع مفصلة يدويًا خصيصًا لجسدك بأرقى الأقمشة الإيطالية والمصرية." 
+                      : "Fitted securely to your physical profile by our skilled local tailors in Cairo."}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between text-[10px] font-bold text-amber-400">
+                    <span>{isArabic ? "احجز موعد قياس مجاني" : "Book Custom Appointment"}</span>
+                    <span className="text-sm select-none">→</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* MAIN PRODUCT SHOWCASE GRID */}
@@ -301,66 +374,109 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
               </div>
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {filteredProducts.map((product) => (
-                  <motion.div
-                    layout
-                    key={product.id}
-                    onClick={() => onSelectProduct(product)}
-                    className="group bg-white rounded-2xl overflow-hidden border border-zinc-100 hover:border-zinc-200/80 hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col h-full relative"
-                  >
-                    {/* Relative Image Display */}
-                    <div className="aspect-[4/5] bg-zinc-50 relative overflow-hidden">
-                      <img
-                        src={product.image}
-                        alt={isArabic ? product.nameAr : product.nameEn}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
-                        referrerPolicy="no-referrer"
-                      />
-                      
-                      {/* Dark overlay & eye quick view indicator */}
-                      <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                        <span className="p-2.5 bg-white text-zinc-900 rounded-full shadow-md scale-75 group-hover:scale-100 transition duration-300">
-                          <Eye size={16} strokeWidth={2.5} />
-                        </span>
-                      </div>
-
-                      {/* Out of stock watermark */}
-                      {!product.inStock && (
-                        <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
-                          <span className="px-3 py-1.5 bg-zinc-950 text-white font-sans text-[10px] font-bold uppercase rounded-lg tracking-widest shadow-sm">
-                            {isArabic ? "نفذت الكمية" : "Sold Out"}
+                {filteredProducts.flatMap((product, idx) => {
+                  const productCard = (
+                    <motion.div
+                      layout
+                      key={product.id}
+                      onClick={() => onSelectProduct(product)}
+                      className="group bg-white rounded-2xl overflow-hidden border border-zinc-100 hover:border-zinc-200/80 hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col h-full relative"
+                    >
+                      {/* Relative Image Display */}
+                      <div className="aspect-[4/5] bg-zinc-50 relative overflow-hidden">
+                        <img
+                          src={product.image}
+                          alt={isArabic ? product.nameAr : product.nameEn}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
+                          referrerPolicy="no-referrer"
+                        />
+                        
+                        {/* Dark overlay & eye quick view indicator */}
+                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+                          <span className="p-2.5 bg-white text-zinc-900 rounded-full shadow-md scale-75 group-hover:scale-100 transition duration-300">
+                            <Eye size={16} strokeWidth={2.5} />
                           </span>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Meta tags and pricing */}
-                    <div className="p-4 flex-1 flex flex-col justify-between" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                      <div>
-                        {/* Category meta label */}
-                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest font-sans block mb-1">
-                          {product.category === 'men' && (isArabic ? 'رجالي' : 'Men')}
-                          {product.category === 'women' && (isArabic ? 'حريمي' : 'Women')}
-                          {product.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
-                          {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
-                        </span>
-                        
-                        <h4 className="text-xs sm:text-sm font-medium text-zinc-900 leading-tight line-clamp-1 group-hover:text-black transition">
-                          {isArabic ? product.nameAr : product.nameEn}
-                        </h4>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-zinc-100/60 flex items-center justify-between text-xs font-bold text-zinc-900 font-serif">
-                        <span>{product.price} ج.م</span>
-                        {product.inStock && (
-                          <span className="text-[10px] text-zinc-400 font-sans font-light">
-                            {isArabic ? "معاينة مجاناً" : "Try-on free"}
-                          </span>
+                        {/* Out of stock watermark */}
+                        {!product.inStock && (
+                          <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
+                            <span className="px-3 py-1.5 bg-zinc-950 text-white font-sans text-[10px] font-bold uppercase rounded-lg tracking-widest shadow-sm">
+                              {isArabic ? "نفذت الكمية" : "Sold Out"}
+                            </span>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+
+                      {/* Meta tags and pricing */}
+                      <div className="p-4 flex-1 flex flex-col justify-between" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                        <div>
+                          {/* Category meta label */}
+                          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest font-sans block mb-1">
+                            {product.category === 'men' && (isArabic ? 'رجالي' : 'Men')}
+                            {product.category === 'women' && (isArabic ? 'حريمي' : 'Women')}
+                            {product.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
+                            {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
+                          </span>
+                          
+                          <h4 className="text-xs sm:text-sm font-medium text-zinc-900 leading-tight line-clamp-1 group-hover:text-black transition">
+                            {isArabic ? product.nameAr : product.nameEn}
+                          </h4>
+                        </div>
+
+                        <div className="mt-3 pt-2 border-t border-zinc-100/60 flex items-center justify-between text-xs font-bold text-zinc-900 font-serif">
+                          <span>{product.price} ج.م</span>
+                          {product.inStock && (
+                            <span className="text-[10px] text-zinc-400 font-sans font-light">
+                              {isArabic ? "معاينة مجاناً" : "Try-on free"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+
+                  // If idx is exactly 2, let's insert a beautiful fashion editorial card right after it!
+                  if (idx === 2) {
+                    const adCard = (
+                      <div 
+                        key="in-grid-fashion-ad"
+                        className="bg-zinc-950 text-white rounded-2xl overflow-hidden p-5 flex flex-col justify-between border border-zinc-850 shadow-sm aspect-[4/5] relative group"
+                        style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
+                      >
+                        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-25 mix-blend-luminosity group-hover:opacity-35 transition duration-500 rounded-2xl animate-pulse" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=400')" }} />
+                        
+                        <div className="relative z-10 flex justify-between items-start">
+                          <span className="text-[8px] bg-amber-400 text-black font-black px-1.5 py-0.5 rounded-sm tracking-widest uppercase">
+                            {isArabic ? "إعلان مميز" : "ADVERT"}
+                          </span>
+                          <span className="text-[8px] text-zinc-500 font-mono tracking-widest">
+                            RAAV ARCHIVES
+                          </span>
+                        </div>
+
+                        <div className="relative z-10 space-y-1">
+                          <h4 className="font-serif text-xs sm:text-sm font-bold tracking-tight leading-snug">
+                            {isArabic ? "الأناقة تكمن في نقاء التفاصيل" : "The Purism of Egyptian Linen"}
+                          </h4>
+                          <p className="text-[9px] sm:text-[10px] text-zinc-450 leading-normal font-light">
+                            {isArabic 
+                              ? "خيوط عضوية مستدامة، نسيج خفيف يسمح لبشرتك بالتنفس." 
+                              : "Each piece travels from ecological lint harvesting to specialized steam-pressing in Cairo."}
+                          </p>
+                        </div>
+
+                        <div className="relative z-10 pt-2 border-t border-zinc-900/80 flex justify-between items-center text-[10px] font-bold text-amber-400">
+                          <span>{isArabic ? "اكتشف قصة علامتنا" : "Discover Our Ethos"}</span>
+                          <span>→</span>
+                        </div>
+                      </div>
+                    );
+                    return [productCard, adCard];
+                  }
+
+                  return [productCard];
+                })}
               </div>
             )}
 

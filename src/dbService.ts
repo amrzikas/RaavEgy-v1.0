@@ -13,7 +13,7 @@ import {
   where
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import { Product, Order, OrderStatus, Review, ShippingPlan, LoyaltyConfig, PaymentConfig, SavedAddress, FavoriteItem, Notification } from './types';
+import { Product, Order, OrderStatus, Review, ShippingPlan, LoyaltyConfig, PaymentConfig, SavedAddress, FavoriteItem, Notification, Conversation, ConversationMessage, SettlementPeriod } from './types';
 import { initialProducts } from './initialProducts';
 
 // Collection references
@@ -653,6 +653,166 @@ export async function createNotification(notif: {
   }
 }
 
+// === Custom Conversations handlers ===
+export function subscribeToAllConversations(callback: (conversations: any[]) => void) {
+  const pathForOnSnapshot = 'conversations';
+  const q = query(
+    collection(db, 'conversations')
+  );
+  return onSnapshot(q, (snapshot) => {
+    const list: any[] = [];
+    snapshot.forEach((doc) => {
+      list.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    list.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+    callback(list);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, pathForOnSnapshot);
+  });
+}
+
+export async function createCustomOrder(orderData: {
+  customerId?: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  customerCity: string;
+  customerNotes?: string;
+  customTitle: string;
+  customDescription: string;
+  customMaterial: string;
+  customColor: string;
+  customBudget: number;
+}): Promise<{ orderId: string; conversationId: string }> {
+  const pathForWrite = 'conversations/createCustom';
+  try {
+    const currentUid = auth.currentUser?.uid || 'guest';
+    const customerId = orderData.customerId || currentUid;
+
+    // 1. Create a conversation
+    const convRef = await addDoc(collection(db, 'conversations'), {
+      customerId,
+      customerName: orderData.customerName,
+      topic: orderData.customTitle,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+    const conversationId = convRef.id;
+
+    // 2. Create initial welcome message from customer
+    await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
+      senderId: customerId,
+      senderRole: 'customer',
+      senderName: orderData.customerName,
+      text: `${orderData.customDescription}\n\n- (الخامة المطلوبة: ${orderData.customMaterial})\n- (اللون المراد: ${orderData.customColor})\n- (الميزانية المخصصة: ${orderData.customBudget} ج.م)`,
+      createdAt: Date.now()
+    });
+
+    // 3. Create the custom order linking to conversationId
+    const orderRef = await addDoc(collection(db, 'orders'), {
+      customerId,
+      customerName: orderData.customerName,
+      customerPhone: orderData.customerPhone,
+      customerAddress: orderData.customerAddress,
+      customerCity: orderData.customerCity,
+      customerNotes: orderData.customerNotes || '',
+      items: [],
+      total: orderData.customBudget,
+      status: 'pending',
+      orderType: 'custom',
+      customTitle: orderData.customTitle,
+      customDescription: orderData.customDescription,
+      customMaterial: orderData.customMaterial,
+      customColor: orderData.customColor,
+      customBudget: orderData.customBudget,
+      linkedConversationId: conversationId,
+      createdAt: Date.now()
+    });
+
+    // Update conversation with orderId
+    await updateDoc(doc(db, 'conversations', conversationId), {
+      orderId: orderRef.id
+    });
+
+    return { orderId: orderRef.id, conversationId };
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, pathForWrite);
+    throw error;
+  }
+}
+
+export function subscribeToCustomerConversations(uid: string, callback: (conversations: any[]) => void) {
+  const pathForOnSnapshot = 'conversations';
+  const q = query(
+    collection(db, 'conversations'),
+    where('customerId', '==', uid)
+  );
+  return onSnapshot(q, (snapshot) => {
+    const list: any[] = [];
+    snapshot.forEach((doc) => {
+      list.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    list.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+    callback(list);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, pathForOnSnapshot);
+  });
+}
+
+export function subscribeToConversationMessages(conversationId: string, callback: (messages: any[]) => void) {
+  const pathForOnSnapshot = `conversations/${conversationId}/messages`;
+  const q = query(
+    collection(db, 'conversations', conversationId, 'messages')
+  );
+  return onSnapshot(q, (snapshot) => {
+    const list: any[] = [];
+    snapshot.forEach((doc) => {
+      list.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    list.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    callback(list);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, pathForOnSnapshot);
+  });
+}
+
+export async function sendConversationMessage(
+  conversationId: string,
+  message: {
+    senderId: string;
+    senderRole: 'customer' | 'admin';
+    senderName: string;
+    text: string;
+  }
+): Promise<string> {
+  const pathForWrite = `conversations/${conversationId}/messages`;
+  try {
+    const messagesCollection = collection(db, 'conversations', conversationId, 'messages');
+    const docRef = await addDoc(messagesCollection, {
+      ...message,
+      createdAt: Date.now()
+    });
+    const convRef = doc(db, 'conversations', conversationId);
+    await updateDoc(convRef, {
+      updatedAt: Date.now()
+    });
+    return docRef.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, pathForWrite);
+    throw error;
+  }
+}
+
+
 // Check search alerts on other users and notify them on new product additions
 export async function checkSearchAlertsAndNotify(newProduct: { id: string; nameAr: string; nameEn: string }) {
   try {
@@ -829,4 +989,61 @@ export async function toggleSearchAlert(userId: string, queryText: string): Prom
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, pathForWrite);
   }
+}
+
+// === FINANCIAL SETTLEMENTS & SHIPPING COMPANY RECONCILIATIONS ===
+export async function getSettlements(): Promise<SettlementPeriod[]> {
+  const pathForGet = 'settings/settlements';
+  try {
+    const docRef = doc(db, 'settings', 'settlements');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return (data.periods || []) as SettlementPeriod[];
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, pathForGet);
+  }
+  return [];
+}
+
+export async function saveSettlements(periods: SettlementPeriod[]): Promise<void> {
+  const pathForWrite = 'settings/settlements';
+  try {
+    const docRef = doc(db, 'settings', 'settlements');
+    await setDoc(docRef, { periods });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, pathForWrite);
+  }
+}
+
+export async function markOrdersAsSettled(orderIds: string[], settlementId: string): Promise<void> {
+  const pathForWrite = 'orders';
+  try {
+    for (const orderId of orderIds) {
+      const docRef = doc(db, 'orders', orderId);
+      await updateDoc(docRef, { 
+        settled: true,
+        settledInPeriodId: settlementId
+      });
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, pathForWrite);
+  }
+}
+
+/**
+ * Subscribe to real-time updates for a specific user profile doc
+ */
+export function subscribeToUserProfile(uid: string, callback: (data: any) => void) {
+  const docRef = doc(db, 'users', uid);
+  return onSnapshot(docRef, (snapshot) => {
+    if (snapshot.exists()) {
+      callback(snapshot.data());
+    } else {
+      callback(null);
+    }
+  }, (error) => {
+    console.error("Error subscribing to user profile:", error);
+  });
 }

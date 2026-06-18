@@ -46,12 +46,14 @@ export interface WalletDetail {
   nameEn: string;
   phone: string;
   qrCode?: string; // Image base64 or URL
+  availableBalance?: number; // Added for financial tracking
 }
 
 export interface InstaPayDetail {
   username: string; // e.g. username@instapay
   phone: string;
   qrCode?: string; // Image base64 or URL
+  availableBalance?: number; // Added for financial tracking
 }
 
 export interface PaymentConfig {
@@ -90,6 +92,26 @@ export interface Order {
   shippingPlanId?: string;
   paymentProof?: string; // base64 payment receipt
   createdAt: number;
+  orderType?: 'standard' | 'custom';
+  customTitle?: string;
+  customDescription?: string;
+  customMaterial?: string;
+  customColor?: string;
+  customBudget?: number;
+  linkedConversationId?: string;
+  agreedPrice?: number;
+  settled?: boolean; // True if collected COD has been paid to admin in a settlement period
+  settledInPeriodId?: string; // ID of the closed SettlementPeriod this belongs to
+}
+
+export interface SettlementPeriod {
+  id: string;
+  startDate: number;
+  endDate: number;
+  totalAmount: number;
+  createdAt: number;
+  orderIds: string[];
+  notes?: string;
 }
 
 export interface SavedAddress {
@@ -145,4 +167,23 @@ export interface Review {
   comment: string;
   createdAt: number;
 }
+
+export interface Conversation {
+  id: string;
+  customerId: string;
+  topic: string;
+  orderId?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ConversationMessage {
+  id: string;
+  senderId: string;
+  senderRole: 'customer' | 'admin';
+  senderName: string;
+  text: string;
+  createdAt: number;
+}
+
 

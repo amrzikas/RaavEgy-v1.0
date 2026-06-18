@@ -18,7 +18,7 @@ const HERO_SLIDES = [
     descEn: "Discover the modern aesthetic with our newly curated collection. Designed for the bold, the beautiful, and the minimalist.",
     quoteAr: "التوازن المثالي بين دقة التصميم والأداء المعاصر لخزانة ملابس عصرية.",
     quoteEn: "The perfect balance of form and function for the modern wardrobe.",
-    image: "https://images.unsplash.com/photo-1510798831971-661eb04babdf?auto=format&fit=crop&q=80&w=1200", 
+    image: "https://img.kwcdn.com/product/fancy/9c18cbce-997c-4405-8b84-482cb677dd72.jpg?imageView2/2/w/800/q/70/format/avif?auto=format&fit=crop&q=80&w=1200", 
     cat: "women",
   },
   {

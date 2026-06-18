@@ -105,6 +105,32 @@
         "orderId": { "type": "string" }
       },
       "required": ["userId", "messageAr", "messageEn", "createdAt", "isRead", "type"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Custom orders custom chats with users",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "topic": { "type": "string" },
+        "orderId": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["customerId", "topic", "createdAt", "updatedAt"]
+    },
+    "ConversationMessage": {
+      "title": "ConversationMessage",
+      "description": "Individual messages in a conversation thread",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderRole": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["senderId", "senderRole", "senderName", "text", "createdAt"]
     }
   },
   "firestore": {
@@ -127,6 +153,14 @@
     "/notifications/{notifId}": {
       "schema": "Notification",
       "description": "Contains in-app notifications on order status changes or product alerts"
+    },
+    "/conversations/{convId}": {
+      "schema": "Conversation",
+      "description": "List of active client custom item conversations"
+    },
+    "/conversations/{convId}/messages/{msgId}": {
+      "schema": "ConversationMessage",
+      "description": "Individual chats with admin/client status details"
     },
     "/admin_config/setup": {
       "schema": "AdminConfigSetup",

@@ -27,7 +27,8 @@ export default function CategoryScrollSlices({
       labelEn: "Premium Women's Atelier",
       descAr: 'تصاميم تسحر العيون، فساتين وبليزر منسق خصيصًا ليناسب رونقك الفريد.',
       descEn: 'Timeless luxury silhouettes, structured blazers, and elegant flowing textures.',
-      bgColor: 'from-rose-50/70 to-orange-50/30'
+      bgColor: 'from-rose-50/70 to-orange-50/30',
+      image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: 'men',
@@ -35,7 +36,8 @@ export default function CategoryScrollSlices({
       labelEn: "Modern Men's Curation",
       descAr: 'قمصان من الكتان الطبيعي وهوديز عريضة مصممة لتجمع الراحة بالأناقة.',
       descEn: 'Natural heavyweight linens, sleek street hoodies, and stretch leisure wear.',
-      bgColor: 'from-amber-50/60 to-zinc-50'
+      bgColor: 'from-amber-50/60 to-zinc-50',
+      image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: 'kids',
@@ -43,7 +45,8 @@ export default function CategoryScrollSlices({
       labelEn: "Organic Cotton Baby & Kids",
       descAr: 'ملابس قطنية بالكامل فائقة النعومة ومحفوظة بعناية لبشرة أطفالك الحساسة.',
       descEn: 'Playtime-resilient baby garments crafted from pure premium cotton fibers.',
-      bgColor: 'from-sky-50/60 to-indigo-50/20'
+      bgColor: 'from-sky-50/60 to-indigo-50/20',
+      image: "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: 'accessories',
@@ -51,7 +54,8 @@ export default function CategoryScrollSlices({
       labelEn: "Signature Accessories & Watches",
       descAr: 'تفاصيل بسيطة تصنع فارقًا كبيرًا! ساعات كلاسيكية ونظارات حماية ذكية.',
       descEn: 'The defining edits: analog retro leather pieces and premium UV400 frames.',
-      bgColor: 'from-zinc-100/70 to-amber-50/30'
+      bgColor: 'from-zinc-100/70 to-amber-50/30',
+      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800"
     }
   ];
 
@@ -102,19 +106,33 @@ export default function CategoryScrollSlices({
                 
                 {/* 1. Styled Showcase Intro Card (3 cols) */}
                 <div className="lg:col-span-4 flex">
-                  <div className={`w-full bg-gradient-to-br ${config.bgColor} border border-zinc-150/50 p-8 rounded-[2rem] flex flex-col justify-between shadow-xs relative overflow-hidden`}>
+                  <div className={`w-full bg-gradient-to-br ${config.bgColor} border border-zinc-150/50 p-8 rounded-[2rem] flex flex-col justify-between shadow-xs relative overflow-hidden group`}>
                     
+                    {/* Gorgeous subtle background image layer with hover scaling */}
+                    {config.image && (
+                      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-[2rem]">
+                        <img 
+                          src={config.image} 
+                          alt="" 
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover opacity-[0.25] mix-blend-multiply transition-transform duration-[1.2s] ease-out group-hover:scale-110"
+                        />
+                        {/* Smooth ambient gradient masking */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-white/40" />
+                      </div>
+                    )}
+
                     {/* Tiny decor circle */}
                     <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-white/20 blur-xl pointer-events-none" />
 
                     <div className="space-y-3 relative z-10 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                      <span className="text-[10px] font-bold bg-white/90 text-amber-900 border border-zinc-100 rounded-full px-3 py-1 font-sans uppercase tracking-widest inline-block">
+                      <span className="text-[10px] font-bold bg-white/95 text-amber-950 border border-zinc-100/55 rounded-full px-3 py-1 font-sans uppercase tracking-widest inline-block shadow-xs">
                         {isArabic ? "مجموعة خاصة" : "EXCLUSIVE LINE"}
                       </span>
-                      <h3 className="text-2xl sm:text-3xl font-serif font-semibold text-zinc-950 tracking-tight leading-tight">
+                      <h3 className="text-2xl sm:text-3xl font-serif font-bold text-zinc-950 tracking-tight leading-tight drop-shadow-xs">
                         {isArabic ? config.labelAr : config.labelEn}
                       </h3>
-                      <p className="text-zinc-500 text-xs sm:text-sm leading-relaxed font-sans font-light">
+                      <p className="text-zinc-800 text-xs sm:text-sm leading-relaxed font-sans font-medium">
                         {isArabic ? config.descAr : config.descEn}
                       </p>
                     </div>

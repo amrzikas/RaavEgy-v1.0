@@ -17,6 +17,7 @@ import ShopPage from './components/ShopPage.tsx';
 import ProductPage from './components/ProductPage.tsx';
 import CustomerAuth from './components/CustomerAuth.tsx';
 import CustomerProfile from './components/CustomerProfile.tsx';
+import CustomCoutureForm from './components/CustomCoutureForm.tsx';
 import { Product, OrderItem, Order } from './types';
 import { getProductPrice } from './utils';
 import { 
@@ -29,6 +30,7 @@ import { initialProducts } from './initialProducts';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { Sparkles, Phone, MapPin, Mail, ShoppingBag } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -40,6 +42,7 @@ export default function App() {
 
   // View Navigation State (home | shop | profile | product-details)
   const [activeView, setActiveView] = useState<'home' | 'shop' | 'profile' | 'product-details'>('home');
+  const [profileTab, setProfileTab] = useState<'addresses' | 'orders' | 'favorites' | 'custom'>('orders');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -218,82 +221,226 @@ export default function App() {
   const cartTotalItemsCount = cart.reduce((count, item) => count + item.quantity, 0);
 
   return (
-    <div className="bg-[#fcfcfc] min-h-screen text-zinc-800 selection:bg-zinc-950 selection:text-white antialiased font-sans transition-colors duration-300">
+    <div className="relative min-h-screen text-zinc-800 selection:bg-zinc-950 selection:text-white antialiased font-sans transition-all duration-500 bg-stone-50 overflow-hidden">
       
-      {/* Header Bar */}
-      <Header
-        cartCount={cartTotalItemsCount}
-        onOpenCart={() => setIsCartOpen(true)}
-        onOpenAdmin={() => setIsAdminOpen(true)}
-        isAdminLoggedIn={isAdminLoggedIn}
-        onLogoutAdmin={handleLogoutAdmin}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        isArabic={isArabic}
-        setIsArabic={setIsArabic}
-        activeView={activeView}
-        setActiveView={setActiveView}
-        isUserLoggedIn={!!currentUser}
-      />
+      {/* High-fashion flowing mesh backdrop with intertwined dark and light soft gradients */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Dark Onyx/Slate top-left soft glow */}
+        <div className="absolute top-[-20%] left-[-20%] w-[65%] h-[65%] rounded-full bg-gradient-to-br from-zinc-950/25 via-stone-200/35 to-transparent blur-[110px] opacity-75" />
+        
+        {/* Soft Gold/Champagne warm light representing premium artisanal luxury */}
+        <div className="absolute top-[15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-gradient-to-tr from-amber-100/15 via-white to-stone-50 blur-[130px] opacity-70" />
+        
+        {/* Intertwined charcoal-stone glow in middle left */}
+        <div className="absolute top-[40%] left-[-25%] w-[55%] h-[55%] rounded-full bg-gradient-to-r from-zinc-900/10 via-amber-50/30 to-transparent blur-[140px]" />
 
-      {/* Main Page Layout */}
-      <main className="pb-16" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
-        {activeView === 'home' && (
-          <div>
-            {/* Only display Hero slides if search query is empty */}
-            {!searchQuery && (
-              <HeroCarousel
-                isArabic={isArabic}
-                onBrowseCategory={(cat) => {
+        {/* Deep Slate/Carbon bottom-right soft ambient depth */}
+        <div className="absolute bottom-[-15%] right-[-15%] w-[65%] h-[65%] rounded-full bg-gradient-to-tl from-zinc-950/20 via-stone-100/50 to-amber-100/10 blur-[150px]" />
+      </div>
+
+      {/* Actual app content layout layer */}
+      <div className="relative z-10">
+        {/* Header Bar */}
+        <Header
+          cartCount={cartTotalItemsCount}
+          onOpenCart={() => setIsCartOpen(true)}
+          onOpenAdmin={() => setIsAdminOpen(true)}
+          isAdminLoggedIn={isAdminLoggedIn}
+          onLogoutAdmin={handleLogoutAdmin}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          isArabic={isArabic}
+          setIsArabic={setIsArabic}
+          activeView={activeView}
+          setActiveView={setActiveView}
+          isUserLoggedIn={!!currentUser}
+        />
+
+        {/* Main Page Layout */}
+        <main className="pb-16" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+          {activeView === 'home' && (
+            <div>
+              {/* Only display Hero slides if search query is empty */}
+              {!searchQuery && (
+                <HeroCarousel
+                  isArabic={isArabic}
+                  onBrowseCategory={(cat) => {
+                    setSelectedCategory(cat);
+                    setActiveView('shop');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              )}
+
+              {/* INTERTWINED PREMIUM AD 1: Below Hero Carousel */}
+              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-10 md:my-14 font-sans focus:outline-none relative">
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                  className="relative overflow-hidden rounded-[2rem] border border-amber-900/10 shadow-xl bg-gradient-to-r from-zinc-950 via-zinc-900 to-amber-950/90 text-white min-h-[160px] md:min-h-[200px] flex items-center"
+                >
+                  {/* Subtle luxurious ambient lights */}
+                  <div className="absolute top-0 right-0 w-[40%] h-full bg-gradient-to-l from-amber-500/10 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-[-50%] left-[-10%] w-[350px] h-[350px] bg-amber-500/5 rounded-full blur-[80px] pointer-events-none" />
+                  <div className="absolute top-[-30%] right-[15%] w-[180px] h-[180px] bg-white/5 rounded-full blur-[60px] pointer-events-none" />
+
+                  <div className="relative w-full px-6 py-8 md:px-12 flex flex-col md:flex-row md:items-center justify-between gap-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                    
+                    {/* Message section */}
+                    <div className="space-y-2 max-w-xl text-right md:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                      <div className="inline-flex items-center gap-2 bg-amber-500/15 border border-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.25em]">
+                        <Sparkles size={11} className="text-amber-400 animate-pulse" />
+                        <span>{isArabic ? "خدمة التفصيل اليدوي الفاخرة" : "LUXURY HANDMADE SERVICES"}</span>
+                      </div>
+                      <h3 className="text-xl md:text-2xl font-serif font-semibold tracking-tight text-white leading-snug">
+                        {isArabic 
+                          ? "هل تبحثين عن تفصيل وتصميم مخصص تماماً؟" 
+                          : "Looking for a Completely Customized Tailored Design?"}
+                      </h3>
+                      <p className="text-xs text-zinc-300 font-light leading-relaxed">
+                        {isArabic 
+                          ? "نحن نحول خيالك إلى قطع ملابس هاند ميد فريدة مصممة خصيصاً بمقاساتك الدقيقة وخامات مختارة لترضي ذوقك. ابدئي طلبك المخصص الآن وتواصلي معنا مباشرة."
+                          : "We transform your sartorial thoughts into unique, hand-tailored clothing made to your exact body measurements and fine fabrics. Start your custom order details and chat now."}
+                      </p>
+                    </div>
+
+                    {/* Action button */}
+                    <div className="shrink-0 self-start md:self-center">
+                      <button
+                        onClick={() => {
+                          setActiveView('profile');
+                          window.scrollTo({ top: 300, behavior: 'smooth' });
+                        }}
+                        className="group relative inline-flex items-center justify-center bg-gradient-to-r from-amber-400 to-amber-500 text-zinc-950 font-bold px-6 py-3.5 rounded-xl text-xs tracking-widest uppercase transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10 hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
+                      >
+                        <span className="relative z-10 flex items-center gap-1.5 font-bold">
+                          {isArabic ? "طلبي المخصص الآن" : "MY CUSTOM COUTURE NOW"}
+                          <span className="text-sm transition-transform duration-300 group-hover:translate-x-1">—→</span>
+                        </span>
+                      </button>
+                    </div>
+
+                  </div>
+                </motion.div>
+              </section>
+
+              {/* The Collections Section - ALWAYS BELOW HERO SECTION */}
+              <TheCollections
+                onSelectCategory={(cat) => {
                   setSelectedCategory(cat);
                   setActiveView('shop');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
+                isArabic={isArabic}
               />
-            )}
 
-            {/* The Collections Section - ALWAYS BELOW HERO SECTION */}
-            <TheCollections
-              onSelectCategory={(cat) => {
-                setSelectedCategory(cat);
-                setActiveView('shop');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              isArabic={isArabic}
-            />
+              {/* INTERTWINED PREMIUM AD 2: Below The Collections Section */}
+              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-10 md:my-14 font-sans focus:outline-none relative">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  className="relative overflow-hidden rounded-[2rem] border border-zinc-200/80 shadow-lg bg-gradient-to-r from-stone-100 via-amber-50/40 to-stone-50 text-zinc-900 min-h-[160px] md:min-h-[200px] flex items-center"
+                >
+                  {/* Subtle artistic light visual accents */}
+                  <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-r from-zinc-200/30 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute top-[-40%] left-[-10%] w-[320px] h-[320px] bg-zinc-900/5 rounded-full blur-[90px] pointer-events-none" />
+                  <div className="absolute bottom-[-30%] right-[10%] w-[220px] h-[220px] bg-amber-200/10 rounded-full blur-[70px] pointer-events-none" />
 
-            {/* Trend Pieces Section */}
-            <TrendPieces
-              products={activeProducts}
-              onSelectProduct={(p) => {
-                setSelectedProduct(p);
-                setActiveView('product-details');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              isArabic={isArabic}
-              onQuickAddToCart={handleQuickAddToCart}
-            />
+                  <div className="relative w-full px-6 py-8 md:px-12 flex flex-col md:flex-row md:items-center justify-between gap-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                    
+                    {/* Info details */}
+                    <div className="space-y-2.5 max-w-xl text-right md:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                      <div className="inline-flex items-center gap-1.5 bg-zinc-950 text-amber-300 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.25em]">
+                        <span>✦</span>
+                        <span>{isArabic ? "عرض الصيف الحصري والمميز" : "EXCLUSIVE SUMMER SEASON"}</span>
+                      </div>
+                      
+                      <h3 className="text-xl md:text-2xl font-serif font-semibold tracking-tight text-zinc-900 leading-snug">
+                        {isArabic 
+                          ? "استمتعي بخصم ١٥٪ على تشكيلات الموسم الفريدة" 
+                          : "Enjoy 15% Off Curated Collection Masterpieces"}
+                      </h3>
+                      <p className="text-xs text-zinc-650 font-light leading-relaxed">
+                        {isArabic 
+                          ? "أدخلي كود الخصم الحصري عند إتمام الطلب لتجربة الأزياء الرائجة لهذا الموسم. نوفر خدمة تجربة القطع للمطابقة والمعاينة عند تسليم المندوب."
+                          : "Apply our premier discount code at checkout to acquire highly coveted styles. Direct shipping in Egypt with fully comfortable home trials."}
+                      </p>
+                    </div>
 
-            {/* Category Scroll Slices Section */}
-            <CategoryScrollSlices
-              products={activeProducts}
-              onSelectProduct={(p) => {
-                setSelectedProduct(p);
-                setActiveView('product-details');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              isArabic={isArabic}
-              onSelectCategory={(cat) => {
-                setSelectedCategory(cat);
-                setActiveView('shop');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              onQuickAddToCart={handleQuickAddToCart}
-            />
-          </div>
-        )}
+                    {/* Coupon / Redeem widget */}
+                    <div className="shrink-0 flex items-center gap-3.5 self-start md:self-center">
+                      <div className="border border-dashed border-zinc-400 bg-white/90 rounded-xl px-5 py-3 text-center shadow-sm">
+                        <span className="block text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">{isArabic ? "كوبون الخصم" : "PROMO CODE"}</span>
+                        <span className="font-mono text-sm md:text-base font-bold text-zinc-950 tracking-widest select-all">RAAV15</span>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setSelectedCategory('all');
+                          setActiveView('shop');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="group bg-zinc-950 text-white font-bold px-5 py-3.5 rounded-xl text-xs tracking-widest uppercase transition-all duration-300 hover:bg-zinc-800 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                      >
+                        <span>{isArabic ? "تسوق الآن" : "SHOP COLL"}</span>
+                      </button>
+                    </div>
+
+                  </div>
+                </motion.div>
+              </section>
+
+              {/* Trend Pieces Section */}
+              <TrendPieces
+                products={activeProducts}
+                onSelectProduct={(p) => {
+                  setSelectedProduct(p);
+                  setActiveView('product-details');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                isArabic={isArabic}
+                onQuickAddToCart={handleQuickAddToCart}
+              />
+
+              {/* Category Scroll Slices Section */}
+              <CategoryScrollSlices
+                products={activeProducts}
+                onSelectProduct={(p) => {
+                  setSelectedProduct(p);
+                  setActiveView('product-details');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                isArabic={isArabic}
+                onSelectCategory={(cat) => {
+                  setSelectedCategory(cat);
+                  setActiveView('shop');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onQuickAddToCart={handleQuickAddToCart}
+              />
+
+              {/* SPECIAL CUSTOM ORDERS FORM SECTION */}
+              <CustomCoutureForm
+                isArabic={isArabic}
+                currentUser={currentUser}
+                onOpenAuth={() => {
+                  setProfileTab('custom');
+                  setActiveView('profile');
+                  window.scrollTo({ top: 300, behavior: 'smooth' });
+                }}
+                onGoToProfileCustom={() => {
+                  setProfileTab('custom');
+                  setActiveView('profile');
+                  window.scrollTo({ top: 300, behavior: 'smooth' });
+                }}
+              />
+            </div>
+          )}
 
         {activeView === 'shop' && (
           <ShopPage
@@ -312,6 +459,11 @@ export default function App() {
           selectedProduct ? (
             <ProductPage
               product={selectedProduct}
+              products={activeProducts}
+              onSelectProduct={(p) => {
+                setSelectedProduct(p);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               onBack={() => {
                 setActiveView('shop');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -322,6 +474,16 @@ export default function App() {
               onGoToAuth={() => {
                 setActiveView('profile');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onSelectCategory={(cat) => {
+                setSelectedCategory(cat);
+                setActiveView('shop');
+                const productsSec = document.getElementById('shop-top-anchor') || document.getElementById('root');
+                if (productsSec) {
+                  productsSec.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  window.scrollTo({ top: 400, behavior: 'smooth' });
+                }
               }}
             />
           ) : (
@@ -343,6 +505,7 @@ export default function App() {
               onBrowseShop={() => {
                 setActiveView('shop');
               }}
+              initialTab={profileTab}
             />
           ) : (
             <CustomerAuth
@@ -603,6 +766,7 @@ export default function App() {
         isArabic={isArabic}
       />
 
+      </div>
     </div>
   );
 }

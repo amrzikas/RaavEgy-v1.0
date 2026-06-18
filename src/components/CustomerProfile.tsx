@@ -8,17 +8,21 @@ import {
   subscribeToProducts,
   subscribeToNotifications,
   markNotificationAsRead,
+  subscribeToCustomerConversations,
+  subscribeToConversationMessages,
+  sendConversationMessage,
   addSavedAddress,
   updateSavedAddress,
   deleteSavedAddress,
   setDefaultSavedAddress,
   toggleProductFavorite,
-  toggleSearchAlert
+  toggleSearchAlert,
+  subscribeToUserProfile
 } from '../dbService';
-import { Order, OrderStatus, Product, SavedAddress, FavoriteItem, Notification } from '../types';
+import { Order, OrderStatus, Product, SavedAddress, FavoriteItem, Notification, Conversation, ConversationMessage } from '../types';
 import { 
   User, Shield, Package, LayoutGrid, Clock, MapPin, Truck, Phone, 
-  LogOut, CheckCircle, Edit, Check, Heart, Trash2, Plus, AlertCircle, Bell, Eye, Search, Star
+  LogOut, CheckCircle, Edit, Check, Heart, Trash2, Plus, AlertCircle, Bell, Eye, Search, Star, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -27,6 +31,7 @@ interface CustomerProfileProps {
   onLogout: () => void;
   isArabic: boolean;
   onBrowseShop: () => void;
+  initialTab?: 'addresses' | 'orders' | 'favorites' | 'custom';
 }
 
 const EGYPTIAN_CITIES = [
@@ -48,7 +53,7 @@ const EGYPTIAN_CITIES = [
   { id: 'aswan', nameAr: 'أسوان', nameEn: 'Aswan' }
 ];
 
-export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop }: CustomerProfileProps) {
+export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop, initialTab }: CustomerProfileProps) {
   const [profileData, setProfileData] = useState<{ 
     name: string; 
     phone: string; 
@@ -60,10 +65,21 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
     points?: number;
   } | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'addresses' | 'orders' | 'favorites'>('orders');
+  const [activeTab, setActiveTab] = useState<'addresses' | 'orders' | 'favorites' | 'custom'>(initialTab || 'orders');
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedConversationId, setSelectedConversationId] = useState('');
+  const [conversationMessages, setConversationMessages] = useState<ConversationMessage[]>([]);
+  const [conversationDraft, setConversationDraft] = useState('');
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
   
   // Sidebar alerts state
   const [newAlertTerm, setNewAlertTerm] = useState('');
@@ -89,67 +105,103 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
 
   // Live collections setup
   useEffect(() => {
+    let unsubsProfile: () => void = () => {};
     let unsubsOrders: () => void = () => {};
     let unsubsProducts: () => void = () => {};
     let unsubsNotifs: () => void = () => {};
+    let unsubsChats: () => void = () => {};
 
     const loadCoreData = async () => {
       setIsLoading(true);
       
-      // Load user profile snapshot
-      const uData = await getUserProfile(uid);
-      if (uData) {
-        setProfileData({
-          name: uData.name || '',
-          phone: uData.phone || '',
-          address: uData.address || '',
-          city: uData.city || 'Cairo',
-          addresses: uData.addresses || [],
-          favorites: uData.favorites || [],
-          searchAlerts: uData.searchAlerts || [],
-          points: uData.points || 0
+      try {
+        // Subscribe to user profile real-time
+        unsubsProfile = subscribeToUserProfile(uid, (uData) => {
+          if (uData) {
+            setProfileData({
+              name: uData.name || '',
+              phone: uData.phone || '',
+              address: uData.address || '',
+              city: uData.city || 'Cairo',
+              addresses: uData.addresses || [],
+              favorites: uData.favorites || [],
+              searchAlerts: uData.searchAlerts || [],
+              points: uData.points || 0
+            });
+            setEditName(uData.name || '');
+            setEditPhone(uData.phone || '');
+          } else {
+            setProfileData({
+              name: auth.currentUser?.displayName || 'RAAV Shopper',
+              phone: '',
+              address: '',
+              city: 'Cairo',
+              addresses: [],
+              favorites: [],
+              searchAlerts: [],
+              points: 0
+            });
+            setEditName(auth.currentUser?.displayName || 'RAAV Shopper');
+          }
         });
-        setEditName(uData.name || '');
-        setEditPhone(uData.phone || '');
-      } else {
-        setProfileData({
-          name: auth.currentUser?.displayName || 'RAAV Shopper',
-          phone: '',
-          address: '',
-          city: 'Cairo',
-          addresses: [],
-          favorites: [],
-          searchAlerts: [],
-          points: 0
+
+        // 1. Subscribe to consumer orders
+        unsubsOrders = subscribeToCustomerOrders(uid, (orderList) => {
+          setOrders(orderList);
         });
-        setEditName(auth.currentUser?.displayName || 'RAAV Shopper');
-      }
 
-      // 1. Subscribe to consumer orders
-      unsubsOrders = subscribeToCustomerOrders(uid, (orderList) => {
-        setOrders(orderList);
-      });
+        // 2. Subscribe to catalog products for wishlist linking
+        unsubsProducts = subscribeToProducts((prodList) => {
+          setProducts(prodList);
+        });
 
-      // 2. Subscribe to catalog products for wishlist linking
-      unsubsProducts = subscribeToProducts((prodList) => {
-        setProducts(prodList);
-      });
+        // 3. Subscribe to real-time client notifications
+        unsubsNotifs = subscribeToNotifications(uid, (notifList) => {
+          setNotifications(notifList);
+        });
 
-      // 3. Subscribe to real-time client notifications
-      unsubsNotifs = subscribeToNotifications(uid, (notifList) => {
-        setNotifications(notifList);
+        // 4. Customer conversations for custom accessories and chat follow-up
+        unsubsChats = subscribeToCustomerConversations(uid, (threads) => {
+          setConversations(threads);
+          if (!selectedConversationId && threads.length > 0) {
+            setSelectedConversationId(threads[0].id);
+          }
+        });
+      } catch (err) {
+        console.error("Failed to load core data:", err);
+      } finally {
         setIsLoading(false);
-      });
+      }
     };
 
     loadCoreData();
 
     return () => {
+      unsubsProfile();
       unsubsOrders();
       unsubsProducts();
       unsubsNotifs();
+      unsubsChats();
     };
   }, [uid]);
+
+  useEffect(() => {
+    if (!selectedConversationId) {
+      setConversationMessages([]);
+      return;
+    }
+
+    const unsubscribeMessages = subscribeToConversationMessages(selectedConversationId, setConversationMessages);
+    return () => unsubscribeMessages();
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
+    }
+  }, [conversationMessages, selectedConversationId, activeTab]);
 
   // Refresh user profile after write updates
   const reloadUserProfileSilently = async () => {
@@ -166,16 +218,6 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
         points: updated.points || 0
       });
     }
-  };
-
-  // Base64 file parser helper
-  const handlePaymentProofUpload = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
   };
 
   const handleEditProfileSubmit = async (e: React.FormEvent) => {
@@ -239,6 +281,22 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
     try {
       await setDefaultSavedAddress(uid, addrId);
       await reloadUserProfileSilently();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSendConversationMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedConversationId || !conversationDraft.trim()) return;
+    try {
+      await sendConversationMessage(selectedConversationId, {
+        senderId: uid,
+        senderRole: 'customer',
+        senderName: profileData?.name || auth.currentUser?.displayName || 'Customer',
+        text: conversationDraft.trim()
+      });
+      setConversationDraft('');
     } catch (err) {
       console.error(err);
     }
@@ -436,7 +494,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
                   value={editName}
                   onChange={e => setEditName(e.target.value)} 
                   placeholder={isArabic ? "الاسم" : "Name"}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg text-xs px-2.5 py-1.5 focus:outline-none"
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg text-xs px-2.5 py-1.5 focus:outline-none text-white"
                   required
                 />
                 <input 
@@ -444,7 +502,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
                   value={editPhone}
                   onChange={e => setEditPhone(e.target.value)} 
                   placeholder={isArabic ? "الهاتف" : "Phone"}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg text-xs px-2.5 py-1.5 focus:outline-none w-28 text-center"
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg text-xs px-2.5 py-1.5 focus:outline-none w-28 text-center text-white"
                 />
                 <button type="submit" disabled={operationPending} className="p-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white">
                   <Check size={14} />
@@ -639,6 +697,23 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
                   {(profileData?.favorites || []).length}
                 </span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('custom')}
+                className={`flex-1 py-3 text-xs sm:text-sm font-medium rounded-xl transition flex items-center justify-center gap-2 cursor-pointer ${
+                  activeTab === 'custom'
+                    ? 'bg-zinc-950 text-white shadow-sm'
+                    : 'text-zinc-650 hover:bg-zinc-50'
+                }`}
+              >
+                <Sparkles size={14} />
+                <span>{isArabic ? "طلبات مخصصة" : "Custom Requests"}</span>
+                <span className={`px-2 py-0.5 text-[9px] rounded-full shrink-0 ${
+                  activeTab === 'custom' ? 'bg-zinc-800 text-amber-400' : 'bg-zinc-100 text-zinc-500'
+                }`}>
+                  {(orders.filter((order) => order.orderType === 'custom')).length}
+                </span>
+              </button>
             </div>
 
             {/* TAB CONTENTS CONTAINER */}
@@ -675,7 +750,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
                     </div>
                   ) : (
                     <div className="space-y-5">
-                      {orders.map((order) => (
+                      {orders.filter((order) => order.orderType !== 'custom').map((order) => (
                         <div key={order.id} className="border border-zinc-100 bg-zinc-50/50 rounded-2xl p-5 space-y-4 text-right" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
                           
                           {/* Order metadata line */}
@@ -738,7 +813,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
 
                           {/* Items listing inside card */}
                           <div className="space-y-3">
-                            {order.items.map((item, idx) => (
+                            {(order.items || []).map((item, idx) => (
                               <div key={idx} className="flex gap-3 items-center">
                                 <img
                                   src={item.image}
@@ -969,7 +1044,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
                                   <MapPin size={11} className="text-zinc-400 shrink-0" />
                                   <span>{getCityName(addr.cityId)}</span>
                                 </p>
-                                <p className="text-[11px] leading-relaxed pl-5 text-zinc-500 mt-1">
+                                <p className="text-[11px] leading-relaxed pl-5 text-zinc-500 mt-1" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                                   {addr.addressDetails}
                                 </p>
                               </div>
@@ -978,7 +1053,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
                             <div className="pt-2 border-t border-zinc-200/40 flex justify-end gap-1.5 mt-2">
                               <button
                                 onClick={() => handleDeleteAddress(addr.id)}
-                                className="px-3 py-1 text-[10px] text-red-500 hover:bg-red-50 rounded-lg flex items-center gap-1 cursor-pointer transition border border-transparent"
+                                className="px-3 py-1 text-[10px] text-red-500 hover:bg-red-55 rounded-lg flex items-center gap-1 cursor-pointer transition border border-transparent"
                               >
                                 <Trash2 size={11} />
                                 <span>{isArabic ? "حذف" : "Remove"}</span>
@@ -993,7 +1068,182 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop 
                 </div>
               )}
 
-              {/* TAB 3: SAVED FAVORITES WITH MONTHLY FILTER LISTING */}
+              {/* TAB 3: CUSTOM REQUESTS & CHAT */}
+              {activeTab === 'custom' && (
+                <div className="space-y-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                  <div className="flex justify-between items-center border-b border-zinc-100 pb-3">
+                    <h3 className="text-sm font-serif font-medium text-zinc-900">
+                      {isArabic ? 'طلبات الهاند ميد وتفصيل السواريه الفاخر' : 'Bespoke Evening & Couture Requests'}
+                    </h3>
+                    <span className="text-[10px] text-zinc-400 italic">
+                      {isArabic ? 'تابعي حركة وتصميم طلبك وميزانيتك من هنا' : 'Track your design status & consult with artisans'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-6">
+                    {/* Left/Right Sidebar List of Custom Orders */}
+                    <div className="space-y-3">
+                      {orders.filter((order) => order.orderType === 'custom').length === 0 ? (
+                        <div className="p-8 border border-dashed border-zinc-200 rounded-2xl text-center text-zinc-500 text-sm">
+                          {isArabic 
+                            ? 'لم تسجلي أي طلب تفصيل أو هاند ميد حتى الآن. يمكنكِ تقديم طلب في النموذج الفاخر أسفل الصفحة الرئيسية.' 
+                            : 'No bespoke fashion orders found. Lodge comments via the couture studio form on Home page.'}
+                        </div>
+                      ) : (
+                        orders.filter((order) => order.orderType === 'custom').map((order) => {
+                          const isSelected = selectedConversationId === order.linkedConversationId;
+                          
+                          // Localized status dictionary
+                          const getArabicStatus = (status: string) => {
+                            switch (status) {
+                              case 'pending': return 'قيد المراجعة الفنية';
+                              case 'preparing': return 'قيد التفصيل اليدوي والتطريز';
+                              case 'shipped': return 'تم الشحن للتسليم';
+                              case 'delivered': return 'تم التسليم والحمد لله';
+                              case 'cancelled': return 'تم الإلغاء';
+                              default: return status;
+                            }
+                          };
+
+                          return (
+                            <button
+                              key={order.id}
+                              onClick={() => order.linkedConversationId && setSelectedConversationId(order.linkedConversationId)}
+                              className={`w-full p-4.5 rounded-2xl border transition duration-200 cursor-pointer text-right ${
+                                isArabic ? 'text-right' : 'text-left'
+                              } ${
+                                isSelected 
+                                  ? 'border-zinc-950 bg-zinc-950 text-white shadow-xl' 
+                                  : 'border-zinc-200 bg-zinc-50 hover:bg-zinc-100/70 hover:border-zinc-350'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="space-y-1">
+                                  <p className="text-xs font-black uppercase tracking-wider">
+                                    {order.customTitle || order.customerName}
+                                  </p>
+                                  <p className={`text-[11px] font-light leading-relaxed line-clamp-2 ${isSelected ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                                    {order.customDescription}
+                                  </p>
+                                </div>
+                                <span className={`text-[9px] font-bold px-2 py-1 rounded-full shrink-0 border uppercase tracking-wider ${
+                                  isSelected 
+                                    ? 'bg-amber-400 text-black border-amber-400' 
+                                    : 'bg-zinc-100 text-zinc-700 border-zinc-200'
+                                }`}>
+                                  {isArabic ? getArabicStatus(order.status) : order.status.toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="mt-3.5 pt-3.5 border-t border-current/10 text-[10px] opacity-80 flex flex-wrap gap-x-3 gap-y-1">
+                                {order.customMaterial && (
+                                  <span>
+                                    <strong>{isArabic ? 'الخامة' : 'Fabric'}:</strong> {order.customMaterial}
+                                  </span>
+                                )}
+                                {order.customColor && (
+                                  <span>
+                                    <strong>{isArabic ? 'اللون' : 'Color'}:</strong> {order.customColor}
+                                  </span>
+                                )}
+                                {typeof order.customBudget === 'number' && (
+                                  <span>
+                                    <strong>{isArabic ? 'الميزانية المقترحة' : 'Target Budget'}:</strong> {order.customBudget} {isArabic ? 'ج.م' : 'EGP'}
+                                  </span>
+                                )}
+                                {typeof order.agreedPrice === 'number' && order.agreedPrice > 0 && (
+                                  <span className={`font-black ${isSelected ? 'text-amber-400' : 'text-emerald-700'}`}>
+                                    🏷️ {isArabic ? 'السعر المتفق عليه النهائي' : 'Agreed price'}: {order.agreedPrice} {isArabic ? 'ج.م' : 'EGP'}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Active Conversation and Chat Area */}
+                    <div className="border border-zinc-200 rounded-3xl bg-white overflow-hidden shadow-sm flex flex-col min-h-[450px]">
+                      <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between text-right">
+                        <div>
+                          <p className="text-xs font-black text-zinc-900 uppercase tracking-widest">{isArabic ? 'قناة المحادثة والاستشارات الحية' : 'Couture Chat Workspace'}</p>
+                          <p className="text-[10px] text-zinc-400 mt-0.5">{isArabic ? 'تواصلي مباشرة مع المصمم لتعديل المقاسات والاتفاق' : 'Live conversation line with your matching RAAV designer'}</p>
+                        </div>
+                        {selectedConversationId && (
+                          <span className="text-[10px] bg-amber-500/10 text-amber-900 border border-amber-500/10 px-2.5 py-1 rounded-full font-bold">
+                            {conversations.find((thread) => thread.id === selectedConversationId)?.topic || (isArabic ? 'حالة نشطة' : 'Active Channel')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Chat Messages Bubble List with Auto-Scroll */}
+                      <div className="flex-1 max-h-[360px] overflow-y-auto p-4 space-y-4 bg-zinc-50">
+                        {!selectedConversationId ? (
+                          <div className="text-center text-zinc-405 text-zinc-400 text-xs sm:text-sm py-20 flex flex-col items-center justify-center gap-3">
+                            <span className="text-2xl animate-spin">✨</span>
+                            <p>{isArabic ? 'الرجاء اختيار طلب تفصيل خاص من القائمة الجانبية لبدء المحادثة.' : 'Select a custom request from the list to view its chat.'}</p>
+                          </div>
+                        ) : conversationMessages.length === 0 ? (
+                          <div className="text-center text-zinc-400 text-xs py-20">
+                            {isArabic ? 'بدء المحادثة الفورية مع المصمم الآن... اكتب رسالتك بالأسفل.' : 'Secure connection established. Type your opening message below.'}
+                          </div>
+                        ) : (
+                          <>
+                            {conversationMessages.map((message) => {
+                              const isMyMessage = message.senderRole === 'customer';
+                              // Elegant layout logic: ensure own client bubbles stay on traditional right-side (regardless of layout direction config)
+                              const justifyClass = isArabic
+                                ? (isMyMessage ? 'justify-start' : 'justify-end')
+                                : (isMyMessage ? 'justify-end' : 'justify-start');
+
+                              return (
+                                <div key={message.id} className={`flex ${justifyClass}`}>
+                                  <div className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
+                                    isMyMessage 
+                                      ? 'bg-zinc-950 text-white font-medium text-right' 
+                                      : 'bg-white text-zinc-800 border border-zinc-150 text-right'
+                                  }`}>
+                                    <div className={`text-[9px] font-black uppercase tracking-wider mb-1 ${
+                                      isMyMessage ? 'text-amber-400' : 'text-amber-600'
+                                    }`}>
+                                      {message.senderName}
+                                    </div>
+                                    <p className="whitespace-pre-wrap leading-relaxed text-xs sm:text-sm">{message.text}</p>
+                                    <span className="block text-[8px] opacity-40 mt-1.5 font-mono text-left">
+                                      {new Date(message.createdAt || Date.now()).toLocaleTimeString(isArabic ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            <div ref={messagesEndRef} />
+                          </>
+                        )}
+                      </div>
+
+                      {/* Msg sending form */}
+                      <form onSubmit={handleSendConversationMessage} className="p-3 sm:p-4 border-t border-zinc-100 bg-white flex gap-2">
+                        <input
+                          value={conversationDraft}
+                          onChange={(e) => setConversationDraft(e.target.value)}
+                          placeholder={isArabic ? 'اكتب رسالتك للمصمم...' : 'Write your bespoke query...'}
+                          className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-black focus:bg-white text-right"
+                          disabled={!selectedConversationId}
+                        />
+                        <button
+                          type="submit"
+                          className="px-5 py-2.5 rounded-xl bg-zinc-950 text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 transition cursor-pointer"
+                          disabled={!selectedConversationId || !conversationDraft.trim()}
+                        >
+                          {isArabic ? 'إرسال' : 'Send'}
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: FAVORITES */}
               {activeTab === 'favorites' && (
                 <div className="space-y-6">
                   <div className="flex justify-between items-center border-b border-zinc-50 pb-3" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
