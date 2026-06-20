@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Sparkles, Eye, ShoppingCart, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Sparkles, Eye, ShoppingCart, ChevronUp, ChevronDown } from 'lucide-react';
 import { Product } from '../types';
 import { getProductPrice } from '../utils';
 
@@ -17,47 +17,87 @@ export default function TrendPieces({
   isArabic,
   onQuickAddToCart
 }: TrendPiecesProps) {
-  // Select designated trending items or fall back
-  const getTrendProducts = () => {
-    if (products.length === 0) return [];
-    
-    // 1. Gather products designated as trending by the administrator
-    const designatedTrends = products.filter(p => p.isTrend === true);
-    if (designatedTrends.length > 0) {
-      return designatedTrends.slice(0, 3);
-    }
-    
-    // Fallback if none are designated:
-    const womenItem = products.find(p => p.category === 'women' && p.inStock) || products[0];
-    const accItem = products.find(p => p.category === 'accessories' && p.inStock && p.id !== womenItem?.id) || products[1];
-    const menItem = products.find(p => p.category === 'men' && p.inStock && p.id !== womenItem?.id && p.id !== accItem?.id) || products[2];
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
-    const finalItems = [womenItem, accItem, menItem].filter(Boolean) as Product[];
-    return finalItems.slice(0, 3);
+  // Helper to scroll the vertical side panel up
+  const scrollUp = () => {
+    if (scrollContainerRef.current) {
+      const parentHeight = scrollContainerRef.current.clientHeight;
+      // Scroll by roughly 1 card height
+      scrollContainerRef.current.scrollBy({ top: -parentHeight / 2, behavior: 'smooth' });
+    }
   };
 
-  const trendItems = getTrendProducts();
+  // Helper to scroll the vertical side panel down
+  const scrollDown = () => {
+    if (scrollContainerRef.current) {
+      const parentHeight = scrollContainerRef.current.clientHeight;
+      // Scroll by roughly 1 card height
+      scrollContainerRef.current.scrollBy({ top: parentHeight / 2, behavior: 'smooth' });
+    }
+  };
 
-  if (trendItems.length === 0) return null;
+  // Select designated trending items or fall back
+  const getTrendProducts = () => {
+    if (products.length === 0) return { hero: null, side: [] };
+    
+    // 1. Gather products designated as trending
+    const designatedTrends = products.filter(p => p.isTrend === true);
+    
+    let hero: Product | null = null;
+    let side: Product[] = [];
+    
+    if (designatedTrends.length > 0) {
+      hero = designatedTrends[0];
+      side = designatedTrends.slice(1);
+    } else {
+      // Fallback if none are designated:
+      hero = products.find(p => p.category === 'women' && p.inStock) || products[0] || null;
+      side = products.filter(p => hero ? p.id !== hero.id : true);
+    }
+    
+    // Ensure we have a generous amount of side products for an elegant scrolling effect
+    if (side.length < 5) {
+      const extra = products.filter(p => p.id !== hero?.id && !side.find(s => s.id === p.id));
+      side = [...side, ...extra];
+    }
+    
+    // De-duplicate side list and exclude hero
+    const seenIds = new Set<string>();
+    if (hero) seenIds.add(hero.id);
+    const uniqueSide: Product[] = [];
+    for (const p of side) {
+      if (!seenIds.has(p.id)) {
+        seenIds.add(p.id);
+        uniqueSide.push(p);
+      }
+    }
+    
+    return { hero, side: uniqueSide };
+  };
+
+  const { hero, side: sideProducts } = getTrendProducts();
+
+  if (!hero) return null;
 
   return (
-    <section id="trend-pieces-section" className="bg-zinc-50/50 py-16 md:py-24 border-b border-zinc-100 select-none">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="trend-pieces-section" className="bg-zinc-50/50 py-10 sm:py-16 md:py-24 border-b border-zinc-100 select-none">
+      <div className="max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8">
         
         {/* Editorial Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 sm:mb-16 gap-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-16 gap-4 sm:gap-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
           <div className="text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100/60 rounded-full text-amber-900 text-[10px] sm:text-[11px] font-bold tracking-[0.2em] uppercase mb-4">
-              <Sparkles size={11} className="text-amber-800" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100/60 rounded-full text-amber-900 text-[9px] sm:text-[11px] font-bold tracking-[0.2em] uppercase mb-2 sm:mb-4">
+              <Sparkles size={11} className="text-amber-805 animate-pulse" />
               <span>{isArabic ? "موضة الموسم العصري" : "SEASON'S HOTTEST TRENDS"}</span>
             </span>
-            <h2 className="text-3xl md:text-5xl font-serif font-light text-zinc-950 tracking-tight leading-tight">
+            <h2 className="text-2xl xs:text-3xl md:text-5xl font-serif font-light text-zinc-950 tracking-tight leading-tight">
               {isArabic ? "قطع الموضة الأكثر تأثيراً" : "The Trend Pieces"}
             </h2>
-            <p className="text-xs text-zinc-400 mt-2 max-w-lg font-sans leading-relaxed">
+            <p className="text-[10px] xs:text-xs text-zinc-400 mt-2 max-w-lg font-sans leading-relaxed">
               {isArabic 
-                ? "مختارات حصرية صُممت لتلائم طابع الحياة الراقية وتتميز بتفاصيل تمنحك إطلالة فريدة." 
-                : "A boundary-pushing curation reflecting future street style and structural elegance."}
+                ? "مختارات حصرية صُممت لتلائم طابع الحياة الراقية وتتميز بتفاصيل ممنوحة خيار تصفح منتجات إضافية مدهشة عبر شريط التمرير." 
+                : "A boundary-pushing curation reflecting future street style. Explore additional trend items using our dynamic vertical scroll."}
             </p>
           </div>
 
@@ -67,250 +107,247 @@ export default function TrendPieces({
         </div>
 
         {/* Avant-Garde Asymmetric Collage/Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+        <div className="grid grid-cols-12 gap-2 sm:gap-4 md:gap-8 items-stretch" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
           
           {/* Trend Item 1: Massive Hero Split Portrait (Columns 1-7) */}
-          {trendItems[0] && (
-            <div className="lg:col-span-7 flex flex-col justify-between">
-              <motion.div
-                whileHover="hover"
-                initial="initial"
-                className="relative h-[480px] sm:h-[550px] lg:h-[620px] rounded-[2.5rem] overflow-hidden bg-zinc-900 group shadow-xl flex flex-col justify-end"
-              >
-                {/* Image layer */}
-                <motion.img
-                  src={trendItems[0].image}
-                  alt={isArabic ? trendItems[0].nameAr : trendItems[0].nameEn}
-                  referrerPolicy="no-referrer"
-                  className="absolute inset-0 w-full h-full object-cover origin-center opacity-90 transition-transform duration-1000 group-hover:scale-105"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000";
-                  }}
-                />
-                
-                {/* Premium Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10 transition-opacity duration-300 group-hover:bg-gradient-to-t group-hover:from-black/90 group-hover:via-black/50" />
+          <div className="col-span-7 flex flex-col justify-between">
+            <motion.div
+              whileHover="hover"
+              initial="initial"
+              className="relative h-[220px] xs:h-[300px] sm:h-[400px] md:h-[500px] lg:h-[620px] rounded-xl sm:rounded-[2.5rem] overflow-hidden bg-zinc-900 group shadow-xl flex flex-col justify-end"
+            >
+              {/* Image layer */}
+              <motion.img
+                src={hero.image}
+                alt={isArabic ? hero.nameAr : hero.nameEn}
+                referrerPolicy="no-referrer"
+                className="absolute inset-0 w-full h-full object-cover origin-center opacity-90 transition-transform duration-1000 group-hover:scale-105"
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000";
+                }}
+              />
+              
+              {/* Premium Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10 transition-opacity duration-300 group-hover:bg-gradient-to-t group-hover:from-black/90 group-hover:via-black/50" />
 
-                {/* Aesthetic Top Left Numbering */}
-                <div className="absolute top-8 left-8 text-white/10 font-serif text-[4.5rem] font-black leading-none pointer-events-none select-none">
-                  01
+              {/* Aesthetic Top Left Numbering */}
+              <div className="absolute top-1.5 left-1.5 xs:top-3 xs:left-3 sm:top-8 sm:left-8 text-white/10 font-serif text-[18px] xs:text-2xl sm:text-[4.5rem] font-black leading-none pointer-events-none select-none">
+                01
+              </div>
+
+              {/* Tag Sticker */}
+              <div className="absolute top-1.5 right-1.5 xs:top-3 xs:right-3 sm:top-8 sm:right-8 bg-amber-500/90 text-white backdrop-blur-md border border-amber-500/30 font-semibold px-1.5 sm:px-4 py-0.5 sm:py-1.5 rounded-full text-[5px] xs:text-[7px] sm:text-[10px] tracking-widest uppercase font-sans">
+                {isArabic ? "قطعة مميزة" : "MUST-HAVE"}
+              </div>
+
+              {/* Text Content Overlay card (floating and stylish) */}
+              <div className="relative z-10 p-2 xs:p-3 sm:p-8 lg:p-10 text-white flex flex-col items-start gap-1 sm:gap-4">
+                <div className="space-y-0.5 sm:space-y-2 text-left w-full" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                  <h3 className="text-[10px] xs:text-base sm:text-2xl md:text-3xl font-serif font-medium text-white tracking-tight leading-tight group-hover:text-amber-300 transition line-clamp-1">
+                    {isArabic ? hero.nameAr : hero.nameEn}
+                  </h3>
+                  <p className="hidden sm:block text-zinc-350 text-xs sm:text-sm max-w-xl font-sans font-light leading-relaxed line-clamp-2">
+                    {isArabic ? hero.descriptionAr : hero.descriptionEn}
+                  </p>
                 </div>
 
-                {/* Arabic/English Sticker */}
-                <div className="absolute top-8 right-8 bg-amber-550/90 text-white backdrop-blur-md border border-amber-500/30 font-semibold px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-sans">
-                  {isArabic ? "قطعة مميزة" : "MUST-HAVE"}
-                </div>
-
-                {/* Text Content Overlay card (floating and stylish) */}
-                <div className="relative z-10 p-8 sm:p-10 text-white flex flex-col items-start gap-4">
-                  <div className="space-y-2 text-left" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                    <h3 className="text-2xl sm:text-3xl font-serif font-medium text-white tracking-tight leading-tight group-hover:text-amber-350 transition">
-                      {isArabic ? trendItems[0].nameAr : trendItems[0].nameEn}
-                    </h3>
-                    <p className="text-zinc-300 text-xs sm:text-sm max-w-xl font-sans font-light leading-relaxed">
-                      {isArabic ? trendItems[0].descriptionAr : trendItems[0].descriptionEn}
-                    </p>
-                  </div>
-
-                  {(() => {
-                    const priceInfo = getProductPrice(trendItems[0]);
-                    return (
-                      <div className="w-full pt-4 border-t border-white/15 flex items-center justify-between gap-4">
-                        <div className="flex flex-col text-left" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                          {priceInfo.hasDiscount && (
-                            <span className="text-zinc-400 line-through text-[11px] font-serif leading-none mb-1">
-                              {priceInfo.original} {isArabic ? 'ج.م' : 'EGP'}
-                            </span>
-                          )}
-                          <div className="flex items-baseline gap-1.5">
-                            <span className={priceInfo.hasDiscount ? "text-2xl font-serif font-black text-amber-400" : "text-2xl font-serif font-medium text-white"}>
-                              {priceInfo.current}
-                            </span>
-                            <span className="text-xs text-zinc-350 font-sans">{isArabic ? 'ج.م' : 'EGP'}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => onSelectProduct(trendItems[0])}
-                            className="px-5 py-2.5 bg-white hover:bg-amber-100 text-zinc-950 rounded-full text-xs font-semibold tracking-wider transition cursor-pointer font-sans shadow"
-                          >
-                            {isArabic ? "اكتشف الموديل" : "EXPLORE NOW"}
-                          </button>
-                          <button
-                            onClick={() => onQuickAddToCart(trendItems[0])}
-                            className="p-2.5 bg-white/10 hover:bg-white hover:text-black text-white rounded-full transition cursor-pointer border border-white/20"
-                            title={isArabic ? "إضافة سريعة للسلة" : "Quick Add"}
-                          >
-                            <ShoppingCart size={15} />
-                          </button>
+                {(() => {
+                  const priceInfo = getProductPrice(hero);
+                  return (
+                    <div className="w-full pt-1.5 sm:pt-4 border-t border-white/15 flex items-center justify-between gap-1 sm:gap-4">
+                      <div className="flex flex-col text-left" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                        {priceInfo.hasDiscount && (
+                          <span className="text-zinc-400 line-through text-[6px] xs:text-[9px] sm:text-[11px] font-serif leading-none mb-0.5">
+                            {priceInfo.original} {isArabic ? 'ج.م' : 'EGP'}
+                          </span>
+                        )}
+                        <div className="flex items-baseline gap-0.5 sm:gap-1.5">
+                          <span className={priceInfo.hasDiscount ? "text-[9px] xs:text-base sm:text-2xl font-serif font-black text-amber-400" : "text-[9px] xs:text-base sm:text-2xl font-serif font-medium text-white"}>
+                            {priceInfo.current}
+                          </span>
+                          <span className="text-[5px] xs:text-[9px] sm:text-xs text-zinc-350 font-sans">{isArabic ? 'ج.م' : 'EGP'}</span>
                         </div>
                       </div>
-                    );
-                  })()}
-                </div>
 
-              </motion.div>
-            </div>
-          )}
+                      <div className="flex items-center gap-0.5 sm:gap-3">
+                        <button
+                          onClick={() => onSelectProduct(hero)}
+                          className="px-1.5 py-1 xs:px-3 xs:py-1.5 sm:px-5 sm:py-2.5 bg-white hover:bg-amber-100 text-zinc-950 rounded-md sm:rounded-full text-[6px] xs:text-[10px] sm:text-xs font-semibold tracking-wider transition cursor-pointer font-sans shadow hover:scale-105"
+                        >
+                          {isArabic ? "اكتشف" : "EXPLORE"}
+                        </button>
+                        <button
+                          onClick={() => onQuickAddToCart(hero)}
+                          className="p-1 xs:p-2 sm:p-2.5 bg-white/10 hover:bg-white hover:text-black text-white rounded-md sm:rounded-full transition cursor-pointer border border-white/20 flex items-center justify-center"
+                          title={isArabic ? "إضافة سريعة للسلة" : "Quick Add"}
+                        >
+                          <ShoppingCart className="w-2.5 h-2.5 sm:w-[15px] sm:h-[15px]" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
 
-          {/* Trend Items 2 and 3: Stacked side layouts (Columns 8-12) */}
-          <div className="lg:col-span-5 flex flex-col gap-6 justify-between">
+            </motion.div>
+          </div>
+
+          {/* Trend Items: Custom Scrollable Vertical Panel (Columns 8-12) */}
+          <div className="col-span-5 relative flex flex-col group/scrollbar h-[220px] xs:h-[300px] sm:h-[400px] md:h-[500px] lg:h-[620px]">
             
-            {/* Box 2 (Light Minimalist Contrast) */}
-            {trendItems[1] && (
-              <motion.div
-                whileHover={{ y: -6 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white border border-zinc-150/40 rounded-[2rem] p-6 sm:p-8 flex flex-col justify-between shadow-md h-[225px] sm:h-[280px] lg:h-[295px] relative overflow-hidden group"
+            {/* Scroll Up Control */}
+            {sideProducts.length > 2 && (
+              <button 
+                onClick={scrollUp}
+                className="absolute top-1 left-1/2 -translate-x-1/2 z-20 w-6 h-6 md:w-9 md:h-9 bg-white/90 hover:bg-amber-400 hover:text-black rounded-full shadow-lg border border-zinc-200/50 transition duration-300 cursor-pointer opacity-0 group-hover/scrollbar:opacity-100 flex items-center justify-center text-zinc-950"
+                title={isArabic ? "تمرير للأعلى" : "Scroll Up"}
               >
-                {/* Large aesthetic number behind */}
-                <div className="absolute right-6 top-4 text-zinc-100/70 font-serif text-[4rem] sm:text-[5.5rem] font-bold leading-none pointer-events-none select-none">
-                  02
-                </div>
-
-                <div className="flex gap-4 sm:gap-6 h-full items-stretch relative z-10" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
-                  
-                  {/* Info Column */}
-                  <div className="flex-1 flex flex-col justify-between py-1 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-sans font-bold text-amber-800 tracking-wider uppercase block">
-                        {isArabic ? "التنسيق المثالي" : "TREND ELEMENT"}
-                      </span>
-                      <h3 
-                        onClick={() => onSelectProduct(trendItems[1])}
-                        className="text-lg sm:text-xl font-serif font-medium text-zinc-950 tracking-tight leading-tight cursor-pointer hover:text-amber-800 transition line-clamp-1"
-                      >
-                        {isArabic ? trendItems[1].nameAr : trendItems[1].nameEn}
-                      </h3>
-                      <p className="text-zinc-400 text-[11px] leading-relaxed font-sans line-clamp-2">
-                        {isArabic ? trendItems[1].descriptionAr : trendItems[1].descriptionEn}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2 border-t border-zinc-100 gap-2">
-                      {(() => {
-                        const priceInfo = getProductPrice(trendItems[1]);
-                        return (
-                          <div className="flex flex-col text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                            {priceInfo.hasDiscount && (
-                              <span className="text-zinc-400 line-through text-[10px] sm:text-xs font-serif leading-none mb-1">
-                                {priceInfo.original} {isArabic ? 'ج.م' : 'EGP'}
-                              </span>
-                            )}
-                            <div>
-                              <span className={priceInfo.hasDiscount ? "text-red-650 font-serif font-bold text-lg" : "text-zinc-950 font-serif font-bold text-lg"}>
-                                {priceInfo.current}
-                              </span>
-                              <span className="text-[10px] text-zinc-500 font-sans ml-1 mr-1">{isArabic ? 'ج.م' : 'EGP'}</span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                      
-                      <button
-                        onClick={() => onSelectProduct(trendItems[1])}
-                        className="p-2 bg-zinc-950 hover:bg-amber-800 text-white rounded-full transition cursor-pointer"
-                        title={isArabic ? "عرض التفاصيل" : "View Details"}
-                      >
-                        {isArabic ? <span className="px-2 text-xs">{ "تفاصيل" }</span> : <Eye size={13} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Thumbnail Clip Image on side */}
-                  <div className="w-24 sm:w-32 lg:w-36 aspect-[3/4] bg-zinc-50 rounded-2xl overflow-hidden shadow-xs cursor-pointer" onClick={() => onSelectProduct(trendItems[1])}>
-                    <img
-                      src={trendItems[1].image}
-                      alt={isArabic ? trendItems[1].nameAr : trendItems[1].nameEn}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&q=80&w=600";
-                      }}
-                    />
-                  </div>
-
-                </div>
-              </motion.div>
+                <ChevronUp className="w-3 h-3 md:w-5 md:h-5" />
+              </button>
             )}
 
-            {/* Box 3 (Deep Minimalist Contrast) */}
-            {trendItems[2] && (
-              <motion.div
-                whileHover={{ y: -6 }}
-                transition={{ duration: 0.3 }}
-                className="bg-zinc-950 border border-zinc-900 rounded-[2rem] p-6 sm:p-8 flex flex-col justify-between shadow-lg h-[225px] sm:h-[280px] lg:h-[295px] relative overflow-hidden group text-white"
-              >
-                {/* Large aesthetic number behind */}
-                <div className="absolute right-6 top-4 text-zinc-900/50 font-serif text-[4rem] sm:text-[5.5rem] font-bold leading-none pointer-events-none select-none">
-                  03
-                </div>
+            {/* Scroll Container */}
+            <div 
+              ref={scrollContainerRef}
+              className="w-full h-full overflow-y-auto scrollbar-none flex flex-col gap-1.5 xs:gap-3.5 sm:gap-5 py-0.5 scroll-smooth snap-y snap-mandatory"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {sideProducts.map((product, idx) => {
+                const itemNum = idx + 2;
+                const paddedNum = String(itemNum).padStart(2, '0');
+                const isEven = idx % 2 === 0;
 
-                <div className="flex gap-4 sm:gap-6 h-full items-stretch relative z-10" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
-                  
-                  {/* Info Column */}
-                  <div className="flex-1 flex flex-col justify-between py-1 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-sans font-bold text-amber-500 tracking-wider uppercase block">
-                        {isArabic ? "مظهر الشارع المعاصر" : "STREET CONTRAST"}
-                      </span>
-                      <h3 
-                        onClick={() => onSelectProduct(trendItems[2])}
-                        className="text-lg sm:text-xl font-serif font-medium text-white tracking-tight leading-tight cursor-pointer hover:text-amber-400 transition line-clamp-1"
-                      >
-                        {isArabic ? trendItems[2].nameAr : trendItems[2].nameEn}
-                      </h3>
-                      <p className="text-zinc-400 text-[11px] leading-relaxed font-sans line-clamp-2">
-                        {isArabic ? trendItems[2].descriptionAr : trendItems[2].descriptionEn}
-                      </p>
-                    </div>
+                return (
+                  <div 
+                    key={product.id}
+                    className="flex-none snap-start h-[105px] xs:h-[145px] sm:h-[195px] md:h-[235px] lg:h-[298px]"
+                  >
+                    <motion.div
+                      whileHover={{ y: -2 }}
+                      transition={{ duration: 0.3 }}
+                      className={`h-full border rounded-lg sm:rounded-[2rem] p-1.5 xs:p-3.5 sm:p-5 lg:p-7 flex flex-col justify-between shadow-xs sm:shadow-md relative overflow-hidden group/item select-none transition-colors ${
+                        isEven 
+                          ? "bg-white border-zinc-150/40 text-zinc-950" 
+                          : "bg-zinc-950 border-zinc-900 text-white"
+                      }`}
+                    >
+                      {/* Substantial decorative background index number */}
+                      <div className={`absolute right-1 top-0 sm:right-6 sm:top-3 font-serif text-[18px] xs:text-3xl sm:text-[3.5rem] lg:text-[4.5rem] font-bold leading-none pointer-events-none select-none transition-opacity ${
+                        isEven ? "text-zinc-100/75" : "text-zinc-900/55"
+                      }`}>
+                        {paddedNum}
+                      </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-zinc-800 gap-2">
-                      {(() => {
-                        const priceInfo = getProductPrice(trendItems[2]);
-                        return (
-                          <div className="flex flex-col text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                            {priceInfo.hasDiscount && (
-                              <span className="text-zinc-500 line-through text-[10px] sm:text-xs font-serif leading-none mb-1">
-                                {priceInfo.original} {isArabic ? 'ج.م' : 'EGP'}
-                              </span>
-                            )}
-                            <div>
-                              <span className={priceInfo.hasDiscount ? "text-amber-300 font-serif font-extrabold text-lg" : "text-amber-400 font-serif font-bold text-lg"}>
-                                {priceInfo.current}
-                              </span>
-                              <span className="text-[10px] text-zinc-400 font-sans ml-1 mr-1">{isArabic ? 'ج.م' : 'EGP'}</span>
+                      <div className="flex gap-1 xs:gap-2.5 sm:gap-5 h-full items-stretch relative z-10" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                        
+                        {/* Info Column */}
+                        <div className="flex-1 flex flex-col justify-between py-0.5 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                          <div className="space-y-0.5 sm:space-y-1.5">
+                            <span className={`text-[4px] xs:text-[7px] sm:text-[9px] font-sans font-bold tracking-wider uppercase block ${
+                              isEven ? "text-amber-805" : "text-amber-400"
+                            }`}>
+                              {isArabic ? "تنسيق مذهل" : "TREND ELEMENT"}
+                            </span>
+                            <h3 
+                              onClick={() => onSelectProduct(product)}
+                              className={`text-[9px] xs:text-xs sm:text-base lg:text-lg font-serif font-semibold tracking-tight leading-snug cursor-pointer transition line-clamp-1 ${
+                                isEven ? "text-zinc-950 hover:text-amber-805" : "text-white hover:text-amber-400"
+                              }`}
+                            >
+                              {isArabic ? product.nameAr : product.nameEn}
+                            </h3>
+                            <p className={`hidden sm:block text-[11px] leading-relaxed font-sans line-clamp-2 ${
+                              isEven ? "text-zinc-400" : "text-zinc-350"
+                            }`}>
+                              {isArabic ? product.descriptionAr : product.descriptionEn}
+                            </p>
+                          </div>
+
+                          <div className={`flex items-center justify-between pt-1 sm:pt-2 border-t gap-0.5 sm:gap-2 ${
+                            isEven ? "border-zinc-100" : "border-zinc-850"
+                          }`}>
+                            {(() => {
+                              const priceInfo = getProductPrice(product);
+                              return (
+                                <div className="flex flex-col text-right animate-fade-in" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                                  {priceInfo.hasDiscount && (
+                                    <span className="text-zinc-450 line-through text-[5px] xs:text-[8px] sm:text-[10px] font-serif leading-none mb-0.5">
+                                      {priceInfo.original} {isArabic ? 'ج.م' : 'EGP'}
+                                    </span>
+                                  )}
+                                  <div className="flex items-baseline gap-0.5">
+                                    <span className={`font-serif font-extrabold text-[8px] xs:text-sm sm:text-lg ${
+                                      priceInfo.hasDiscount 
+                                        ? (isEven ? "text-amber-805" : "text-amber-300") 
+                                        : (isEven ? "text-zinc-950" : "text-amber-400")
+                                    }`}>
+                                      {priceInfo.current}
+                                    </span>
+                                    <span className={`text-[5px] xs:text-[8px] sm:text-[10px] font-sans ml-0.5 mr-0.5 ${
+                                      isEven ? "text-zinc-500" : "text-zinc-400"
+                                    }`}>{isArabic ? 'ج.م' : 'EGP'}</span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                            
+                            <div className="flex items-center gap-0.5 sm:gap-1">
+                              <button
+                                onClick={() => onSelectProduct(product)}
+                                className={`p-0.5 xs:p-1.5 sm:p-2.5 rounded-md sm:rounded-full transition cursor-pointer flex items-center justify-center shrink-0 ${
+                                  isEven ? "bg-zinc-950 text-white hover:bg-amber-805" : "bg-amber-500 text-black hover:bg-amber-400 border-none"
+                                }`}
+                                title={isArabic ? "عرض التفاصيل" : "View Details"}
+                              >
+                                <Eye className="w-2.5 h-2.5 sm:w-[14px] sm:h-[14px]" />
+                              </button>
+                              <button
+                                onClick={() => onQuickAddToCart(product)}
+                                className={`p-0.5 xs:p-1.5 sm:p-2.5 rounded-md sm:rounded-full transition cursor-pointer flex items-center justify-center shrink-0 ${
+                                  isEven ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-200" : "bg-white/10 hover:bg-white hover:text-black text-white border border-white/15"
+                                }`}
+                                title={isArabic ? "إشارة سريعة" : "Quick Add"}
+                              >
+                                <ShoppingCart className="w-2.5 h-2.5 sm:w-[14px] sm:h-[14px]" />
+                              </button>
                             </div>
                           </div>
-                        );
-                      })()}
-                      
-                      <button
-                        onClick={() => onSelectProduct(trendItems[2])}
-                        className="p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-full transition cursor-pointer border-none"
-                        title={isArabic ? "عرض التفاصيل" : "View Details"}
-                      >
-                        {isArabic ? <span className="px-2 text-xs">{ "تفاصيل" }</span> : <Eye size={13} />}
-                      </button>
-                    </div>
-                  </div>
+                        </div>
 
-                  {/* Thumbnail Clip Image on side */}
-                  <div className="w-24 sm:w-32 lg:w-36 aspect-[3/4] bg-zinc-900 rounded-2xl overflow-hidden cursor-pointer" onClick={() => onSelectProduct(trendItems[2])}>
-                    <img
-                      src={trendItems[2].image}
-                      alt={isArabic ? trendItems[2].nameAr : trendItems[2].nameEn}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=600";
-                      }}
-                    />
-                  </div>
+                        {/* Side Thumbnail Image Clip */}
+                        <div 
+                          className="w-10 xs:w-16 sm:w-24 lg:w-32 aspect-[3/4] bg-zinc-50 rounded-md sm:rounded-2xl overflow-hidden shadow-xs cursor-pointer select-none shrink-0" 
+                          onClick={() => onSelectProduct(product)}
+                        >
+                          <img
+                            src={product.image}
+                            alt={isArabic ? product.nameAr : product.nameEn}
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110"
+                            onError={(e) => {
+                              e.currentTarget.src = isEven 
+                                ? "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&q=80&w=600" 
+                                : "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=600";
+                            }}
+                          />
+                        </div>
 
-                </div>
-              </motion.div>
+                      </div>
+                    </motion.div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Scroll Down Control */}
+            {sideProducts.length > 2 && (
+              <button 
+                onClick={scrollDown}
+                className="absolute bottom-1 left-1/2 -translate-x-1/2 z-20 w-6 h-6 md:w-9 md:h-9 bg-white/90 hover:bg-amber-400 hover:text-black rounded-full shadow-lg border border-zinc-200/50 transition duration-300 cursor-pointer opacity-0 group-hover/scrollbar:opacity-100 flex items-center justify-center text-zinc-950"
+                title={isArabic ? "تمرير لأسفل" : "Scroll Down"}
+              >
+                <ChevronDown className="w-3 h-3 md:w-5 md:h-5" />
+              </button>
             )}
 
           </div>

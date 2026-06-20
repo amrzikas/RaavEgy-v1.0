@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
 import { getProductPrice } from '../utils';
-import { SlidersHorizontal, Search, ArrowUpDown, Eye, ArrowLeft, Check, Sparkles, AlertCircle } from 'lucide-react';
+import { SlidersHorizontal, Search, ArrowUpDown, Eye, ArrowLeft, Check, Sparkles, AlertCircle, X } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ShopPageProps {
@@ -163,8 +163,35 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
-          {/* SIDEBAR FILTERS (Desktop) & Collapsible (Mobile) */}
-          <div className={`lg:block ${showFiltersMobile ? 'block' : 'hidden'} lg:col-span-1 space-y-6 bg-white p-6 rounded-2xl border border-zinc-100 shadow-xs h-fit`}>
+          {/* Mobile Overlay */}
+          {showFiltersMobile && (
+            <div 
+              className="fixed inset-0 bg-zinc-950/40 backdrop-blur-xs z-49 lg:hidden transition-opacity" 
+              onClick={() => setShowFiltersMobile(false)}
+            />
+          )}
+
+          {/* SIDEBAR FILTERS (Desktop & Mobile Drawer) */}
+          <div className={`
+            lg:block lg:col-span-1 lg:static lg:bg-white lg:p-6 lg:rounded-2xl lg:border lg:border-zinc-100 lg:shadow-xs lg:h-fit lg:w-auto
+            ${showFiltersMobile 
+              ? 'fixed inset-y-0 right-0 w-[85vw] max-w-[340px] bg-white p-6 z-50 overflow-y-auto shadow-2xl border-l border-zinc-100 space-y-6 block' 
+              : 'hidden'
+            }
+          `}>
+            
+            {/* Mobile filter header with close button */}
+            <div className="lg:hidden flex items-center justify-between pb-4 border-b border-zinc-150 mb-4">
+              <span className="text-sm font-bold uppercase tracking-wider text-zinc-900">
+                {isArabic ? "تصفية الموديلات" : "Filter Clothing"}
+              </span>
+              <button 
+                onClick={() => setShowFiltersMobile(false)}
+                className="p-1.5 bg-zinc-50 hover:bg-zinc-100 rounded-full text-zinc-650 hover:text-black transition cursor-pointer"
+              >
+                <X size={16} strokeWidth={2.5} />
+              </button>
+            </div>
             
             {/* Search Box */}
             <div style={{ textAlign: isArabic ? 'right' : 'left' }}>

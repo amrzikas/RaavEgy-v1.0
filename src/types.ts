@@ -102,6 +102,9 @@ export interface Order {
   agreedPrice?: number;
   settled?: boolean; // True if collected COD has been paid to admin in a settlement period
   settledInPeriodId?: string; // ID of the closed SettlementPeriod this belongs to
+  cancelReason?: string; // Predefined or custom reason for order cancellation or return
+  paymentStatus?: 'pending_verification' | 'verified' | 'rejected'; // State of electronic payment verification
+  paymentProofNotes?: string; // Additional customer notes for payment resubmission
 }
 
 export interface SettlementPeriod {
@@ -186,4 +189,66 @@ export interface ConversationMessage {
   createdAt: number;
 }
 
+export interface SupportPageItem {
+  titleAr: string;
+  titleEn: string;
+  contentAr: string;
+  contentEn: string;
+}
 
+export interface FaqItem {
+  id: string;
+  qAr: string;
+  qEn: string;
+  aAr: string;
+  aEn: string;
+}
+
+export interface SupportPagesContent {
+  contact_us: {
+    titleAr: string;
+    titleEn: string;
+    subtitleAr: string;
+    subtitleEn: string;
+    phone: string;
+    email: string;
+    addressAr: string;
+    addressEn: string;
+    workingHoursAr: string;
+    workingHoursEn: string;
+    instagramUrl?: string;
+    facebookUrl?: string;
+    whatsappPhone: string;
+  };
+  shipping_returns: SupportPageItem;
+  size_guide: SupportPageItem;
+  faq: {
+    titleAr: string;
+    titleEn: string;
+    subtitleAr: string;
+    subtitleEn: string;
+    items: FaqItem[];
+  };
+  privacy_policy: SupportPageItem;
+  terms_of_service: SupportPageItem;
+}
+
+export interface HeroSlideInput {
+  id: string | number;
+  overlineAr: string;
+  overlineEn: string;
+  titleAr: string;
+  titleEn: string;
+  descAr: string;
+  descEn: string;
+  quoteAr?: string;
+  quoteEn?: string;
+  image: string;
+  cat: string;
+}
+
+export interface HomepageContent {
+  announcementAr: string;
+  announcementEn: string;
+  heroSlides: HeroSlideInput[];
+}

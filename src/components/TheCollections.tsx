@@ -43,15 +43,15 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
         </div>
 
         {/* Categories Grid Setup */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="grid grid-cols-12 gap-2 sm:gap-4 md:gap-6 items-stretch">
           
           {/* LEFT: Massive high-fashion editorial Women image card (takes 7 columns) */}
-          <div className="lg:col-span-7 h-[400px] sm:h-[500px] lg:h-[580px]">
+          <div className="col-span-7 h-[180px] sm:h-[400px] md:h-[500px] lg:h-[580px]">
             <motion.div
               whileHover={{ scale: 0.99 }}
               transition={{ duration: 0.4 }}
               onClick={() => handleCategoryClick('women')}
-              className="relative w-full h-full rounded-[2.2rem] md:rounded-[3rem] overflow-hidden shadow-lg cursor-pointer group"
+              className="relative w-full h-full rounded-2xl sm:rounded-[2.2rem] md:rounded-[3rem] overflow-hidden shadow-lg cursor-pointer group"
             >
               <img
                 src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000"
@@ -62,14 +62,14 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
               {/* Overlay with radial and soft linear dark gradient on bottom left */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent transition-opacity duration-300 group-hover:bg-black/25" />
 
-              <div className="absolute bottom-10 left-10 text-white space-y-2 select-none" style={{ textAlign: 'left' }}>
-                <div className="text-[10px] font-bold tracking-[0.25em] text-zinc-300/90 uppercase font-sans">
+              <div className="absolute bottom-3 left-3 sm:bottom-10 sm:left-10 text-white space-y-0.5 sm:space-y-2 select-none" style={{ textAlign: 'left' }}>
+                <div className="text-[6px] sm:text-[10px] font-bold tracking-[0.25em] text-zinc-300/90 uppercase font-sans">
                   SEASON 2026
                 </div>
-                <h3 className="text-4xl sm:text-5xl font-serif text-white font-medium leading-none mb-2">
+                <h3 className="text-sm sm:text-4xl md:text-5xl font-serif text-white font-medium leading-none mb-1">
                   Women
                 </h3>
-                <div className="inline-block text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-white uppercase border-b-2 border-white/80 pb-1 mt-1 transition-all duration-300 group-hover:border-white">
+                <div className="inline-block text-[7px] sm:text-[10px] sm:text-xs font-semibold tracking-[0.2em] text-white uppercase border-b border-white/80 pb-0.5 mt-0.5 transition-all duration-300 group-hover:border-white">
                   {isArabic ? "اكتشف المزيد" : "DISCOVER MORE"}
                 </div>
               </div>
@@ -77,7 +77,7 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
           </div>
 
           {/* RIGHT: Stack of 3 customized categories horizontally sliced (takes 5 columns) */}
-          <div className="lg:col-span-5 flex flex-col gap-6 h-[400px] sm:h-[500px] lg:h-[580px]">
+          <div className="col-span-5 flex flex-col gap-1.5 sm:gap-4 md:gap-6 h-[180px] sm:h-[400px] md:h-[500px] lg:h-[580px]">
             
             {/* 1. Men Card (Deep blue sky concept) */}
             <div className="flex-1 min-h-0">
@@ -85,7 +85,7 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
                 whileHover={{ scale: 0.99 }}
                 transition={{ duration: 0.4 }}
                 onClick={() => handleCategoryClick('men')}
-                className="relative w-full h-full rounded-3xl overflow-hidden shadow-md cursor-pointer group"
+                className="relative w-full h-full rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden shadow-md cursor-pointer group"
               >
                 <img
                   src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800"
@@ -94,8 +94,8 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/55 to-transparent" />
-                <div className="absolute bottom-6 left-8 text-white select-none">
-                  <h3 className="text-2.5xl sm:text-3xl font-serif text-white font-medium">
+                <div className="absolute bottom-2 left-2 sm:bottom-6 sm:left-8 text-white select-none">
+                  <h3 className="text-[10px] xs:text-[12px] sm:text-2.5xl sm:text-3xl font-serif text-white font-medium">
                     Men
                   </h3>
                 </div>
@@ -108,7 +108,7 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
                 whileHover={{ scale: 0.99 }}
                 transition={{ duration: 0.4 }}
                 onClick={() => handleCategoryClick('kids')}
-                className="relative w-full h-full rounded-3xl overflow-hidden shadow-md cursor-pointer group"
+                className="relative w-full h-full rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden shadow-md cursor-pointer group"
               >
                 <img
                   src="https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&q=80&w=800"
@@ -117,8 +117,8 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/55 to-transparent" />
-                <div className="absolute bottom-6 left-8 text-white select-none">
-                  <h3 className="text-2.5xl sm:text-3xl font-serif text-white font-medium">
+                <div className="absolute bottom-2 left-2 sm:bottom-6 sm:left-8 text-white select-none">
+                  <h3 className="text-[10px] xs:text-[12px] sm:text-2.5xl sm:text-3xl font-serif text-white font-medium">
                     Kids
                   </h3>
                 </div>
@@ -131,7 +131,7 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
                 whileHover={{ scale: 0.99 }}
                 transition={{ duration: 0.4 }}
                 onClick={() => handleCategoryClick('accessories')}
-                className="relative w-full h-full rounded-3xl overflow-hidden shadow-md cursor-pointer group"
+                className="relative w-full h-full rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden shadow-md cursor-pointer group"
               >
                 <img
                   src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800"
@@ -140,8 +140,8 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/55 to-transparent" />
-                <div className="absolute bottom-6 left-8 text-white select-none">
-                  <h3 className="text-2.5xl sm:text-3xl font-serif text-white font-medium">
+                <div className="absolute bottom-2 left-2 sm:bottom-6 sm:left-8 text-white select-none">
+                  <h3 className="text-[10px] xs:text-[12px] sm:text-2.5xl sm:text-3xl font-serif text-white font-medium">
                     Acc
                   </h3>
                 </div>

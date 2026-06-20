@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Lock, ShieldAlert, Sparkles, ChevronDown, Search, User } from 'lucide-react';
+import { ShoppingBag, Lock, ShieldAlert, Sparkles, ChevronDown, Search, User, Menu, X, ChevronRight, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface HeaderProps {
@@ -14,9 +14,10 @@ interface HeaderProps {
   setSearchQuery: (query: string) => void;
   isArabic: boolean;
   setIsArabic: (val: boolean) => void;
-  activeView: 'home' | 'shop' | 'profile' | 'product-details';
-  setActiveView: (view: 'home' | 'shop' | 'profile' | 'product-details') => void;
+  activeView: 'home' | 'shop' | 'profile' | 'product-details' | 'contact-us' | 'shipping-returns' | 'size-guide' | 'faq' | 'privacy-policy' | 'terms-of-service';
+  setActiveView: (view: any) => void;
   isUserLoggedIn: boolean;
+  customAnnouncement?: string;
 }
 
 export default function Header({
@@ -33,10 +34,12 @@ export default function Header({
   setIsArabic,
   activeView,
   setActiveView,
-  isUserLoggedIn
+  isUserLoggedIn,
+  customAnnouncement
 }: HeaderProps) {
   const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const categories = [
     { id: 'all', labelAr: 'الكل', labelEn: 'All' },
@@ -65,17 +68,28 @@ export default function Header({
       {/* Premium Minimal Announcement Bar */}
       <div className="bg-zinc-950 font-sans text-[11px] tracking-[0.15em] text-white py-2 px-4 text-center uppercase flex items-center justify-center gap-2">
         <span className="font-semibold text-zinc-300">
-          {isArabic 
+          {customAnnouncement || (isArabic 
             ? "توصيل سريع مجاني في مصر للطلبات الأكثر من ١٢٠٠ ج.م • كود الخصم: RAAV2026" 
-            : "FREE EXPEDITED SHIPPING IN EGYPT ON ORDERS OVER 1200 EGP • CODE: RAAV2026"}
+            : "FREE EXPEDITED SHIPPING IN EGYPT ON ORDERS OVER 1200 EGP • CODE: RAAV2026")}
         </span>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* Navigation links on the Left */}
-          <div className="flex items-center space-x-1 sm:space-x-8 md:w-1/3" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+          {/* Hamburger Menu on the Left (Mobile only) */}
+          <div className="flex md:hidden items-center">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-2 text-zinc-700 hover:text-black hover:bg-zinc-50 rounded-full transition cursor-pointer"
+              title={isArabic ? "القائمة" : "Menu"}
+            >
+              <Menu size={20} strokeWidth={1.8} />
+            </button>
+          </div>
+
+          {/* Navigation links on the Left (Desktop only) */}
+          <div className="hidden md:flex items-center space-x-1 sm:space-x-8 md:w-1/3" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
             <button 
               onClick={() => {
                 setActiveView('home');
@@ -147,7 +161,7 @@ export default function Header({
           </div>
 
           {/* Logo in the Center */}
-          <div className="flex justify-center md:w-1/3">
+          <div className="flex justify-center md:w-1/3 flex-1 md:flex-initial">
             <div 
               onClick={() => {
                 setActiveView('home');
@@ -203,10 +217,10 @@ export default function Header({
               </button>
             </div>
 
-            {/* Language Switch */}
+            {/* Language Switch (hidden on mobile, moved to drawer) */}
             <button
               onClick={() => setIsArabic(!isArabic)}
-              className="text-xs font-semibold tracking-wider hover:text-amber-800 px-2 py-1 cursor-pointer transition border border-zinc-200 hover:border-zinc-300 rounded"
+              className="hidden md:inline-block text-xs font-semibold tracking-wider hover:text-amber-800 px-2 py-1 cursor-pointer transition border border-zinc-200 hover:border-zinc-300 rounded"
               title={isArabic ? "Switch to English" : "تغيير للعربية"}
             >
               {isArabic ? "EN" : "عربي"}
@@ -231,10 +245,10 @@ export default function Header({
               )}
             </button>
 
-            {/* Admin Key Button */}
+            {/* Admin Key Button (hidden on mobile, moved to drawer) */}
             <button 
               onClick={onOpenAdmin}
-              className={`p-2 rounded-full transition cursor-pointer relative ${
+              className={`hidden md:inline-block p-2 rounded-full transition cursor-pointer relative ${
                 isAdminLoggedIn
                   ? "text-amber-750 bg-amber-50"
                   : "text-zinc-400 hover:text-amber-600 hover:bg-amber-50/50"
@@ -244,11 +258,11 @@ export default function Header({
               <Lock size={15} strokeWidth={1.8} />
             </button>
 
-            {/* Admin Logout button */}
+            {/* Admin Logout button (hidden on mobile, moved to drawer) */}
             {isAdminLoggedIn && (
               <button
                 onClick={onLogoutAdmin}
-                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full transition cursor-pointer"
+                className="hidden md:inline-block p-1.5 text-red-650 hover:text-red-755 hover:bg-red-50 rounded-full transition cursor-pointer"
                 title={isArabic ? "خروج المسؤول" : "Admin Logout"}
               >
                 <ShieldAlert size={19} strokeWidth={1.8} />
@@ -284,6 +298,180 @@ export default function Header({
           </button>
         </div>
       )}
+
+      {/* Premium Sliding Mobile Navigation Drawer */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop Blur Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-zinc-950/60 backdrop-blur-xs z-50 md:hidden"
+            />
+
+            {/* Drawer Body (slides from opposite depending on RTL/LTR) */}
+            <motion.div
+              initial={{ x: isArabic ? '100%' : '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: isArabic ? '100%' : '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className={`fixed top-0 bottom-0 w-[290px] max-w-[85vw] bg-white z-55 shadow-2xl flex flex-col justify-between p-6 md:hidden ${
+                isArabic ? 'right-0 border-l border-zinc-100' : 'left-0 border-r border-zinc-100'
+              }`}
+              style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
+            >
+              {/* Drawer Header */}
+              <div>
+                <div className="flex items-center justify-between pb-4 border-b border-zinc-100 mb-6">
+                  <h2 className="text-xl font-serif tracking-[0.2em] font-bold text-black select-none">
+                    RAAV
+                  </h2>
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-1.5 bg-zinc-50 hover:bg-zinc-100 rounded-full text-zinc-650 hover:text-black transition cursor-pointer"
+                  >
+                    <X size={16} strokeWidth={2.5} />
+                  </button>
+                </div>
+
+                {/* Navigation Links */}
+                <div className="space-y-4">
+                  {/* Home Link */}
+                  <button
+                    onClick={() => {
+                      setActiveView('home');
+                      setMobileMenuOpen(false);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`w-full py-2 text-sm font-bold uppercase tracking-[0.15em] transition flex items-center justify-between ${
+                      activeView === 'home' ? 'text-amber-900 bg-amber-50/40 px-3 rounded-lg' : 'text-zinc-700 hover:text-black'
+                    }`}
+                  >
+                    <span>{isArabic ? "الصفحة الرئيسية" : "HOME"}</span>
+                    <ChevronRight size={14} className={isArabic ? "rotate-180 text-amber-900" : "text-zinc-400"} />
+                  </button>
+
+                  {/* Shop Section / Accordion Header */}
+                  <div className="border-t border-zinc-100/60 pt-4 mt-2">
+                    <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold block mb-3 px-1">
+                      {isArabic ? "تصفح الفئات" : "SHOP CATEGORIES"}
+                    </span>
+                    
+                    <div className="space-y-2">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => {
+                            handleCategorySelect(cat.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center justify-between ${
+                            selectedCategory === cat.id && activeView === 'shop'
+                              ? 'bg-amber-100/40 text-amber-950 font-extrabold'
+                              : 'bg-zinc-50/50 hover:bg-zinc-50 text-zinc-650 hover:text-zinc-950'
+                          }`}
+                        >
+                          <span>{isArabic ? cat.labelAr : cat.labelEn}</span>
+                          {selectedCategory === cat.id && activeView === 'shop' ? (
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping" />
+                          ) : (
+                            <ChevronRight size={12} className={isArabic ? "rotate-180 text-zinc-400" : "text-zinc-400"} />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* About Us Link */}
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setTimeout(() => {
+                        const footer = document.querySelector('footer');
+                        if (footer) footer.scrollIntoView({ behavior: 'smooth' });
+                      }, 250);
+                    }}
+                    className="w-full py-3 border-t border-zinc-100/60 text-xs font-semibold uppercase tracking-[0.15em] text-zinc-650 hover:text-amber-750 flex items-center justify-between mt-4"
+                  >
+                    <span>{isArabic ? "من نحن وقصتنا" : "ABOUT US & HERITAGE"}</span>
+                    <Globe size={13} className="text-zinc-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Drawer Footer Actions */}
+              <div className="border-t border-zinc-150 pt-5 mt-auto space-y-4">
+                {/* User Status / Account Page Trigger */}
+                <button
+                  onClick={() => {
+                    setActiveView('profile');
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="w-full flex items-center justify-between p-2.5 bg-zinc-50 hover:bg-zinc-100 transition rounded-xl text-xs text-zinc-700 font-bold cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <User size={15} />
+                    <span>{isArabic ? "حسابي الشخصي" : "MY PROFILE"}</span>
+                  </div>
+                  {isUserLoggedIn && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  )}
+                </button>
+
+                {/* Language Switch block */}
+                <div className="flex items-center justify-between gap-3 text-xs bg-zinc-50/60 p-2.5 rounded-xl border border-zinc-100">
+                  <span className="text-zinc-400 font-medium">{isArabic ? "لغة العرض" : "Layout Language"}</span>
+                  <button
+                    onClick={() => {
+                      setIsArabic(!isArabic);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="px-3 py-1 bg-white border border-zinc-200 hover:border-black rounded-lg text-xs font-bold text-zinc-950 transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Globe size={13} />
+                    <span>{isArabic ? "English" : "العربية"}</span>
+                  </button>
+                </div>
+
+                {/* Admin Area */}
+                <div className="flex items-center justify-between text-[11px] pt-2 border-t border-zinc-100">
+                  <button
+                    onClick={() => {
+                      onOpenAdmin();
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-1.5 font-bold px-3 py-1.5 rounded-lg transition ${
+                      isAdminLoggedIn 
+                        ? 'bg-amber-100 text-amber-950' 
+                        : 'bg-zinc-50 text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
+                    }`}
+                  >
+                    <Lock size={12} />
+                    <span>{isAdminLoggedIn ? (isArabic ? "لوحة الأدمن" : "Admin Panel") : (isArabic ? "الأدمن" : "Admin Mode")}</span>
+                  </button>
+
+                  {isAdminLoggedIn && (
+                    <button
+                      onClick={() => {
+                        onLogoutAdmin();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="text-red-650 hover:text-red-755 font-bold px-2 py-1 flex items-center gap-1 cursor-pointer"
+                    >
+                      <ShieldAlert size={14} />
+                      <span>{isArabic ? "خروج" : "Logout"}</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

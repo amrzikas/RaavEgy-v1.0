@@ -263,7 +263,7 @@ export default function ProductPage({
 
             {/* Multiple Images Thumbnails Gallery Row */}
             {product.images && product.images.filter(Boolean).length > 0 && (
-              <div className="grid grid-cols-5 gap-3 mt-4">
+              <div className="grid grid-cols-5 gap-1.5 sm:gap-3 mt-4">
                 {/* Always include root product.image as an option */}
                 {[product.image, ...product.images.filter(img => img !== product.image)].filter(Boolean).slice(0, 5).map((img, idx) => (
                   <button
@@ -450,8 +450,8 @@ export default function ProductPage({
               </div>
 
               {/* Secure badges and trust banners */}
-              <div className="grid grid-cols-3 gap-3 pt-5 border-t border-zinc-100 text-center font-sans">
-                <div className="p-3 bg-zinc-50 rounded-xl space-y-1">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-3 pt-5 border-t border-zinc-100 text-center font-sans">
+                <div className="p-2 sm:p-3 bg-zinc-50 rounded-xl space-y-1">
                   <Truck size={16} className="mx-auto text-amber-600" />
                   <p className="text-[10px] font-bold text-zinc-900">{isArabic ? "معاينة وقياس" : "Sizing tests"}</p>
                   <p className="text-[9px] text-zinc-400">{isArabic ? "مجاناً بموقعك" : "At your doorstep"}</p>

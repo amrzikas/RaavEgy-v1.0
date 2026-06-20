@@ -100,17 +100,17 @@ export default function CategoryScrollSlices({
             return (
               <div 
                 key={config.id} 
-                className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch"
+                className="grid grid-cols-12 gap-2 sm:gap-6 lg:gap-8 items-stretch"
                 style={{ direction: isArabic ? 'rtl' : 'ltr' }}
               >
                 
-                {/* 1. Styled Showcase Intro Card (3 cols) */}
-                <div className="lg:col-span-4 flex">
-                  <div className={`w-full bg-gradient-to-br ${config.bgColor} border border-zinc-150/50 p-8 rounded-[2rem] flex flex-col justify-between shadow-xs relative overflow-hidden group`}>
+                {/* 1. Styled Showcase Intro Card (4 cols on all screen sizes) */}
+                <div className="col-span-4 flex">
+                  <div className={`w-full bg-gradient-to-br ${config.bgColor} border border-zinc-150/50 p-2.5 xs:p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] flex flex-col justify-between shadow-xs relative overflow-hidden group`}>
                     
                     {/* Gorgeous subtle background image layer with hover scaling */}
                     {config.image && (
-                      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-[2rem]">
+                      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-2xl sm:rounded-[2rem]">
                         <img 
                           src={config.image} 
                           alt="" 
@@ -121,28 +121,28 @@ export default function CategoryScrollSlices({
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-white/40" />
                       </div>
                     )}
-
+ 
                     {/* Tiny decor circle */}
                     <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-white/20 blur-xl pointer-events-none" />
-
-                    <div className="space-y-3 relative z-10 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                      <span className="text-[10px] font-bold bg-white/95 text-amber-950 border border-zinc-100/55 rounded-full px-3 py-1 font-sans uppercase tracking-widest inline-block shadow-xs">
+ 
+                    <div className="space-y-1.5 sm:space-y-3 relative z-10 text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                      <span className="text-[6px] xs:text-[8px] sm:text-[10px] font-bold bg-white/95 text-amber-950 border border-zinc-100/55 rounded-full px-1.5 py-0.5 sm:px-3 sm:py-1 font-sans uppercase tracking-widest inline-block shadow-xs">
                         {isArabic ? "مجموعة خاصة" : "EXCLUSIVE LINE"}
                       </span>
-                      <h3 className="text-2xl sm:text-3xl font-serif font-bold text-zinc-950 tracking-tight leading-tight drop-shadow-xs">
+                      <h3 className="text-[10px] xs:text-sm sm:text-2xl lg:text-3xl font-serif font-bold text-zinc-950 tracking-tight leading-tight drop-shadow-xs">
                         {isArabic ? config.labelAr : config.labelEn}
                       </h3>
-                      <p className="text-zinc-800 text-xs sm:text-sm leading-relaxed font-sans font-medium">
+                      <p className="hidden xs:block text-zinc-800 text-[8px] sm:text-xs lg:text-sm leading-relaxed font-sans font-medium">
                         {isArabic ? config.descAr : config.descEn}
                       </p>
                     </div>
-
-                    <div className="pt-6 relative z-10 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+ 
+                    <div className="pt-2 sm:pt-6 relative z-10 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                       <button
                         onClick={() => handleViewAll(config.id)}
-                        className="px-6 py-3 bg-zinc-950 hover:bg-zinc-900 text-white rounded-full text-xs font-semibold tracking-wider transition uppercase shadow-sm cursor-pointer text-center"
+                        className="px-1.5 py-1 xs:px-3 xs:py-1.5 sm:px-6 sm:py-3 bg-zinc-950 hover:bg-zinc-900 text-white rounded-lg sm:rounded-full text-[7px] xs:text-[9px] sm:text-xs font-semibold tracking-wider transition uppercase shadow-sm cursor-pointer text-center"
                       >
-                        {isArabic ? "عرض كامل الموديلات" : "VIEW ENTIRE EDIT"}
+                        {isArabic ? "كل الموديلات" : "BROWSE EDIT"}
                       </button>
                       
                       {/* Nav Arrows */}
@@ -163,22 +163,22 @@ export default function CategoryScrollSlices({
                         </button>
                       </div>
                     </div>
-
+ 
                   </div>
                 </div>
-
-                {/* 2. Seamless Horizontal Scroll Track (8 cols) */}
-                <div className="lg:col-span-8 flex items-center relative">
+ 
+                {/* 2. Seamless Horizontal Scroll Track (8 cols on all screen sizes) */}
+                <div className="col-span-8 flex items-center relative">
                   
                   {/* Subtle shadows indicating side scrolls */}
                   <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 hidden md:block" />
                   <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 hidden md:block" />
-
+ 
                   <div
                     ref={(el) => {
                       scrollSlidersRefs.current[config.id] = el;
                     }}
-                    className="w-full flex items-stretch gap-6 overflow-x-auto py-4 px-2 scrollbar-none snap-x snap-mandatory"
+                    className="w-full flex items-stretch gap-2.5 sm:gap-6 overflow-x-auto py-2 sm:py-4 px-1 sm:px-2 scrollbar-none snap-x snap-mandatory"
                     style={{ 
                       scrollbarWidth: 'none', 
                       msOverflowStyle: 'none' 
@@ -189,7 +189,7 @@ export default function CategoryScrollSlices({
                       <motion.div
                         key={product.id}
                         whileHover={{ y: -4 }}
-                        className="flex-none w-[235px] sm:w-[265px] bg-white border border-zinc-150/30 rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition duration-300 flex flex-col snap-start group select-none"
+                        className="flex-none w-[100px] xs:w-[135px] sm:w-[265px] bg-white border border-zinc-150/30 rounded-xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition duration-300 flex flex-col snap-start group select-none"
                       >
                         {/* Compact Luxury Image */}
                         <div 
@@ -205,17 +205,17 @@ export default function CategoryScrollSlices({
                               e.currentTarget.src = "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&q=80&w=600";
                             }}
                           />
-
+ 
                           {/* Quick details reveal glass overlays */}
-                          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-1.5 xs:gap-2">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onSelectProduct(product);
                               }}
-                              className="p-2.5 bg-white text-zinc-950 rounded-full hover:bg-amber-800 hover:text-white shadow-md transition"
+                              className="p-1.5 xs:p-2.5 bg-white text-zinc-950 rounded-full hover:bg-amber-800 hover:text-white shadow-md transition"
                             >
-                              <Eye size={15} />
+                              <Eye className="w-2.5 h-2.5 xs:w-3.5 xs:h-3.5" />
                             </button>
                             {product.inStock && (
                               <button
@@ -223,98 +223,98 @@ export default function CategoryScrollSlices({
                                   e.stopPropagation();
                                   onQuickAddToCart(product);
                                 }}
-                                className="p-2.5 bg-zinc-950 text-white rounded-full hover:bg-white hover:text-zinc-950 shadow-md transition"
+                                className="p-1.5 xs:p-2.5 bg-zinc-950 text-white rounded-full hover:bg-white hover:text-zinc-950 shadow-md transition"
                               >
-                                <Plus size={15} />
+                                <Plus className="w-2.5 h-2.5 xs:w-3.5 xs:h-3.5" />
                               </button>
                             )}
                           </div>
-
+ 
                           {!product.inStock && (
                             <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
-                              <span className="text-[10px] tracking-wider text-red-700 bg-red-50 border border-red-100 py-1.5 px-3 rounded-full font-bold">
-                                {isArabic ? "نفاد المخزن" : "SOLD OUT"}
+                              <span className="text-[7px] xs:text-[10px] tracking-wider text-red-700 bg-red-50 border border-red-100 py-0.5 px-1.5 sm:py-1.5 sm:px-3 rounded-full font-bold">
+                                {isArabic ? "نفد" : "SOLD OUT"}
                               </span>
                             </div>
                           )}
                         </div>
-
+ 
                         {/* Title details bar */}
-                        <div className="p-4 flex flex-col flex-1 justify-between gap-2" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                        <div className="p-2 xs:p-3 sm:p-4 flex flex-col flex-1 justify-between gap-1 sm:gap-2" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                           <div>
                             <h4 
                               onClick={() => onSelectProduct(product)}
-                              className="text-zinc-900 font-serif font-medium text-sm tracking-tight cursor-pointer hover:text-amber-700 transition line-clamp-1"
+                              className="text-zinc-900 font-serif font-medium text-[9px] xs:text-xs sm:text-sm tracking-tight cursor-pointer hover:text-amber-700 transition line-clamp-1"
                             >
                               {isArabic ? product.nameAr : product.nameEn}
                             </h4>
                           </div>
-
-                          <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
+ 
+                          <div className="flex flex-col xs:flex-row xs:items-center justify-between pt-1 xs:pt-2 border-t border-zinc-100 gap-1">
                             {(() => {
                               const priceInfo = getProductPrice(product);
                               return (
                                 <div className="flex flex-col text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                                   {priceInfo.hasDiscount && (
-                                    <span className="text-zinc-400 line-through text-[9px] font-serif leading-none mb-0.5">
-                                      {priceInfo.original} {isArabic ? 'ج.م' : 'EGP'}
+                                    <span className="text-zinc-400 line-through text-[7px] xs:text-[8px] sm:text-[9px] font-serif leading-none mb-0.5">
+                                      {priceInfo.original}
                                     </span>
                                   )}
                                   <div>
-                                    <span className={priceInfo.hasDiscount ? "text-red-650 font-bold text-sm font-serif" : "text-zinc-900 font-bold text-sm font-serif"}>
+                                    <span className={priceInfo.hasDiscount ? "text-red-650 font-bold text-[9px] xs:text-xs sm:text-sm font-serif" : "text-zinc-900 font-bold text-[9px] xs:text-xs sm:text-sm font-serif"}>
                                       {priceInfo.current}
                                     </span>
-                                    <span className="text-[9px] text-zinc-500 font-sans ml-1 mr-1">{isArabic ? 'ج.م' : 'EGP'}</span>
+                                    <span className="text-[6px] xs:text-[8px] text-zinc-500 font-sans ml-0.5 mr-0.5">{isArabic ? 'ج.م' : 'EGP'}</span>
                                   </div>
                                 </div>
                               );
                             })()}
-
+ 
                             {product.inStock ? (
                               <button
                                 onClick={() => onSelectProduct(product)}
-                                className="text-[10px] text-zinc-550 hover:text-amber-800 font-semibold uppercase tracking-wider font-sans underline underline-offset-4"
+                                className="text-[8px] xs:text-[9px] sm:text-[10px] text-zinc-550 hover:text-amber-800 font-semibold uppercase tracking-wider font-sans underline underline-offset-4 self-start xs:self-auto"
                               >
                                 {isArabic ? "تفاصيل" : "BUY"}
                               </button>
                             ) : (
-                              <span className="text-[9px] text-zinc-400 italic">
+                              <span className="text-[7px] xs:text-[9px] text-zinc-400 italic">
                                 {isArabic ? "غير متاح" : "Out"}
                               </span>
                             )}
                           </div>
                         </div>
-
+ 
                       </motion.div>
                     ))}
-
+ 
                     {/* Final "Explore" Card inside each scroll track */}
-                    <div className="flex-none w-[160px] sm:w-[200px] flex items-center justify-center p-6 bg-zinc-50 border border-dashed border-zinc-300 rounded-3xl snap-end">
-                      <div className="text-center space-y-4">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-xs border border-zinc-100 text-amber-800">
-                          <ShoppingBag size={18} />
+                    <div className="flex-none w-[80px] xs:w-[110px] sm:w-[200px] flex items-center justify-center p-2.5 xs:p-4 sm:p-6 bg-zinc-50 border border-dashed border-zinc-300 rounded-xl sm:rounded-3xl snap-end">
+                      <div className="text-center space-y-2 sm:space-y-4">
+                        <div className="w-6 h-6 xs:w-8 xs:h-8 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-xs border border-zinc-100 text-amber-800">
+                          <ShoppingBag className="w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]" />
                         </div>
-                        <div className="space-y-1">
-                          <h4 className="font-serif font-medium text-zinc-950 text-sm">
+                        <div className="space-y-0.5 sm:space-y-1">
+                          <h4 className="font-serif font-medium text-zinc-950 text-[9px] xs:text-xs sm:text-sm">
                             {isArabic ? "المزيد؟" : "More pieces"}
                           </h4>
-                          <p className="text-[11px] text-zinc-400 font-sans leading-tight">
+                          <p className="hidden xs:block text-[8px] sm:text-[11px] text-zinc-400 font-sans leading-tight">
                             {isArabic ? "تصفح هذه المجموعة بالكامل" : "See entire curated line"}
                           </p>
                         </div>
                         <button
                           onClick={() => handleViewAll(config.id)}
-                          className="px-4 py-2 bg-zinc-900 hover:bg-amber-800 text-white rounded-full text-[10px] font-semibold tracking-wider uppercase transition inline-block cursor-pointer"
+                          className="px-2 py-1 sm:px-4 sm:py-2 bg-zinc-900 hover:bg-amber-800 text-white rounded-md sm:rounded-full text-[7px] xs:text-[9px] sm:text-[10px] font-semibold tracking-wider uppercase transition inline-block cursor-pointer"
                         >
-                          {isArabic ? "تصفح الكل" : "Browse all"}
+                          {isArabic ? "تصفح" : "Browse"}
                         </button>
                       </div>
                     </div>
-
+ 
                   </div>
-
+ 
                 </div>
-
+ 
               </div>
             );
           })}

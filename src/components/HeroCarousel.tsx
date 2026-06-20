@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { HeroSlideInput } from '../types';
 
 interface HeroCarouselProps {
   onBrowseCategory: (cat: string) => void;
   isArabic: boolean;
+  customSlides?: HeroSlideInput[];
 }
 
 const HERO_SLIDES = [
@@ -51,26 +53,28 @@ const HERO_SLIDES = [
 
 export default function HeroCarousel({
   onBrowseCategory,
-  isArabic
+  isArabic,
+  customSlides
 }: HeroCarouselProps) {
+  const slides = customSlides && customSlides.length > 0 ? customSlides : HERO_SLIDES;
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
     }, 8500);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides]);
 
   const handleNext = () => {
-    setCurrentIndex((currentIndex + 1) % HERO_SLIDES.length);
+    setCurrentIndex((currentIndex + 1) % slides.length);
   };
 
   const handlePrev = () => {
-    setCurrentIndex((currentIndex - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+    setCurrentIndex((currentIndex - 1 + slides.length) % slides.length);
   };
 
-  const currentSlide = HERO_SLIDES[currentIndex];
+  const currentSlide = slides[currentIndex];
 
   // Helper to split and italicize words nicely if En
   const renderTitle = (text: string, isEn: boolean) => {
@@ -134,7 +138,7 @@ export default function HeroCarousel({
               </div>
 
               {/* Title Section (with Serifying) */}
-              <h1 className="text-5xl sm:text-6xl md:text-6xl lg:text-7xl font-light tracking-tight leading-[1.08] text-zinc-950 font-serif">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight leading-[1.08] text-zinc-950 font-serif">
                 {renderTitle(isArabic ? currentSlide.titleAr : currentSlide.titleEn, !isArabic)}
               </h1>
 
@@ -203,7 +207,7 @@ export default function HeroCarousel({
         {/* Manual Slides Dot navigation and side control steps */}
         <div className="mt-14 flex items-center justify-between border-t border-zinc-100 pt-6">
           <div className="flex gap-2.5">
-            {HERO_SLIDES.map((_, idx) => (
+            {slides.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}

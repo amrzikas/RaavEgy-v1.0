@@ -17,7 +17,8 @@ import {
   setDefaultSavedAddress,
   toggleProductFavorite,
   toggleSearchAlert,
-  subscribeToUserProfile
+  subscribeToUserProfile,
+  resubmitOrderPayment
 } from '../dbService';
 import { Order, OrderStatus, Product, SavedAddress, FavoriteItem, Notification, Conversation, ConversationMessage } from '../types';
 import { 
@@ -99,6 +100,11 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
 
   // Image receipt zoom popup
   const [zoomedReceipt, setZoomedReceipt] = useState<string | null>(null);
+
+  // Resubmission of payment states (saved by orderId)
+  const [paymentResubmitImage, setPaymentResubmitImage] = useState<Record<string, string>>({});
+  const [paymentResubmitNotes, setPaymentResubmitNotes] = useState<Record<string, string>>({});
+  const [isResubmittingPayment, setIsResubmittingPayment] = useState<Record<string, boolean>>({});
 
   const [isLoading, setIsLoading] = useState(true);
   const [operationPending, setOperationPending] = useState(false);
@@ -486,35 +492,39 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
             </div>
           </div>
 
-          <div className="relative z-10 flex gap-3 self-end md:self-auto">
+          <div className="relative z-10 flex flex-wrap gap-3 w-full md:w-auto justify-end md:justify-start items-center">
             {isEditingProfile ? (
-              <form onSubmit={handleEditProfileSubmit} className="flex gap-2 bg-zinc-800/80 p-2 rounded-xl border border-zinc-700">
-                <input 
-                  type="text" 
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)} 
-                  placeholder={isArabic ? "الاسم" : "Name"}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg text-xs px-2.5 py-1.5 focus:outline-none text-white"
-                  required
-                />
-                <input 
-                  type="tel" 
-                  value={editPhone}
-                  onChange={e => setEditPhone(e.target.value)} 
-                  placeholder={isArabic ? "الهاتف" : "Phone"}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg text-xs px-2.5 py-1.5 focus:outline-none w-28 text-center text-white"
-                />
-                <button type="submit" disabled={operationPending} className="p-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white">
-                  <Check size={14} />
-                </button>
-                <button type="button" onClick={() => setIsEditingProfile(false)} className="p-2 bg-zinc-700 hover:bg-zinc-650 rounded-lg text-zinc-300">
-                  <Trash2 size={14} />
-                </button>
+              <form onSubmit={handleEditProfileSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-zinc-800/80 p-2.5 rounded-2xl border border-zinc-700 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input 
+                    type="text" 
+                    value={editName}
+                    onChange={e => setEditName(e.target.value)} 
+                    placeholder={isArabic ? "الاسم" : "Name"}
+                    className="bg-zinc-900 border border-zinc-700 rounded-lg text-xs px-2.5 py-1.5 focus:outline-none text-white w-full sm:w-28"
+                    required
+                  />
+                  <input 
+                    type="tel" 
+                    value={editPhone}
+                    onChange={e => setEditPhone(e.target.value)} 
+                    placeholder={isArabic ? "الهاتف" : "Phone"}
+                    className="bg-zinc-900 border border-zinc-700 rounded-lg text-xs px-2.5 py-1.5 focus:outline-none text-white w-full sm:w-28 text-center"
+                  />
+                </div>
+                <div className="flex gap-1.5 justify-end">
+                  <button type="submit" disabled={operationPending} className="p-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white flex-1 sm:flex-initial flex items-center justify-center cursor-pointer">
+                    <Check size={14} />
+                  </button>
+                  <button type="button" onClick={() => setIsEditingProfile(false)} className="p-2 bg-zinc-700 hover:bg-zinc-650 rounded-lg text-zinc-300 flex-1 sm:flex-initial flex items-center justify-center cursor-pointer">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </form>
             ) : (
               <button
                 onClick={() => setIsEditingProfile(true)}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-xs border border-zinc-700 rounded-xl transition text-zinc-200 flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-xs border border-zinc-700 rounded-xl transition text-zinc-200 flex items-center gap-1.5 cursor-pointer w-full sm:w-auto justify-center"
               >
                 <Edit size={13} />
                 <span>{isArabic ? "تعديل الحساب" : "Edit Profile"}</span>
@@ -523,7 +533,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
 
             <button
               onClick={handleSignOut}
-              className="px-4 py-2 bg-zinc-800 hover:bg-red-950 hover:text-red-300 text-xs border border-zinc-700 hover:border-red-900 rounded-xl transition text-zinc-300 flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 bg-zinc-800 hover:bg-red-950 hover:text-red-300 text-xs border border-zinc-700 hover:border-red-900 rounded-xl transition text-zinc-350 flex items-center gap-1.5 cursor-pointer w-full sm:w-auto justify-center text-zinc-300"
             >
               <LogOut size={13} />
               <span>{isArabic ? "خروج" : "Logout"}</span>
@@ -535,7 +545,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* LEFT SIDE PANEL: Notifications Center and Search Alerts */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-6 order-2 lg:order-1">
             
             {/* In-App Notifications Center with realtime update */}
             <div className="bg-white rounded-2xl border border-zinc-100 p-6 shadow-sm">
@@ -643,19 +653,22 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
           </div>
 
           {/* MAIN COLUMN (2 cols gap): Tabbed details display */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
             
             {/* Navigation Tabs */}
-            <div className="bg-white p-2 rounded-2xl border border-zinc-150/80 shadow-xs flex gap-1">
+            <div 
+              className="bg-white p-1.5 sm:p-2 rounded-2xl border border-zinc-150/80 shadow-xs flex gap-1 overflow-x-auto sm:overflow-visible shrink-0 snap-x"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               <button
                 onClick={() => setActiveTab('orders')}
-                className={`flex-1 py-3 text-xs sm:text-sm font-medium rounded-xl transition flex items-center justify-center gap-2 cursor-pointer ${
+                className={`flex-1 shrink-0 py-2.5 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-xl transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer snap-start ${
                   activeTab === 'orders' 
                     ? 'bg-zinc-950 text-white shadow-sm' 
                     : 'text-zinc-650 hover:bg-zinc-50'
                 }`}
               >
-                <Package size={14} />
+                <Package size={14} className="shrink-0" />
                 <span>{isArabic ? "طلبات الشراء" : "Purchases"}</span>
                 <span className={`px-2 py-0.5 text-[9px] rounded-full shrink-0 ${
                   activeTab === 'orders' ? 'bg-zinc-800 text-amber-400' : 'bg-zinc-100 text-zinc-500'
@@ -666,13 +679,13 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
 
               <button
                 onClick={() => setActiveTab('addresses')}
-                className={`flex-1 py-3 text-xs sm:text-sm font-medium rounded-xl transition flex items-center justify-center gap-2 cursor-pointer ${
+                className={`flex-1 shrink-0 py-2.5 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-xl transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer snap-start ${
                   activeTab === 'addresses' 
                     ? 'bg-zinc-950 text-white shadow-sm' 
                     : 'text-zinc-650 hover:bg-zinc-50'
                 }`}
               >
-                <MapPin size={14} />
+                <MapPin size={14} className="shrink-0" />
                 <span>{isArabic ? "العناوين المحفوظة" : "Addresses Details"}</span>
                 <span className={`px-2 py-0.5 text-[9px] rounded-full shrink-0 ${
                   activeTab === 'addresses' ? 'bg-zinc-800 text-amber-400' : 'bg-zinc-100 text-zinc-500'
@@ -683,13 +696,13 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
 
               <button
                 onClick={() => setActiveTab('favorites')}
-                className={`flex-1 py-3 text-xs sm:text-sm font-medium rounded-xl transition flex items-center justify-center gap-2 cursor-pointer ${
+                className={`flex-1 shrink-0 py-2.5 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-xl transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer snap-start ${
                   activeTab === 'favorites' 
                     ? 'bg-zinc-950 text-white shadow-sm' 
                     : 'text-zinc-650 hover:bg-zinc-50'
                 }`}
               >
-                <Heart size={14} />
+                <Heart size={14} className="shrink-0" />
                 <span>{isArabic ? "المفضلة الشهرية" : "My Wishlist"}</span>
                 <span className={`px-2 py-0.5 text-[9px] rounded-full shrink-0 ${
                   activeTab === 'favorites' ? 'bg-zinc-800 text-amber-400' : 'bg-zinc-100 text-zinc-500'
@@ -700,13 +713,13 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
 
               <button
                 onClick={() => setActiveTab('custom')}
-                className={`flex-1 py-3 text-xs sm:text-sm font-medium rounded-xl transition flex items-center justify-center gap-2 cursor-pointer ${
+                className={`flex-1 shrink-0 py-2.5 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm font-medium rounded-xl transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer snap-start ${
                   activeTab === 'custom'
                     ? 'bg-zinc-950 text-white shadow-sm'
                     : 'text-zinc-650 hover:bg-zinc-50'
                 }`}
               >
-                <Sparkles size={14} />
+                <Sparkles size={14} className="shrink-0" />
                 <span>{isArabic ? "طلبات مخصصة" : "Custom Requests"}</span>
                 <span className={`px-2 py-0.5 text-[9px] rounded-full shrink-0 ${
                   activeTab === 'custom' ? 'bg-zinc-800 text-amber-400' : 'bg-zinc-100 text-zinc-500'
@@ -717,7 +730,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
             </div>
 
             {/* TAB CONTENTS CONTAINER */}
-            <div className="bg-white rounded-2xl border border-zinc-100 p-6 sm:p-8 shadow-xs">
+            <div className="bg-white rounded-2xl border border-zinc-105/80 p-4 sm:p-8 shadow-xs">
               
               {/* TAB 1: ORDERS HISTORY */}
               {activeTab === 'orders' && (
@@ -750,100 +763,255 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
                     </div>
                   ) : (
                     <div className="space-y-5">
-                      {orders.filter((order) => order.orderType !== 'custom').map((order) => (
-                        <div key={order.id} className="border border-zinc-100 bg-zinc-50/50 rounded-2xl p-5 space-y-4 text-right" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
-                          
-                          {/* Order metadata line */}
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-zinc-200/40 pb-3 font-sans text-xs text-zinc-500">
-                            <div>
-                              <div className="flex items-center gap-2 justify-start flex-wrap">
-                                <span className="font-mono font-medium text-zinc-900">#{order.id.slice(0, 12)}...</span>
-                                <span className="text-[9px] bg-zinc-200/60 px-2 py-0.5 rounded text-zinc-650">
-                                  {new Date(order.createdAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </span>
+                      {orders.filter((order) => order.orderType !== 'custom').map((order) => {
+                        const isElectronic = order.paymentMethod && !['cod', 'cashondelivery', 'cash on delivery'].includes(order.paymentMethod.toLowerCase().replace(/\s/g, ''));
+                        return (
+                          <div key={order.id} className="border border-zinc-100 bg-zinc-50/50 rounded-2xl p-5 space-y-4 text-right" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                            
+                            {/* Order metadata line */}
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-zinc-200/40 pb-3 font-sans text-xs text-zinc-500">
+                              <div>
+                                <div className="flex items-center gap-2 justify-start flex-wrap">
+                                  <span className="font-mono font-medium text-zinc-900">#{order.id.slice(0, 12)}...</span>
+                                  <span className="text-[9px] bg-zinc-200/60 px-2 py-0.5 rounded text-zinc-650">
+                                    {new Date(order.createdAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-zinc-400 mt-1 font-light">
+                                  {isArabic 
+                                    ? `طريقة الدفع: ${order.paymentMethod === 'cod' ? 'الدفع عند الاستلام' : order.paymentMethod}` 
+                                    : `Pay Method: ${order.paymentMethod}`}
+                                </p>
                               </div>
-                              <p className="text-[10px] text-zinc-400 mt-1 font-light">
-                                {isArabic 
-                                  ? `طريقة الدفع: ${order.paymentMethod === 'cod' ? 'الدفع عند الاستلام' : order.paymentMethod}` 
-                                  : `Pay Method: ${order.paymentMethod}`}
-                              </p>
+
+                              {/* Status and receipts preview */}
+                              <div className="flex items-center gap-2 self-end sm:self-auto font-sans flex-wrap">
+                                {order.paymentProof && (
+                                  <button 
+                                    onClick={() => setZoomedReceipt(order.paymentProof!)}
+                                    className="text-[10px] text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-1 rounded-lg font-medium flex items-center gap-1 cursor-pointer transition"
+                                  >
+                                    <Eye size={10} />
+                                    <span>{isArabic ? "عرض إيصال التحويل" : "View Receipt"}</span>
+                                  </button>
+                                )}
+
+                                {isElectronic && (
+                                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                                    order.paymentStatus === 'verified' 
+                                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                                      : order.paymentStatus === 'rejected' 
+                                        ? 'bg-rose-50 text-rose-600 border-rose-100 animate-pulse' 
+                                        : 'bg-amber-50 text-amber-600 border-amber-100'
+                                  }`}>
+                                    {order.paymentStatus === 'verified' && (isArabic ? "تأكيد السداد: مقبول" : "Payment Confirmed")}
+                                    {order.paymentStatus === 'rejected' && (isArabic ? "تأكيد السداد: مرفوض" : "Payment Rejected")}
+                                    {(order.paymentStatus === 'pending_verification' || !order.paymentStatus) && (isArabic ? "انتظار مراجعة السداد" : "Awaiting Verification")}
+                                  </span>
+                                )}
+
+                                {order.status === 'pending' && (
+                                  <span className="bg-amber-50 text-amber-600 border border-amber-100 rounded-full px-3 py-1 text-[10px] font-bold">
+                                    {isArabic ? "جاري المراجعة" : "Reviewing"}
+                                  </span>
+                                )}
+                                {order.status === 'preparing' && (
+                                  <span className="bg-blue-50 text-blue-600 border border-blue-100 rounded-full px-3 py-1 text-[10px] font-bold">
+                                    {isArabic ? "يتم التحضير والقص" : "Preparing Fashion"}
+                                  </span>
+                                )}
+                                {order.status === 'shipped' && (
+                                  <span className="bg-indigo-50 text-indigo-600 border border-indigo-150 rounded-full px-3 py-1 text-[10px] font-bold flex items-center gap-1">
+                                    <Truck size={10} />
+                                    <span>{isArabic ? "مع المندوب للتوصيل" : "Shipped / Deliver"}</span>
+                                  </span>
+                                )}
+                                {order.status === 'delivered' && (
+                                  <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full px-3 py-1 text-[10px] font-bold flex items-center gap-1">
+                                    <CheckCircle size={10} />
+                                    <span>{isArabic ? "تم الاستلام" : "Delivered"}</span>
+                                  </span>
+                                )}
+                                {order.status === 'cancelled' && (
+                                  <span className="bg-red-50 text-red-600 border border-red-100 rounded-full px-3 py-1 text-[10px] font-bold">
+                                    {isArabic ? "ملغي" : "Cancelled"}
+                                  </span>
+                                )}
+                              </div>
                             </div>
 
-                            {/* Status and receipts preview */}
-                            <div className="flex items-center gap-2 self-end sm:self-auto font-sans">
-                              {order.paymentProof && (
-                                <button 
-                                  onClick={() => setZoomedReceipt(order.paymentProof!)}
-                                  className="text-[10px] text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-1 rounded-lg font-medium flex items-center gap-1 cursor-pointer transition"
-                                >
-                                  <Eye size={10} />
-                                  <span>{isArabic ? "عرض إيصال التحويل" : "View Receipt"}</span>
-                                </button>
-                              )}
-
-                              {order.status === 'pending' && (
-                                <span className="bg-amber-50 text-amber-600 border border-amber-100 rounded-full px-3 py-1 text-[10px] font-bold">
-                                  {isArabic ? "جاري المراجعة" : "Reviewing"}
-                                </span>
-                              )}
-                              {order.status === 'preparing' && (
-                                <span className="bg-blue-50 text-blue-600 border border-blue-100 rounded-full px-3 py-1 text-[10px] font-bold">
-                                  {isArabic ? "يتم التحضير والقص" : "Preparing Fashion"}
-                                </span>
-                              )}
-                              {order.status === 'shipped' && (
-                                <span className="bg-indigo-50 text-indigo-600 border border-indigo-150 rounded-full px-3 py-1 text-[10px] font-bold flex items-center gap-1">
-                                  <Truck size={10} />
-                                  <span>{isArabic ? "مع المندوب للتوصيل" : "Shipped / Deliver"}</span>
-                                </span>
-                              )}
-                              {order.status === 'delivered' && (
-                                <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full px-3 py-1 text-[10px] font-bold flex items-center gap-1">
-                                  <CheckCircle size={10} />
-                                  <span>{isArabic ? "تم الاستلام" : "Delivered"}</span>
-                                </span>
-                              )}
-                              {order.status === 'cancelled' && (
-                                <span className="bg-red-50 text-red-600 border border-red-100 rounded-full px-3 py-1 text-[10px] font-bold">
-                                  {isArabic ? "ملغي" : "Cancelled"}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Items listing inside card */}
-                          <div className="space-y-3">
-                            {(order.items || []).map((item, idx) => (
-                              <div key={idx} className="flex gap-3 items-center">
-                                <img
-                                  src={item.image}
-                                  alt={isArabic ? item.nameAr : item.nameEn}
-                                  className="w-10 h-12 object-cover bg-zinc-100 rounded-lg border border-zinc-200"
-                                />
-                                <div className="flex-1 text-right text-xs" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                                  <h4 className="text-zinc-900 font-medium line-clamp-1">
-                                    {isArabic ? item.nameAr : item.nameEn}
-                                  </h4>
-                                  <p className="text-[10px] text-zinc-400 mt-1">
-                                    {isArabic ? `مقاس: ${item.selectedSize} - لون:` : `Size: ${item.selectedSize} - Color:`}
-                                    <span className="w-2.5 h-2.5 rounded-full inline-block border border-zinc-200 mx-1 align-middle" style={{ backgroundColor: item.selectedColor }} />
-                                  </p>
+                            {/* Items listing inside card */}
+                            <div className="space-y-3">
+                              {(order.items || []).map((item, idx) => (
+                                <div key={idx} className="flex gap-3 items-center">
+                                  <img
+                                    src={item.image}
+                                    alt={isArabic ? item.nameAr : item.nameEn}
+                                    className="w-10 h-12 object-cover bg-zinc-100 rounded-lg border border-zinc-200"
+                                  />
+                                  <div className="flex-1 text-right text-xs" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                                    <h4 className="text-zinc-900 font-medium line-clamp-1">
+                                      {isArabic ? item.nameAr : item.nameEn}
+                                    </h4>
+                                    <p className="text-[10px] text-zinc-400 mt-1">
+                                      {isArabic ? `مقاس: ${item.selectedSize} - لون:` : `Size: ${item.selectedSize} - Color:`}
+                                      <span className="w-2.5 h-2.5 rounded-full inline-block border border-zinc-200 mx-1 align-middle" style={{ backgroundColor: item.selectedColor }} />
+                                    </p>
+                                  </div>
+                                  <div className="text-xs font-semibold text-zinc-900">
+                                    {item.quantity} × {item.price} {isArabic ? "ج.م" : "EGP"}
+                                  </div>
                                 </div>
-                                <div className="text-xs font-semibold text-zinc-900">
-                                  {item.quantity} × {item.price} {isArabic ? "ج.م" : "EGP"}
+                              ))}
+                            </div>
+
+                            {/* Order Total Receipt Line */}
+                            <div className="pt-3 border-t border-zinc-200/30 flex justify-between items-center text-xs font-semibold">
+                              <span className="text-zinc-500">{isArabic ? "إجمالي قيمة الفاتورة الشاملة:" : "Total Premium Despatched:"}</span>
+                              <span className="text-zinc-950 text-sm font-bold font-serif">{order.total} {isArabic ? "ج.م" : "EGP"}</span>
+                            </div>
+
+                            {/* Resubmit payment section on paymentStatus === 'rejected' */}
+                            {isElectronic && order.paymentStatus === 'rejected' && (
+                              <div className="mt-3 p-4 bg-rose-50 border border-rose-100 rounded-xl text-xs space-y-3">
+                                <div className="flex items-center gap-2 text-rose-800 font-bold">
+                                  <AlertCircle size={14} className="shrink-0" />
+                                  <span>
+                                    {isArabic 
+                                      ? "تم رفض وثيقة الخطوة السابقة من السداد لهذا الطلب." 
+                                      : "The payment proof for this order was rejected."}
+                                  </span>
+                                </div>
+                                <p className="text-zinc-600 leading-relaxed font-light">
+                                  {isArabic
+                                    ? "المرجو كتابة تفاصيل السداد الجديد (مثل رقم التحويل أو المحفظة الإلكترونية) وإرفاق الإيصال الجديد ليتم تواصل الإدارة ومراجعة المعاملة فوراً."
+                                    : "Please write details of your new payment (or wallet number) and attach the new receipt so that management can re-verify and approve your order immediately."}
+                                </p>
+
+                                <div className="space-y-3 pt-1">
+                                  {/* Text comment input */}
+                                  <div>
+                                    <label className="block text-[10px] uppercase font-bold text-zinc-500 mb-1">
+                                      {isArabic ? "تفاصيل السداد الجديد / رسالتك للإدارة:" : "New Payment details / Message directly to admin:"}
+                                    </label>
+                                    <textarea
+                                      className="w-full p-2 bg-white border border-zinc-200 rounded-lg text-xs font-sans text-zinc-800 focus:outline-none focus:border-rose-400 placeholder:text-zinc-400"
+                                      rows={2}
+                                      placeholder={isArabic ? "اكتبي الرقم المحول منه، المحفظة، المعاملة، أو غيرها..." : "e.g., wallet number, InstaPay transaction handle, reference..."}
+                                      value={paymentResubmitNotes[order.id] || ""}
+                                      onChange={(e) => {
+                                        setPaymentResubmitNotes(prev => ({
+                                          ...prev,
+                                          [order.id]: e.target.value
+                                        }));
+                                      }}
+                                    />
+                                  </div>
+
+                                  {/* Image base64 upload label */}
+                                  <div>
+                                    <label className="block text-[10px] uppercase font-bold text-zinc-500 mb-1">
+                                      {isArabic ? "صورة إثبات السداد المحدث (مطلوب):" : "Updated Receipt Image Proof (Required):"}
+                                    </label>
+                                    <div className="flex gap-2 items-center">
+                                      <label className="flex-1 flex flex-col items-center justify-center border border-dashed border-zinc-300 hover:border-zinc-400 rounded-xl p-3 bg-white cursor-pointer transition">
+                                        <span className="text-[11px] text-zinc-500 font-medium">
+                                          {paymentResubmitImage[order.id] 
+                                            ? (isArabic ? "✅ تم اختيار صورة الإيصال" : "✅ Receipt image selected")
+                                            : (isArabic ? "📁 اضغطي هنا لاختيار الصورة" : "📁 Click to select screenshot")}
+                                        </span>
+                                        <input 
+                                          type="file" 
+                                          accept="image/*" 
+                                          className="hidden" 
+                                          onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                              try {
+                                                const base64 = await new Promise<string>((resolve, reject) => {
+                                                  const reader = new FileReader();
+                                                  reader.readAsDataURL(file);
+                                                  reader.onload = () => resolve(reader.result as string);
+                                                  reader.onerror = error => reject(error);
+                                                });
+                                                setPaymentResubmitImage(prev => ({
+                                                  ...prev,
+                                                  [order.id]: base64
+                                                }));
+                                              } catch (err) {
+                                                console.error("Failed to parse proof image:", err);
+                                              }
+                                            }
+                                          }}
+                                        />
+                                      </label>
+                                      
+                                      {paymentResubmitImage[order.id] && (
+                                        <img 
+                                          src={paymentResubmitImage[order.id]} 
+                                          className="w-10 h-12 object-cover rounded border border-zinc-200" 
+                                          alt="Preview" 
+                                        />
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    disabled={isResubmittingPayment[order.id]}
+                                    onClick={async () => {
+                                      const img = paymentResubmitImage[order.id];
+                                      if (!img) {
+                                        alert(isArabic 
+                                          ? "يرجى إرفاق صورة الإيصال الجديد أولاً!" 
+                                          : "Please attach a new receipt screenshot first!");
+                                        return;
+                                      }
+                                      
+                                      setIsResubmittingPayment(prev => ({ ...prev, [order.id]: true }));
+                                      try {
+                                        await resubmitOrderPayment(order.id, img, paymentResubmitNotes[order.id] || "");
+                                        alert(isArabic 
+                                          ? "تم إعادة إرسال بيانات الإيصال والسداد الجديد للإدارة بنجاح ويجري تدقيقها من قبل المسؤولين." 
+                                          : "New payment details and proof submitted to management. Administrators will verify it shortly.");
+                                        
+                                        // Clear states
+                                        setPaymentResubmitImage(prev => {
+                                          const copy = { ...prev };
+                                          delete copy[order.id];
+                                          return copy;
+                                        });
+                                        setPaymentResubmitNotes(prev => {
+                                          const copy = { ...prev };
+                                          delete copy[order.id];
+                                          return copy;
+                                        });
+                                      } catch (err) {
+                                        console.error(err);
+                                        alert(isArabic 
+                                          ? "حدث خطأ أثناء إرسال البيانات المسجلة، يرجى المحاولة ثانيةً." 
+                                          : "There was an error updating your payment details, please try again.");
+                                      } finally {
+                                        setIsResubmittingPayment(prev => ({ ...prev, [order.id]: false }));
+                                      }
+                                    }}
+                                    className={`w-full py-2 px-4 rounded-xl text-xs font-bold text-white transition ${
+                                      isResubmittingPayment[order.id]
+                                        ? "bg-zinc-300 cursor-not-allowed text-zinc-500"
+                                        : "bg-rose-600 hover:bg-rose-500 cursor-pointer shadow-md"
+                                    }`}
+                                  >
+                                    {isResubmittingPayment[order.id] 
+                                      ? (isArabic ? "جاري إرسال البيانات ومزامنتها..." : "Submitting new data...") 
+                                      : (isArabic ? "إرسال السداد الجديد وإعادة المراجعة للطلب" : "Submit New Receipt & Request Re-verification")}
+                                  </button>
                                 </div>
                               </div>
-                            ))}
-                          </div>
+                            )}
 
-                          {/* Order Total Receipt Line */}
-                          <div className="pt-3 border-t border-zinc-200/30 flex justify-between items-center text-xs font-semibold">
-                            <span className="text-zinc-500">{isArabic ? "إجمالي قيمة الفاتورة الشاملة:" : "Total Premium Despatched:"}</span>
-                            <span className="text-zinc-950 text-sm font-bold font-serif">{order.total} {isArabic ? "ج.م" : "EGP"}</span>
                           </div>
-
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -991,15 +1159,15 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
                   <div className="space-y-4">
                     {(profileData?.addresses || []).length === 0 ? (
                       <div className="py-12 bg-zinc-50 border border-zinc-100 rounded-2xl text-center space-y-3">
-                        <MapPin size={28} className="text-zinc-350 mx-auto animate-bounce" />
+                        <MapPin size={28} className="text-zinc-400 mx-auto animate-bounce" />
                         <div>
                           <p className="text-zinc-700 text-xs sm:text-sm font-semibold">
                             {isArabic ? "لا توجد عناوين توصيل مسجلة حالياً" : "Your address handbook is empty"}
                           </p>
                           <p className="text-[10px] text-zinc-400 mt-0.5">
                             {isArabic 
-                              ? "أضف عنوان شحن لتوفير الوقت وتسهيل إرسال ومقاس الملابس في منزلك!" 
-                              : "Registered addresses are auto-injected dynamically upon Checkout launch."}
+                              ? "أضف عنوان شحن لتوفير الوقت وتسهيل شحن الملابس الفاخرة إليك!" 
+                              : "Registered addresses are auto-injected dynamically when you place custom orders."}
                           </p>
                         </div>
                       </div>
@@ -1053,7 +1221,7 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
                             <div className="pt-2 border-t border-zinc-200/40 flex justify-end gap-1.5 mt-2">
                               <button
                                 onClick={() => handleDeleteAddress(addr.id)}
-                                className="px-3 py-1 text-[10px] text-red-500 hover:bg-red-55 rounded-lg flex items-center gap-1 cursor-pointer transition border border-transparent"
+                                className="px-3 py-1 text-[10px] text-red-500 hover:bg-red-50 rounded-lg flex items-center gap-1 cursor-pointer transition border border-transparent"
                               >
                                 <Trash2 size={11} />
                                 <span>{isArabic ? "حذف" : "Remove"}</span>
@@ -1064,7 +1232,6 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
                       </div>
                     )}
                   </div>
-
                 </div>
               )}
 
@@ -1082,9 +1249,9 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
 
                   <div className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-6">
                     {/* Left/Right Sidebar List of Custom Orders */}
-                    <div className="space-y-3">
+                    <div className={`space-y-3 ${selectedConversationId ? 'hidden lg:block' : 'block'}`}>
                       {orders.filter((order) => order.orderType === 'custom').length === 0 ? (
-                        <div className="p-8 border border-dashed border-zinc-200 rounded-2xl text-center text-zinc-500 text-sm">
+                        <div className="p-8 border border-dashed border-zinc-200 rounded-2xl text-center text-zinc-400 text-xs sm:text-sm">
                           {isArabic 
                             ? 'لم تسجلي أي طلب تفصيل أو هاند ميد حتى الآن. يمكنكِ تقديم طلب في النموذج الفاخر أسفل الصفحة الرئيسية.' 
                             : 'No bespoke fashion orders found. Lodge comments via the couture studio form on Home page.'}
@@ -1163,14 +1330,22 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
                     </div>
 
                     {/* Active Conversation and Chat Area */}
-                    <div className="border border-zinc-200 rounded-3xl bg-white overflow-hidden shadow-sm flex flex-col min-h-[450px]">
-                      <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between text-right">
+                    <div className={`border border-zinc-200 rounded-3xl bg-white overflow-hidden shadow-sm flex flex-col min-h-[450px] ${selectedConversationId ? 'flex' : 'hidden lg:flex'}`}>
+                      <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between text-right gap-3">
                         <div>
+                          {selectedConversationId && (
+                            <button
+                              onClick={() => setSelectedConversationId('')}
+                              className="lg:hidden mb-2 text-[10px] bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-zinc-700 px-2.5 py-1 rounded-lg font-medium cursor-pointer flex items-center gap-1 shrink-0"
+                            >
+                              <span>{isArabic ? '← العودة للطلبات' : '← Back to requests'}</span>
+                            </button>
+                          )}
                           <p className="text-xs font-black text-zinc-900 uppercase tracking-widest">{isArabic ? 'قناة المحادثة والاستشارات الحية' : 'Couture Chat Workspace'}</p>
                           <p className="text-[10px] text-zinc-400 mt-0.5">{isArabic ? 'تواصلي مباشرة مع المصمم لتعديل المقاسات والاتفاق' : 'Live conversation line with your matching RAAV designer'}</p>
                         </div>
                         {selectedConversationId && (
-                          <span className="text-[10px] bg-amber-500/10 text-amber-900 border border-amber-500/10 px-2.5 py-1 rounded-full font-bold">
+                          <span className="text-[10px] bg-amber-500/10 text-amber-900 border border-amber-500/10 px-2.5 py-1 rounded-full font-bold shrink-0">
                             {conversations.find((thread) => thread.id === selectedConversationId)?.topic || (isArabic ? 'حالة نشطة' : 'Active Channel')}
                           </span>
                         )}

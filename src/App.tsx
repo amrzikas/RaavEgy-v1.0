@@ -18,13 +18,23 @@ import ProductPage from './components/ProductPage.tsx';
 import CustomerAuth from './components/CustomerAuth.tsx';
 import CustomerProfile from './components/CustomerProfile.tsx';
 import CustomCoutureForm from './components/CustomCoutureForm.tsx';
-import { Product, OrderItem, Order } from './types';
+import { 
+  ContactUsPage, 
+  ShippingReturnsPage, 
+  SizeGuidePage, 
+  FaqPage, 
+  PrivacyPolicyPage, 
+  TermsOfServicePage 
+} from './components/SupportPages.tsx';
+import { Product, OrderItem, Order, SupportPagesContent, HomepageContent } from './types';
 import { getProductPrice } from './utils';
 import { 
   seedProductsIfNeeded, 
   subscribeToProducts, 
   subscribeToOrders,
-  getAdminSetupStatus
+  getAdminSetupStatus,
+  getHomepageContent,
+  getSupportPagesContent
 } from './dbService';
 import { initialProducts } from './initialProducts';
 import { auth } from './firebase';
@@ -40,8 +50,11 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // View Navigation State (home | shop | profile | product-details)
-  const [activeView, setActiveView] = useState<'home' | 'shop' | 'profile' | 'product-details'>('home');
+  // View Navigation State (home | shop | profile | product-details | customer sub-pages)
+  const [activeView, setActiveView] = useState<
+    'home' | 'shop' | 'profile' | 'product-details' | 
+    'contact-us' | 'shipping-returns' | 'size-guide' | 'faq' | 'privacy-policy' | 'terms-of-service'
+  >('home');
   const [profileTab, setProfileTab] = useState<'addresses' | 'orders' | 'favorites' | 'custom'>('orders');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -55,7 +68,16 @@ export default function App() {
   
   // Auth state
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [isArabic, setIsArabic] = useState(true);
+  const [isArabic, setIsArabic] = useState(false);
+
+  // Dynamic Content States
+  const [homepageContent, setHomepageContent] = useState<HomepageContent | null>(null);
+  const [supportContent, setSupportContent] = useState<SupportPagesContent | null>(null);
+
+  const refreshContentData = () => {
+    getHomepageContent().then(setHomepageContent).catch(() => {});
+    getSupportPagesContent().then(setSupportContent).catch(() => {});
+  };
 
   // Sync cart to localStorage
   useEffect(() => {
@@ -64,6 +86,9 @@ export default function App() {
 
   // Read data on launch
   useEffect(() => {
+    // Fetch dynamic content from Firestore
+    refreshContentData();
+
     // 1. Subscribe to real-time Products catalog (available to anyone)
     const unsubscribeProducts = subscribeToProducts((prodList) => {
       // Merge database items with any missing seed initial products
@@ -256,6 +281,7 @@ export default function App() {
           activeView={activeView}
           setActiveView={setActiveView}
           isUserLoggedIn={!!currentUser}
+          customAnnouncement={isArabic ? homepageContent?.announcementAr : homepageContent?.announcementEn}
         />
 
         {/* Main Page Layout */}
@@ -271,6 +297,7 @@ export default function App() {
                     setActiveView('shop');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
+                  customSlides={homepageContent?.heroSlides}
                 />
               )}
 
@@ -516,6 +543,37 @@ export default function App() {
             />
           )
         )}
+
+        {activeView === 'contact-us' && (
+          <ContactUsPage 
+            isArabic={isArabic} 
+            onBackToHome={() => {
+              setActiveView('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} 
+            content={supportContent?.contact_us}
+          />
+        )}
+
+        {activeView === 'shipping-returns' && (
+          <ShippingReturnsPage isArabic={isArabic} content={supportContent?.shipping_returns} />
+        )}
+
+        {activeView === 'size-guide' && (
+          <SizeGuidePage isArabic={isArabic} content={supportContent?.size_guide} />
+        )}
+
+        {activeView === 'faq' && (
+          <FaqPage isArabic={isArabic} content={supportContent?.faq} />
+        )}
+
+        {activeView === 'privacy-policy' && (
+          <PrivacyPolicyPage isArabic={isArabic} content={supportContent?.privacy_policy} />
+        )}
+
+        {activeView === 'terms-of-service' && (
+          <TermsOfServicePage isArabic={isArabic} content={supportContent?.terms_of_service} />
+        )}
       </main>
 
       {/* FOOTER SECTION */}
@@ -605,9 +663,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    alert(isArabic 
-                      ? "يسعدنا دائماً تواصلك معنا عبر الهاتف: 01012345678 أو الإيميل: support@raavegy.com"
-                      : "Contact our customer helpdesk anytime at: +201012345678 or support@raavegy.com");
+                    setActiveView('contact-us');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="hover:text-white transition-colors duration-200 cursor-pointer text-[#8a92a6]"
                 >
@@ -618,9 +675,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    alert(isArabic 
-                      ? "نوفر خدمة الشحن السريع في جميع أنحاء جمهورية مصر العربية مع إمكانية تجربة القياس والمعاينة قبل الدفع للمندوب لراحة مطلقة."
-                      : "We provide high priority shipping all across Egypt. Doorstep previews and trial fittings are fully supported prior to cash submission.");
+                    setActiveView('shipping-returns');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="hover:text-white transition-colors duration-200 cursor-pointer text-[#8a92a6]"
                 >
@@ -631,9 +687,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    alert(isArabic 
-                      ? "جميع مقاسات راف تتبع المعايير القياسية بدقة متناهية. تواصل مع الدعم الفني لمزيد من المساعدة في اختيار المقاس المناسب لك."
-                      : "RAAV garments follow standard sizing guidelines carefully. Our support coordinators are glad to size match you prior to dispatch.");
+                    setActiveView('size-guide');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="hover:text-white transition-colors duration-200 cursor-pointer text-[#8a92a6]"
                 >
@@ -644,9 +699,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    alert(isArabic 
-                      ? "الأسئلة الشائعة: هل نقبل الدفع عند الاستلام؟ نعم بكل سرور. هل يمكنني الاستبدال؟ نعم، نوفر استبدال مرن في خلال 14 يوماً."
-                      : "FAQ: Cash on delivery is accepted. Standard and custom size alterations can be accommodated on receipt within 14 days.");
+                    setActiveView('faq');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className="hover:text-white transition-colors duration-200 cursor-pointer text-[#8a92a6]"
                 >
@@ -720,14 +774,20 @@ export default function App() {
           <div className="flex gap-6 text-[9px] tracking-[0.15em] text-[#555d6e] uppercase">
             <button 
               type="button"
-              onClick={() => alert(isArabic ? "سياسة الخصوصية لـ RAAV EGY: بياناتك محمية تماماً ولا نشاركها مع أي جهة خارجية." : "Privacy Policy: Your details are fully encrypted and never distributed to third parties.")} 
+              onClick={() => {
+                setActiveView('privacy-policy');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }} 
               className="hover:text-white transition"
             >
               {isArabic ? "سياسة الخصوصية" : "PRIVACY POLICY"}
             </button>
             <button 
               type="button"
-              onClick={() => alert(isArabic ? "شروط الخدمة: تلتزم راف إيجي بتقديم منتجات مطابقة للصور ومقاسات منضبطة." : "Terms of Service: Beautiful design lines delivered exactly as showcased.")} 
+              onClick={() => {
+                setActiveView('terms-of-service');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }} 
               className="hover:text-white transition"
             >
               {isArabic ? "شروط الخدمة" : "TERMS OF SERVICE"}
@@ -764,6 +824,7 @@ export default function App() {
         products={products}
         orders={orders}
         isArabic={isArabic}
+        onContentUpdate={refreshContentData}
       />
 
       </div>
