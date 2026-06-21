@@ -106,16 +106,40 @@ export default function CategoryScrollSlices({
 
         {/* Categories Loop */}
         <div className="space-y-16 md:space-y-24">
-          {categoryConfigs.map((config) => {
-            // Get products for this specific category
-            const categoryProducts = products.filter(p => p.category === config.id);
-            if (categoryProducts.length === 0) return null;
+          {(() => {
+            let renderedIndex = 0;
+            return categoryConfigs.map((config) => {
+              // Get products for this specific category
+              const categoryProducts = products.filter(p => p.category === config.id);
+              if (categoryProducts.length === 0) return null;
 
-            return (
-              <div 
-                key={config.id} 
-                className="bg-gradient-to-br from-zinc-800 via-zinc-850 to-zinc-900 border border-zinc-700/60 rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-8 lg:p-10 shadow-xl relative overflow-hidden"
-              >
+              const isFirst = renderedIndex === 0;
+              const isThird = renderedIndex === 2;
+              renderedIndex++;
+
+              let customStyle: React.CSSProperties | undefined = undefined;
+              let leftShadowStyle: React.CSSProperties = {};
+              let rightShadowStyle: React.CSSProperties = {};
+
+              if (isFirst) {
+                customStyle = { background: '#c9d9bc' };
+                leftShadowStyle = { background: 'linear-gradient(to right, #93a783, transparent)' };
+                rightShadowStyle = { background: 'linear-gradient(to left, #93a783, transparent)' };
+              } else if (isThird) {
+                customStyle = { background: '#c9dfdd' };
+                leftShadowStyle = { background: 'linear-gradient(to right, #9ebbba, transparent)' };
+                rightShadowStyle = { background: 'linear-gradient(to left, #9ebbba, transparent)' };
+              } else {
+                leftShadowStyle = { background: 'linear-gradient(to right, rgba(15, 15, 17, 0.95), transparent)' };
+                rightShadowStyle = { background: 'linear-gradient(to left, rgba(15, 15, 17, 0.95), transparent)' };
+              }
+
+              return (
+                <div 
+                  key={config.id} 
+                  className="bg-gradient-to-br from-zinc-800 via-zinc-850 to-zinc-900 border border-zinc-700/60 rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-8 lg:p-10 shadow-xl relative overflow-hidden"
+                  style={customStyle}
+                >
                 {/* Ambient glow backgrounds */}
                 <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-zinc-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -191,9 +215,15 @@ export default function CategoryScrollSlices({
                   {/* 2. Seamless Horizontal Scroll Track (7 cols on md+, 12 cols on mobile/tablet) */}
                   <div className="col-span-12 md:col-span-8 lg:col-span-7 flex items-center relative">
                     
-                    {/* Subtle shadows indicating side scrolls matching the dark section */}
-                    <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-zinc-900 to-transparent pointer-events-none z-10 hidden md:block" />
-                    <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-zinc-900 to-transparent pointer-events-none z-10 hidden md:block" />
+                    {/* Subtle shadows indicating side scrolls matching the dynamic card background */}
+                    <div 
+                      className="absolute left-0 top-0 bottom-0 w-12 pointer-events-none z-10 hidden md:block" 
+                      style={leftShadowStyle}
+                    />
+                    <div 
+                      className="absolute right-0 top-0 bottom-0 w-12 pointer-events-none z-10 hidden md:block" 
+                      style={rightShadowStyle}
+                    />
    
                     <div
                       ref={(el) => {
@@ -339,7 +369,8 @@ export default function CategoryScrollSlices({
               </div>
             </div>
           );
-          })}
+          });
+          })()}
         </div>
 
       </div>

@@ -194,6 +194,8 @@ export default function CartSlider({
         customerNotes: customerNotes.trim() || undefined,
         items: cartItems,
         total: grandTotal,
+        shippingFee: deliveryFee,
+        shippingPlanId: selectedCarrierPlanId || undefined,
         paymentMethod: resolvedPaymentMethod,
         paymentProof: paymentProofImage || undefined
       });

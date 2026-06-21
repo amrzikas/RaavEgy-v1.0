@@ -39,7 +39,7 @@ import {
 import { initialProducts } from './initialProducts';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { Sparkles, Phone, MapPin, Mail, ShoppingBag } from 'lucide-react';
+import { Sparkles, Phone, MapPin, Mail, ShoppingBag, Facebook, Instagram, Video } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
@@ -69,6 +69,13 @@ export default function App() {
   // Auth state
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [isArabic, setIsArabic] = useState(false);
+
+  // Sync HTML direction and language attributes dynamically
+  useEffect(() => {
+    const html = document.documentElement;
+    html.lang = isArabic ? 'ar' : 'en';
+    html.dir = isArabic ? 'rtl' : 'ltr';
+  }, [isArabic]);
 
   // Dynamic Content States
   const [homepageContent, setHomepageContent] = useState<HomepageContent | null>(null);
@@ -125,6 +132,8 @@ export default function App() {
         }
       } else {
         setIsAdminLoggedIn(false);
+        setCart([]);
+        localStorage.removeItem('raav_egy_cart');
       }
     });
 
@@ -530,6 +539,8 @@ export default function App() {
               uid={currentUser.uid}
               onLogout={() => {
                 setCurrentUser(null);
+                setCart([]);
+                localStorage.removeItem('raav_egy_cart');
                 setActiveView('home');
               }}
               isArabic={isArabic}
@@ -584,7 +595,7 @@ export default function App() {
       <footer className="bg-[#0b0e14] text-[#8a92a6] py-16 text-xs leading-relaxed" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           
-          {/* Col 1: Brand details */}
+          {/* Col 1: Brand details & Social Media Links */}
           <div className="space-y-4" style={{ textAlign: isArabic ? 'right' : 'left' }}>
             <h4 className="text-white font-serif text-lg tracking-[0.1em] font-medium uppercase">
               RAAV EGY
@@ -594,6 +605,38 @@ export default function App() {
                 ? "ننسج الأناقة في كل لحظة. أزياء راقية ومبتكرة مصممة خصيصاً للنساء، الرجال، والأطفال."
                 : "Crafting elegance for every moment. High-fashion apparel for women, men, and children."}
             </p>
+            
+            {/* Social Media Links with customized logos */}
+            <div className={`pt-2 flex items-center gap-3 ${isArabic ? 'justify-start' : 'justify-start'}`}>
+              <a 
+                href="https://facebook.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full border border-[#1b2336] bg-[#0c101b] flex items-center justify-center text-[#8a92a6] hover:text-white hover:bg-blue-600 hover:border-blue-600 transition-all duration-300"
+                title="Facebook"
+              >
+                <Facebook size={14} />
+              </a>
+              <a 
+                href="https://instagram.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full border border-[#1b2336] bg-[#0c101b] flex items-center justify-center text-[#8a92a6] hover:text-white hover:bg-gradient-to-tr hover:from-yellow-500 hover:to-purple-600 hover:border-transparent transition-all duration-300"
+                title="Instagram"
+              >
+                <Instagram size={14} />
+              </a>
+              <a 
+                href="https://tiktok.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full border border-[#1b2336] bg-[#0c101b] flex items-center justify-center text-[#8a92a6] hover:text-white hover:bg-zinc-800 hover:border-zinc-800 transition-all duration-300 gap-0.5"
+                title="TikTok"
+              >
+                <Video size={11} />
+                <span className="text-[8px] font-serif font-black tracking-tighter leading-none select-none">TT</span>
+              </a>
+            </div>
           </div>
 
           {/* Col 2: Shop Category Redirection Links */}

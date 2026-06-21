@@ -90,6 +90,7 @@ export interface Order {
   status: OrderStatus;
   paymentMethod?: string;
   shippingPlanId?: string;
+  shippingFee?: number; // actual recorded shipping fee
   paymentProof?: string; // base64 payment receipt
   createdAt: number;
   orderType?: 'standard' | 'custom';

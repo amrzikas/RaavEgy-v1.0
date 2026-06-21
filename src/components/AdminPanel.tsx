@@ -83,6 +83,24 @@ export default function AdminPanel({
 
   // Sub-navigation tabs: 'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content'
   const [activeTab, setActiveTab] = useState<'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content'>('stats');
+  const [isAdminLightMode, setIsAdminLightMode] = useState<boolean>(false);
+
+  // Helper to separate shipping fee from product revenue
+  const getOrderShippingFee = (o: Order) => {
+    if (o.shippingFee !== undefined) return o.shippingFee;
+    const itemsSum = o.items ? o.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) : 0;
+    const calculatedFee = o.total - itemsSum;
+    return calculatedFee > 0 ? calculatedFee : 0;
+  };
+
+  const getOrderProductsTotal = (o: Order) => {
+    const itemsSum = o.items ? o.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) : 0;
+    if (o.orderType === 'custom' && o.agreedPrice !== undefined) {
+      const estimatedShipping = o.shippingFee !== undefined ? o.shippingFee : 0;
+      return Math.max(0, o.agreedPrice - estimatedShipping);
+    }
+    return itemsSum;
+  };
 
   // Products manager state variables
   const [showProductForm, setShowProductForm] = useState(false);
@@ -151,6 +169,7 @@ export default function AdminPanel({
 
   // Payment Verification States
   const [rejectingOrderId, setRejectingOrderId] = useState<string | null>(null);
+  const [confirmingOrderId, setConfirmingOrderId] = useState<string | null>(null);
   const [rejectMessageAr, setRejectMessageAr] = useState("");
   const [rejectMessageEn, setRejectMessageEn] = useState("");
   const [viewingPaymentProofUrl, setViewingPaymentProofUrl] = useState<string | null>(null);
@@ -630,10 +649,21 @@ export default function AdminPanel({
   const activeOrdersCount = orders.filter(o => ['pending', 'preparing', 'shipped'].includes(o.status)).length;
   const pendingOrdersCount = orders.filter(o => o.status === 'pending').length;
 
-  // 1. Detailed Financial Overview
-  const totalDeliveredSum = totalSales;
-  const totalPendingSum = orders.filter(o => ['pending', 'preparing', 'shipped'].includes(o.status)).reduce((sum, o) => sum + o.total, 0);
-  const totalCancelledSum = orders.filter(o => o.status === 'cancelled').reduce((sum, o) => sum + o.total, 0);
+  // 1. Detailed Financial Overview with Shipping and Product separation
+  const deliveredOrders = orders.filter(o => o.status === 'delivered');
+  const totalDeliveredProductsOnly = deliveredOrders.reduce((sum, o) => sum + getOrderProductsTotal(o), 0);
+  const totalDeliveredShippingOnly = deliveredOrders.reduce((sum, o) => sum + getOrderShippingFee(o), 0);
+  const totalDeliveredSum = totalDeliveredProductsOnly + totalDeliveredShippingOnly;
+
+  const pendingOrders = orders.filter(o => ['pending', 'preparing', 'shipped'].includes(o.status));
+  const totalPendingProductsOnly = pendingOrders.reduce((sum, o) => sum + getOrderProductsTotal(o), 0);
+  const totalPendingShippingOnly = pendingOrders.reduce((sum, o) => sum + getOrderShippingFee(o), 0);
+  const totalPendingSum = totalPendingProductsOnly + totalPendingShippingOnly;
+
+  const cancelledOrders = orders.filter(o => o.status === 'cancelled');
+  const totalCancelledProductsOnly = cancelledOrders.reduce((sum, o) => sum + getOrderProductsTotal(o), 0);
+  const totalCancelledShippingOnly = cancelledOrders.reduce((sum, o) => sum + getOrderShippingFee(o), 0);
+  const totalCancelledSum = totalCancelledProductsOnly + totalCancelledShippingOnly;
 
   // 2. Best-Selling Products calculations
   const salesMap: { [key: string]: number } = {};
@@ -689,7 +719,6 @@ export default function AdminPanel({
   ];
 
   // 4. Cancellation Analysis
-  const cancelledOrders = orders.filter(o => o.status === 'cancelled');
   const cancelReasonsMap: { [key: string]: number } = {};
   cancelledOrders.forEach(o => {
     const r = o.cancelReason || (isArabic ? "تلقائي / خطأ قياس العميل" : "Customer sizing conflict");
@@ -843,7 +872,85 @@ export default function AdminPanel({
         </div>
       ) : (
         /* RENDER PRIMARY ADMIN PANEL CONTENT */
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-zinc-950">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-zinc-950 relative">
+          {isAdminLightMode && (
+            <style dangerouslySetInnerHTML={{ __html: `
+              /* Force Lightmode Daytime Theme CSS */
+              .bg-zinc-950, [class*="bg-zinc-950"] {
+                background-color: #fafafa !important;
+                color: #111827 !important;
+              }
+              .text-white {
+                color: #111827 !important;
+              }
+              .bg-zinc-900\\/60 {
+                background-color: #ffffff !important;
+                border-color: #e4e4e7 !important;
+              }
+              .border-zinc-800, .border-zinc-805, .border-zinc-850 {
+                border-color: #e4e4e7 !important;
+              }
+              .text-zinc-500, .text-zinc-650 {
+                color: #4b5563 !important;
+              }
+              .text-zinc-400 {
+                color: #374151 !important;
+              }
+              .text-zinc-350 {
+                color: #27272a !important;
+              }
+              .text-zinc-300, .text-zinc-330 {
+                color: #1f2937 !important;
+              }
+              /* CRITICAL: Overwrite light texts used for names, phone, address, price, and product names so they are highly visible dark slate/black */
+              .text-zinc-100, .text-zinc-150, .text-zinc-200, .text-zinc-250, .text-zinc-220, .text-zinc-280 {
+                color: #111827 !important;
+              }
+              /* For deep dark gray on generic labels */
+              strong, .font-semibold, .font-bold {
+                color: #111827 !important;
+              }
+              /* Crucial: Override low-contrast golden yellow and bright orange texts with premium dark bronze/amber for high contrast readability */
+              .text-amber-400, .text-amber-500, .text-amber-600, .text-yellow-400, .text-yellow-500, .text-orange-400, .text-orange-500, .text-indigo-400, .text-sky-400, .text-violet-400 {
+                color: #92400e !important; /* Premium Red-Amber / Deep Dark Gold */
+                font-weight: 800 !important;
+              }
+              .bg-zinc-950\\/60, .bg-zinc-900, .bg-zinc-900\\/90, .bg-zinc-900\\/95, .bg-zinc-955\\/20, .bg-zinc-905 {
+                background-color: #ffffff !important;
+                border-color: #e4e4e7 !important;
+                color: #111827 !important;
+              }
+              h3, h4, h5, th {
+                color: #111827 !important;
+              }
+              td {
+                color: #1f2937 !important;
+              }
+              thead tr {
+                background-color: #f4f4f5 !important;
+                border-color: #e4e4e7 !important;
+              }
+              tbody tr {
+                border-color: #e4e4e7 !important;
+              }
+              tbody tr:hover {
+                background-color: #fafafa !important;
+              }
+              input, select, textarea {
+                background-color: #ffffff !important;
+                color: #111827 !important;
+                border-color: #d4d4d8 !important;
+              }
+              p {
+                color: #374151 !important;
+              }
+              /* Fix toggle background issues in light mode */
+              .bg-zinc-950\\/80 {
+                background-color: #f4f4f5 !important;
+                border-color: #e4e4e7 !important;
+              }
+            `}} />
+          )}
           
           {/* Sub menu Navigation Sidebar */}
           <div className="w-full md:w-64 bg-zinc-900/60 md:border-r md:border-l md:border-zinc-800 flex md:flex-col overflow-x-auto md:overflow-y-auto shrink-0 p-3 md:p-4 gap-1.5 border-b border-zinc-900">
@@ -970,6 +1077,37 @@ export default function AdminPanel({
               <span>{isArabic ? "تحرير محتوى الصفحات" : "Page Content Editor"}</span>
             </button>
 
+            {/* Daytime Lighting switcher toggle */}
+            <div className="hidden md:flex flex-col gap-1.5 pt-3 border-t border-zinc-800/80 font-sans select-none shrink-0 text-right">
+              <span className="text-[9.5px] text-zinc-500 font-bold uppercase tracking-wider block px-1">
+                {isArabic ? "إضاءة المعاينة:" : "Control Lighting:"}
+              </span>
+              <div className="grid grid-cols-2 gap-1 p-1 bg-zinc-950/80 rounded-xl border border-zinc-900">
+                <button
+                  type="button"
+                  onClick={() => setIsAdminLightMode(false)}
+                  className={`py-1.5 rounded-lg text-[9px] font-extrabold transition duration-200 cursor-pointer ${
+                    !isAdminLightMode 
+                      ? "bg-zinc-800 text-amber-400" 
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  {isArabic ? "ليلي" : "Dark"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAdminLightMode(true)}
+                  className={`py-1.5 rounded-lg text-[9px] font-extrabold transition duration-200 cursor-pointer ${
+                    isAdminLightMode 
+                      ? "bg-amber-400 text-black shadow" 
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  {isArabic ? "نهار ي" : "Daytime"}
+                </button>
+              </div>
+            </div>
+
             <div className="hidden md:block mt-auto pt-4 border-t border-zinc-800 text-center">
               <p className="text-[10px] text-zinc-500 font-mono mb-2">
                 ADMIN: {adminUser.email}
@@ -1006,7 +1144,7 @@ export default function AdminPanel({
                 {/* Financial Summary grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {/* Delivered Amount (Collected) */}
-                  <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col justify-between shadow-sm relative overflow-hidden">
+                  <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col justify-between shadow-sm relative overflow-hidden text-right font-sans">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-[4rem] pointer-events-none" />
                     <p className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider mb-2">
                       {isArabic ? "المبالغ المحصلة (أوردرات مكتملة)" : "Collected & Settled Revenue"}
@@ -1015,14 +1153,24 @@ export default function AdminPanel({
                       <h4 className="text-2xl font-black font-mono text-emerald-400">
                         {totalDeliveredSum.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
                       </h4>
-                      <p className="text-[10px] text-zinc-400 mt-1">
+                      <div className="mt-2 pt-2 border-t border-zinc-800/60 space-y-1 text-[10.5px] text-zinc-400">
+                        <div className="flex justify-between">
+                          <span>{isArabic ? "صافي قيمة الفساتين:" : "Products net value:"}</span>
+                          <span className="font-mono text-zinc-300 font-bold">{totalDeliveredProductsOnly.toLocaleString()} ج.م</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-zinc-500">
+                           <span>{isArabic ? "قيمة التوصيل المحصلة:" : "Shipping fees:"}</span>
+                           <span className="font-mono">{totalDeliveredShippingOnly.toLocaleString()} ج.م</span>
+                        </div>
+                      </div>
+                      <p className="text-[9.5px] text-zinc-500 mt-2">
                         {isArabic ? "تم تسليمها للعميل وتحصيل قيمتها" : "Cash securely cleared from doorstep delivery trials."}
                       </p>
                     </div>
                   </div>
 
                   {/* Pending / Under Collection */}
-                  <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col justify-between shadow-sm relative overflow-hidden">
+                  <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col justify-between shadow-sm relative overflow-hidden text-right font-sans">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-[4rem] pointer-events-none" />
                     <p className="text-[10px] uppercase font-bold text-amber-400 tracking-wider mb-2">
                       {isArabic ? "مبالغ تحت التحصيل (قيد الشحن والتجهيز)" : "Pending / Under Collection"}
@@ -1031,14 +1179,24 @@ export default function AdminPanel({
                       <h4 className="text-2xl font-black font-mono text-amber-400">
                         {totalPendingSum.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
                       </h4>
-                      <p className="text-[10px] text-zinc-400 mt-1">
+                      <div className="mt-2 pt-2 border-t border-zinc-800/60 space-y-1 text-[10.5px] text-zinc-400">
+                        <div className="flex justify-between">
+                          <span>{isArabic ? "قيمة الفساتين قيد الانتظار:" : "Dresses value:"}</span>
+                          <span className="font-mono text-zinc-300 font-bold">{totalPendingProductsOnly.toLocaleString()} ج.م</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-zinc-500">
+                          <span>{isArabic ? "قيمة شحن قيد الانتظار:" : "Shipping fees:"}</span>
+                          <span className="font-mono">{totalPendingShippingOnly.toLocaleString()} ج.م</span>
+                        </div>
+                      </div>
+                      <p className="text-[9.5px] text-zinc-500 mt-2">
                         {isArabic ? "طلبات جارية، معلقة أو مشحونة" : "Outstanding COD pipeline currently being dispatched."}
                       </p>
                     </div>
                   </div>
 
                   {/* Cancelled sum */}
-                  <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col justify-between shadow-sm relative overflow-hidden">
+                  <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col justify-between shadow-sm relative overflow-hidden text-right font-sans">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-bl-[4rem] pointer-events-none" />
                     <p className="text-[10px] uppercase font-bold text-red-400 tracking-wider mb-2">
                       {isArabic ? "مبيعات ملغاة / مرتجعة" : "Cancelled / Returned Valuation"}
@@ -1047,7 +1205,17 @@ export default function AdminPanel({
                       <h4 className="text-2xl font-black font-mono text-red-400">
                         {totalCancelledSum.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
                       </h4>
-                      <p className="text-[10px] text-zinc-400 mt-1">
+                      <div className="mt-2 pt-2 border-t border-zinc-800/60 space-y-1 text-[10.5px] text-zinc-400 font-sans">
+                        <div className="flex justify-between">
+                          <span>{isArabic ? "الفساتين المرتجعة:" : "Returned dresses value:"}</span>
+                          <span className="font-mono text-zinc-300 font-bold">{totalCancelledProductsOnly.toLocaleString()} ج.م</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-zinc-500">
+                          <span>{isArabic ? "خسائر شحن مرتجعة:" : "Returned shipping:"}</span>
+                          <span className="font-mono">{totalCancelledShippingOnly.toLocaleString()} ج.م</span>
+                        </div>
+                      </div>
+                      <p className="text-[9.5px] text-zinc-500 mt-2">
                         {isArabic ? "طلبات تم كنسلتها وإبداء الأسباب" : "Lost conversions from doorstep return options."}
                       </p>
                     </div>
@@ -2361,25 +2529,38 @@ export default function AdminPanel({
                 
                 {/* Search orders controls */}
                 <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex flex-col sm:flex-row gap-3 justify-between items-center">
-                  <div className="flex flex-wrap gap-1 md:gap-2">
-                    {['all', 'pending', 'preparing', 'shipped', 'delivered', 'cancelled'].map((val) => (
-                      <button
-                        key={val}
-                        onClick={() => setOrderFilter(val as any)}
-                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wide transition uppercase cursor-pointer ${
-                          orderFilter === val
-                            ? "bg-amber-400 text-black shadow-md font-black"
-                            : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800"
-                        }`}
-                      >
-                        {val === 'all' && (isArabic ? "جميع الفواتير" : "All Orders")}
-                        {val === 'pending' && (isArabic ? "معلق" : "Pending")}
-                        {val === 'preparing' && (isArabic ? "تحضير بمصر" : "Preparing")}
-                        {val === 'shipped' && (isArabic ? "شحن للمندوب" : "Shipped")}
-                        {val === 'delivered' && (isArabic ? "مسلَم مكتمل" : "Delivered")}
-                        {val === 'cancelled' && (isArabic ? "ملغي" : "Cancelled")}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap gap-2 md:gap-3">
+                    {['all', 'pending', 'preparing', 'shipped', 'delivered', 'cancelled'].map((val) => {
+                      const count = val === 'all' 
+                        ? orders.length 
+                        : orders.filter(o => o.status === val).length;
+                      return (
+                        <div key={val} className="flex flex-col items-center gap-1">
+                          <span className={`${
+                            orderFilter === val 
+                              ? "text-amber-400 font-extrabold text-[11px]" 
+                              : "text-zinc-500 font-bold text-[10px]"
+                          } font-mono`}>
+                            {count}
+                          </span>
+                          <button
+                            onClick={() => setOrderFilter(val as any)}
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wide transition uppercase cursor-pointer ${
+                              orderFilter === val
+                                ? "bg-amber-400 text-black shadow-md font-black"
+                                : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800"
+                            }`}
+                          >
+                            {val === 'all' && (isArabic ? "جميع الفواتير" : "All Orders")}
+                            {val === 'pending' && (isArabic ? "معلق" : "Pending")}
+                            {val === 'preparing' && (isArabic ? "تحضير بمصر" : "Preparing")}
+                            {val === 'shipped' && (isArabic ? "شحن للمندوب" : "Shipped")}
+                            {val === 'delivered' && (isArabic ? "مسلَم مكتمل" : "Delivered")}
+                            {val === 'cancelled' && (isArabic ? "ملغي" : "Cancelled")}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <input
@@ -2535,7 +2716,7 @@ export default function AdminPanel({
                               )}
 
                               {/* Action Buttons for Electronic Payments (InstaPay or Wallet) */}
-                              {isElectronic && ord.status === 'pending' && (
+                              {isElectronic && ord.status !== 'cancelled' && (
                                   <div className="pt-2 border-t border-zinc-900 flex flex-col gap-2">
                                     {ord.paymentStatus !== 'verified' && (
                                       <div className="text-[11px] text-zinc-400 flex items-center gap-1">
@@ -2552,16 +2733,9 @@ export default function AdminPanel({
                                       {ord.paymentStatus !== 'verified' && (
                                         <button
                                           type="button"
-                                          onClick={async () => {
-                                            if (confirm(isArabic ? "هل أنت متأكد من استلام كامل مبلغ هذا التحويل بنجاح؟" : "Are you sure you successfully received the transfer amount?")) {
-                                              try {
-                                                await updateOrderPaymentStatus(ord.id, 'verified');
-                                                alert(isArabic ? "تم تأكيد الدفع بنجاح وإلغاء قفل الطلب للتحضير." : "Payment confirmed successfully! Preparation unlocked.");
-                                              } catch (e) {
-                                                console.error(e);
-                                                alert("Failed to update status.");
-                                              }
-                                            }
+                                          onClick={() => {
+                                            setConfirmingOrderId(ord.id);
+                                            setRejectingOrderId(null);
                                           }}
                                           className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold rounded-xl cursor-pointer transition flex items-center gap-1 shadow"
                                         >
@@ -2575,11 +2749,12 @@ export default function AdminPanel({
                                           type="button"
                                           onClick={() => {
                                             setRejectingOrderId(ord.id);
+                                            setConfirmingOrderId(null);
                                             const phone = supportContent?.contact_us?.whatsappPhone || supportContent?.contact_us?.phone || '201012345678';
                                             setRejectMessageAr(`تم رفض المعاملة لطلبكم رقم #${ord.id.substring(0, 6)}. برجاء المحاولة مرة أخرى لعدم تمكننا من التحقق من عملية السداد، للتواصل والاستفسار رقم: +${phone}`);
                                             setRejectMessageEn(`We were unable to verify your electronic payment for order #${ord.id.substring(0, 6)}. The transaction has been rejected. Please try again. Contact support: +${phone}`);
                                           }}
-                                          className="px-4 py-1.5 text-rose-455 hover:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-semibold rounded-xl cursor-pointer transition flex items-center gap-1 shadow"
+                                          className="px-4 py-1.5 text-rose-452 hover:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-semibold rounded-xl cursor-pointer transition flex items-center gap-1 shadow"
                                         >
                                           <span>⚠️</span>
                                           <span>{isArabic ? "رفض المعاملة وتجميد الطلب" : "Decline Payment & Hold"}</span>
@@ -2587,6 +2762,48 @@ export default function AdminPanel({
                                       )}
                                     </div>
                                   </div>
+                              )}
+
+                              {/* Inline Confirmation dialog */}
+                              {confirmingOrderId === ord.id && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  className="bg-zinc-905 w-full border border-emerald-500/20 p-4 rounded-xl mt-3 space-y-3"
+                                >
+                                  <div className="text-xs font-bold text-emerald-450 flex items-center gap-1 justify-start">
+                                    <span>✓</span>
+                                    <span>{isArabic ? "تأكيد استلام كامل المبلغ:" : "Confirm full amount received:"}</span>
+                                  </div>
+                                  <p className="text-xs text-zinc-350 leading-relaxed text-right" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                                    {isArabic 
+                                      ? "هل قمت بالفعل بالتحقق من استلام كامل مبلغ هذا الأوردر بنجاح على حساب إنستا باي أو المحفظة الذكية الخاصة برأف إيجيبت؟ سيؤدي هذا لتجهيز الشحنة وإشعار العميل فوراً." 
+                                      : "Have you genuinely double checked receiving the complete conversion sum inside your InstaPay app or mobile cash wallet? This will instantly unlock full packaging steps and notify the client."}
+                                  </p>
+                                  <div className="flex gap-2 justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmingOrderId(null)}
+                                      className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs rounded-lg cursor-pointer transition"
+                                    >
+                                      {isArabic ? "إلغاء بطلان" : "Cancel"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        try {
+                                          await updateOrderPaymentStatus(ord.id, 'verified');
+                                          setConfirmingOrderId(null);
+                                        } catch (e) {
+                                          console.error(e);
+                                        }
+                                      }}
+                                      className="px-3 py-1 bg-emerald-500 hover:bg-emerald-450 text-black text-xs font-black rounded-lg cursor-pointer transition"
+                                    >
+                                      {isArabic ? "نعم، تأكيد وتحصيل" : "Yes, Confirm Receipt"}
+                                    </button>
+                                  </div>
+                                </motion.div>
                               )}
 
                               {/* Rejection Message custom builder */}
@@ -2641,7 +2858,6 @@ export default function AdminPanel({
                                             ar: isArMsg,
                                             en: isEnMsg
                                           });
-                                          alert(isArabic ? "تم تعليق المعاملة وإرسال الإشعار للعميل بنجاح." : "Order suspended and rejection notification sent successfully.");
                                           setRejectingOrderId(null);
                                         } catch (e) {
                                           console.error(e);
@@ -3748,19 +3964,57 @@ export default function AdminPanel({
                     const unsettledCODs = codOrders.filter(o => !o.settled);
                     const settledCODs = codOrders.filter(o => o.settled);
 
-                    const unsettledTotalSum = unsettledCODs.reduce((sum, o) => sum + (o.agreedPrice || o.total || 0), 0);
-                    const settledTotalSum = settledCODs.reduce((sum, o) => sum + (o.agreedPrice || o.total || 0), 0);
+                    // Separated calculations:
+                    const unsettledProductsSum = unsettledCODs.reduce((sum, o) => sum + getOrderProductsTotal(o), 0);
+                    const unsettledShippingSum = unsettledCODs.reduce((sum, o) => sum + getOrderShippingFee(o), 0);
+                    const unsettledTotalSum = unsettledProductsSum + unsettledShippingSum;
+
+                    const settledProductsSum = settledCODs.reduce((sum, o) => sum + getOrderProductsTotal(o), 0);
+                    const settledShippingSum = settledCODs.reduce((sum, o) => sum + getOrderShippingFee(o), 0);
+                    const settledTotalSum = settledProductsSum + settledShippingSum;
+
+                    // Electronic payments delivered (InstaPay or Mobile Wallets) for the selected period
+                    const electronicDeliveredOrders = orders.filter(o => {
+                      if (o.status !== 'delivered') return false;
+                      const method = (o.paymentMethod || '').toLowerCase();
+                      const isEPay = method.includes('instapay') || method.includes('wallet') || method.includes('محفظة') || method.includes('فودافون');
+                      if (!isEPay) return false;
+
+                      // Date filtering
+                      if (settlementFromDate) {
+                        const fromLimit = new Date(settlementFromDate).setHours(0, 0, 0, 0);
+                        if (o.createdAt < fromLimit) return false;
+                      }
+                      if (settlementToDate) {
+                        const toLimit = new Date(settlementToDate).setHours(23, 59, 59, 999);
+                        if (o.createdAt > toLimit) return false;
+                      }
+
+                      return true;
+                    });
+
+                    const electronicShippingFeesSum = electronicDeliveredOrders.reduce((sum, o) => sum + getOrderShippingFee(o), 0);
+                    const electronicProductsSum = electronicDeliveredOrders.reduce((sum, o) => sum + getOrderProductsTotal(o), 0);
+
+                    // Balance ledger math with shipping company
+                    const courierOwedAmount = unsettledProductsSum; // Courier owes products to merchant
+                    const merchantOwedAmount = electronicShippingFeesSum; // Merchant owes shipping to courier
+                    const netCourierDifference = courierOwedAmount - merchantOwedAmount;
 
                     const handleClosePeriod = async () => {
                       if (unsettledCODs.length === 0) {
-                        alert(isArabic ? "لا توجد أي طلبات غير مسواة لإغلاقها الآن!" : "No unsettled orders available in this filter to lock down.");
+                        alert(
+                          isArabic 
+                            ? "تنبيه: لا يوجد أي طلبات مستحقة التوريد (الدفع عند الاستلام COD بحالة مكتملة) حالياً بالفلتر المحدد لتقفيل الدفعة. الرجاء التأكد من وجود طلبات تم تسليمها." 
+                            : "Alert: There are no delivered cash-on-delivery (COD) orders available under current filters to settle."
+                        );
                         return;
                       }
 
                       const periodNotes = prompt(
                         isArabic 
-                          ? `سيتم إغلاق وتسوية عدد (${unsettledCODs.length}) طلبات محصلة بإجمالي مبلغ: ${unsettledTotalSum} ج.م.\nيرجى كتابة اسم أو وصف لهذه الدفعة الاستلامية (مثال: توريد الأسبوع الأول من يونيو):` 
-                          : `You are closing settlement for (${unsettledCODs.length}) orders with sum ${unsettledTotalSum} EGP.\nEnter a reference title or date label for this closure (e.g. Early June Settlement Batch):`
+                          ? `سيتم إغلاق وتسوية عدد (${unsettledCODs.length}) طلبات محصلة بإجمالي مبيعات منتجات فقط: ${unsettledProductsSum.toLocaleString()} ج.م (باستبعاد مصاريف الشحن البالغة ${unsettledShippingSum.toLocaleString()} ج.م).\nيرجى كتابة اسم أو وصف لهذه الدفعة الاستلامية (مثال: دفعة الأسبوع الحالى لشركة الشحن):` 
+                          : `You are closing settlement for (${unsettledCODs.length}) orders.\nNet Product Cash: ${unsettledProductsSum.toLocaleString()} EGP (excluding shipping fees of ${unsettledShippingSum.toLocaleString()} EGP).\nEnter reference notes:`
                       );
 
                       if (periodNotes === null) return; // user cancelled
@@ -3774,7 +4028,7 @@ export default function AdminPanel({
                         id: settleId,
                         startDate: minTimestamp,
                         endDate: maxTimestamp,
-                        totalAmount: unsettledTotalSum,
+                        totalAmount: unsettledProductsSum, // products sum only as requested!
                         createdAt: Date.now(),
                         orderIds: unsettledCODs.map(o => o.id),
                         notes: periodNotes.trim() || (isArabic ? `تسوية بتاريخ ${new Date().toLocaleDateString('ar-EG')}` : `Settlement on ${new Date().toLocaleDateString()}`)
@@ -3797,7 +4051,7 @@ export default function AdminPanel({
                           o.settledInPeriodId = settleId;
                         });
 
-                        alert(isArabic ? "تم تسوية وإغلاق فترة التوريد بنجاح وبدء فترة مبيعات جديدة!" : "Settlement period sealed securely! Fresh fiscal term seeded.");
+                        alert(isArabic ? "تم تسوية وإغلاق فترة التوريد بنجاح وبقيمة المنتجات فقط!" : "Settlement period sealed with product valuation only!");
                       } catch (err) {
                         console.error(err);
                         alert(isArabic ? "حدث خطأ أثناء حفظ التسوية!" : "Error sealing settlement packet.");
@@ -3808,59 +4062,166 @@ export default function AdminPanel({
                       <div className="space-y-6 text-right">
                         {/* Summary Bento Row */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <div className="bg-zinc-950/60 p-4 border border-zinc-805 rounded-2xl flex flex-col justify-between text-right">
+                          <div className="bg-zinc-950/60 p-4 border border-zinc-805 rounded-2xl flex flex-col justify-between text-right font-sans">
                             <span className="text-[11px] text-zinc-400 font-bold block">
-                              {isArabic ? "مستحقات التوريد الحالية (غير مسواة):" : "Current Pending Collection:"}
+                              {isArabic ? "مبيعات المنتجات المستحقة للتوريد (صافي):" : "Pending Products Revenue (Net):"}
                             </span>
                             <div className="flex justify-between items-baseline mt-2">
                               <span className="text-2xl font-black text-amber-400 font-mono">
-                                {unsettledTotalSum.toLocaleString()} ج.م
+                                {unsettledProductsSum.toLocaleString()} ج.م
                               </span>
                               <span className="text-[11px] text-zinc-500 font-bold">
                                 {unsettledCODs.length} {isArabic ? "طلبات" : "orders"}
                               </span>
                             </div>
-                            <p className="text-[10px] text-zinc-500 mt-2">
-                              {isArabic ? "المبالغ التي حصلتها شركة الشحن من العميل ولم توردها بعد." : "Delivered cash on hand with couriers awaiting trade closure."}
+                            <p className="text-[10px] text-zinc-500 mt-2 leading-relaxed">
+                              {isArabic ? "حساب المنتجات فقط التي يجب توريدها من شركة الشحن بدون رسوم توصيلهم." : "Net product cost gathered with courier which belongs to the store owner."}
                             </p>
                           </div>
 
-                          <div className="bg-zinc-950/60 p-4 border border-zinc-805 rounded-2xl flex flex-col justify-between text-right">
+                          <div className="bg-zinc-950/60 p-4 border border-zinc-805 rounded-2xl flex flex-col justify-between text-right font-sans">
                             <span className="text-[11px] text-zinc-400 font-bold block">
-                              {isArabic ? "مجموع التسويات المغلقة السابقة:" : "Historial Closed / Settled:"}
+                              {isArabic ? "مجموع تسويات المنتجات المغلقة السابقة:" : "Historical Product Settlements Closed:"}
                             </span>
                             <div className="flex justify-between items-baseline mt-2">
                               <span className="text-2xl font-black text-emerald-400 font-mono">
                                 {settlements.reduce((sum, s) => sum + s.totalAmount, 0).toLocaleString()} ج.م
                               </span>
                               <span className="text-[11px] text-zinc-500 font-bold">
-                                {settlements.length} {isArabic ? "دورات وتوريدات" : "settlement cycles"}
+                                {settlements.length} {isArabic ? "دورات" : "cycles"}
                               </span>
                             </div>
-                            <p className="text-[10px] text-zinc-500 mt-2">
-                              {isArabic ? "المبالغ التي تم توريدها بالفعل وإغلاق فتراتها التم تم تحصيلها." : "Previously transferred sums locked and filed in ledger."}
+                            <p className="text-[10px] text-zinc-500 mt-2 leading-relaxed">
+                              {isArabic ? "المبالغ المغلقة السابقة التي تم مطابقتها وتوريدها من منتجات الـ COD." : "Previously transferred product sums locked and finalized."}
                             </p>
                           </div>
 
                           {/* Action Button Box */}
-                          <div className="bg-amber-400 text-black p-4 rounded-2xl flex flex-col justify-between text-right">
+                          <div className="bg-amber-400 text-black p-4 rounded-2xl flex flex-col justify-between text-right relative group font-sans">
+                            <span className="absolute top-2 left-3 text-[9px] font-mono font-black uppercase text-amber-950 leading-none bg-black/10 px-1.5 py-0.5 rounded select-none">
+                              {isArabic ? "تحصيل صافي" : "NET COD"}
+                            </span>
+                            
                             <div>
                               <span className="text-[10px] font-black uppercase tracking-wider block opacity-70">
-                                {isArabic ? "أقفل الفترة الحالية بالتوريد" : "Settle Period Ledger"}
+                                {isArabic ? "إغلاق فترة توريد المنتجات الحالية" : "Settle Period Ledger"}
                               </span>
-                              <p className="text-[11px] leading-tight font-bold mt-1">
+                              <p className="text-[11px] leading-tight font-bold mt-1 text-black/80">
                                 {isArabic 
-                                  ? `تقفيل وتجميد مبلغ ${unsettledTotalSum.toLocaleString()} ج.م من شركة الشحن وتسهيل بدء التوريد القادم.` 
-                                  : `Freeze pending ${unsettledTotalSum.toLocaleString()} EGP, marking orders as completely paid.`}
+                                  ? `تقفيل الدفعة وتسجيل توريد صافي مبالغ الفساتين بقيمة ${unsettledProductsSum.toLocaleString()} ج.م.` 
+                                  : `Freeze pending ${unsettledProductsSum.toLocaleString()} EGP code, marking files settled.`}
                               </p>
                             </div>
+                            
                             <button
                               onClick={handleClosePeriod}
-                              disabled={unsettledCODs.length === 0}
-                              className="mt-3.5 w-full py-2 bg-black hover:bg-zinc-900 border border-black text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 shadow-md active:scale-95"
+                              className="mt-3.5 w-full py-2 bg-black hover:bg-zinc-900 border border-black text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl cursor-pointer transition duration-150 shadow-md active:scale-95"
                             >
-                              {isArabic ? "إغلاق وتسوية الدفعة الحالية" : "Lock & Settle Current Unsettled"}
+                              {isArabic ? "موافقة وإغلاق دفتر الفترة ماليًا" : "Lock & Settle Current Products"}
                             </button>
+                          </div>
+                        </div>
+
+                        {/* COMPREHENSIVE COURIER & STORE RECONCILIATION SUMMARY */}
+                        <div className="bg-zinc-900/95 border border-zinc-800 rounded-3xl p-5 space-y-4 text-right font-sans">
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-zinc-800">
+                            <h4 className="text-sm font-black text-white flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-indigo-550 animate-pulse"></span>
+                              {isArabic ? "كشف حساب وتسوية شركة الشحن الشامل" : "Comprehensive Shipping Company Balancing Statement"}
+                            </h4>
+                            <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold bg-zinc-950 px-2.5 py-0.5 rounded select-none">
+                              {isArabic ? "مطابقة وحسابات" : "Ledger Audit"}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
+                            {/* Panel A: COD (Cash on Delivery) details */}
+                            <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-850 space-y-2.5 text-right">
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-350 font-bold">{isArabic ? "1. طلبات الدفع نقدًا عند الاستلام COD:" : "1. Cash on Delivery (COD) orders:"}</span>
+                                <span className="font-mono text-[11px] text-zinc-500 font-semibold">({unsettledCODs.length} {isArabic ? "أوردرات" : "orders"})</span>
+                              </div>
+                              <hr className="border-zinc-850" />
+                              <div className="flex justify-between">
+                                <span className="text-zinc-500">{isArabic ? "إجمالي كلي محصل شامل الشحن:" : "Grand Total collected:"}</span>
+                                <span className="font-mono text-zinc-300 font-medium font-bold">{(unsettledProductsSum + unsettledShippingSum).toLocaleString()} ج.م</span>
+                              </div>
+                              <div className="flex justify-between text-red-400">
+                                <span>{isArabic ? "يخصم مصاريف الشحن لشركة الشحن:" : "Deduct Courier Deliveries charge:"}</span>
+                                <span className="font-mono font-bold">-{unsettledShippingSum.toLocaleString()} ج.م</span>
+                              </div>
+                              <div className="flex justify-between text-yellow-400 font-extrabold text-[12px] pt-1">
+                                <span>{isArabic ? "صافي قيمة الفساتين المستحقة لك:" : "Product valuation courier owes store:"}</span>
+                                <span className="font-mono">{unsettledProductsSum.toLocaleString()} ج.م</span>
+                              </div>
+                            </div>
+
+                            {/* Panel B: Electronic Transfer payments details */}
+                            <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-850 space-y-2.5 text-right">
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-350 font-bold">{isArabic ? "2. طلبات تم دفعها إلكترونيًا (إنستاباي ومحافظ):" : "2. Electronic transfers prepaid (pre-collected):"}</span>
+                                <span className="font-mono text-[11px] text-zinc-500 font-semibold">({electronicDeliveredOrders.length} {isArabic ? "أوردرات" : "orders"})</span>
+                              </div>
+                              <hr className="border-zinc-850" />
+                              <div className="flex justify-between">
+                                <span className="text-zinc-500">{isArabic ? "إجمالي محصل شامل مصاريف الشحن:" : "Total client paid store online:"}</span>
+                                <span className="font-mono text-zinc-300 font-medium font-bold">{(electronicProductsSum + electronicShippingFeesSum).toLocaleString()} ج.م</span>
+                              </div>
+                              <div className="flex justify-between text-orange-400 font-extrabold text-[12px] pt-1">
+                                <span>{isArabic ? "قيمة الشحن المستحقة لشركة الشحن:" : "Delivery fee store owes courier:"}</span>
+                                <span className="font-mono">-{electronicShippingFeesSum.toLocaleString()} ج.م</span>
+                              </div>
+                              <p className="text-[10px] text-zinc-500 pt-1 leading-normal">
+                                {isArabic 
+                                  ? "لأنك استلمت ثمن الشحن مسبقاً من العميل على حسابك، تقوم بتصفية وسداد هذا الجزء لشركة الشحن." 
+                                  : "Since you received delivery fee online from client, this fee is owed to courier partner."}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Reconciliation Final Summary Row */}
+                          <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-805 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-sans text-right">
+                            <div className="space-y-1 w-full sm:w-auto">
+                              <span className="text-[10px] font-bold text-zinc-400 block uppercase tracking-wide">
+                                {isArabic ? "نتيجة تصفية المعاملات وتسوية الفواتير الحالية" : "Net Settlement / Financial Reconciliation Result"}
+                              </span>
+                              <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">
+                                {isArabic 
+                                  ? `تقابل تجاري متبادل: شركة الشحن تحتفظ بـ ${unsettledShippingSum.toLocaleString()} ج.م رسوم توصيل الـ COD، ومطالبة بتحويل ${unsettledProductsSum.toLocaleString()} ج.م مستحقات فساتينك. في المقابل، يخصم منها قيمة ${electronicShippingFeesSum.toLocaleString()} ج.م مصاريف التوصيل التي استلمتها أنت عبر إنستاباي.`
+                                  : `Reconciliation summary: Courier collected ${unsettledProductsSum.toLocaleString()} EGP product cash, while store collected ${electronicShippingFeesSum.toLocaleString()} EGP shipping charges for prepaid orders.`}
+                              </p>
+                            </div>
+
+                            <div className="bg-zinc-900 border border-zinc-800 px-6 py-3.5 rounded-xl text-center min-w-[240px] w-full sm:w-auto shrink-0 select-none">
+                              {netCourierDifference > 0 ? (
+                                <div className="space-y-1">
+                                  <span className="text-[9.5px] text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full font-extrabold uppercase">
+                                    {isArabic ? "صافي مستحق تحصيله من الشحن" : "RECEIVABLE FROM COURIER"}
+                                  </span>
+                                  <div className="text-xl font-mono font-black text-white pt-1">
+                                    {netCourierDifference.toLocaleString()} ج.م
+                                  </div>
+                                </div>
+                              ) : netCourierDifference < 0 ? (
+                                <div className="space-y-1">
+                                  <span className="text-[9.5px] text-red-400 bg-red-400/10 px-2.5 py-0.5 rounded-full font-extrabold uppercase">
+                                    {isArabic ? "صافي مستحق دفعه وتوريده للشحن" : "PAYABLE TO COURIER"}
+                                  </span>
+                                  <div className="text-xl font-mono font-black text-red-400 pt-1">
+                                    {Math.abs(netCourierDifference).toLocaleString()} ج.م
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-1">
+                                  <span className="text-[9.5px] text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full font-extrabold uppercase">
+                                    {isArabic ? "الحساب متزن وصفر تماماً" : "BALANCED ACCOUNT"}
+                                  </span>
+                                  <div className="text-xl font-mono font-black text-emerald-400 pt-1">
+                                    0 ج.م
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
 

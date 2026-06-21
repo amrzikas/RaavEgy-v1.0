@@ -115,8 +115,8 @@ export default function Header({
             </button>
           </div>
 
-          {/* Navigation links on the Left (Desktop only) */}
-          <div className="hidden md:flex items-center space-x-1 sm:space-x-8 md:w-1/3" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+          {/* Navigation links (Desktop only) */}
+          <div className="hidden md:flex items-center gap-4 sm:gap-8 md:w-1/3 justify-start" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
             <button 
               onClick={() => {
                 setActiveView('home');
@@ -211,8 +211,8 @@ export default function Header({
             </div>
           </div>
 
-          {/* Controls on the Right */}
-          <div className="flex items-center justify-end space-x-1 sm:space-x-4 md:w-1/3">
+          {/* Controls on the End */}
+          <div className="flex items-center gap-2 sm:gap-4 md:w-1/3 justify-end">
             
             {/* Search Input Toggle */}
             <div className="relative flex items-center">
@@ -275,17 +275,19 @@ export default function Header({
             </button>
 
             {/* Admin Key Button (hidden on mobile, moved to drawer) */}
-            <button 
-              onClick={onOpenAdmin}
-              className={`hidden md:inline-block p-2 rounded-full transition cursor-pointer relative ${
-                isAdminLoggedIn
-                  ? "text-amber-750 bg-amber-50"
-                  : "text-zinc-400 hover:text-amber-600 hover:bg-amber-50/50"
-              }`}
-              title={isAdminLoggedIn ? (isArabic ? "لوحة الإدارة" : "Admin Dashboard") : (isArabic ? "دخول المسؤول" : "Admin Sign-In")}
-            >
-              <Lock size={15} strokeWidth={1.8} />
-            </button>
+            {isAdminLoggedIn && (
+              <button 
+                onClick={onOpenAdmin}
+                className={`hidden md:inline-block p-2 rounded-full transition cursor-pointer relative ${
+                  isAdminLoggedIn
+                    ? "text-amber-750 bg-amber-50"
+                    : "text-zinc-400 hover:text-amber-600 hover:bg-amber-50/50"
+                }`}
+                title={isArabic ? "لوحة الإدارة" : "Admin Dashboard"}
+              >
+                <Lock size={15} strokeWidth={1.8} />
+              </button>
+            )}
 
             {/* Admin Logout button (hidden on mobile, moved to drawer) */}
             {isAdminLoggedIn && (
@@ -467,23 +469,19 @@ export default function Header({
                 </div>
 
                 {/* Admin Area */}
-                <div className="flex items-center justify-between text-[11px] pt-2 border-t border-zinc-100">
-                  <button
-                    onClick={() => {
-                      onOpenAdmin();
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`flex items-center gap-1.5 font-bold px-3 py-1.5 rounded-lg transition ${
-                      isAdminLoggedIn 
-                        ? 'bg-amber-100 text-amber-950' 
-                        : 'bg-zinc-50 text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100'
-                    }`}
-                  >
-                    <Lock size={12} />
-                    <span>{isAdminLoggedIn ? (isArabic ? "لوحة الأدمن" : "Admin Panel") : (isArabic ? "الأدمن" : "Admin Mode")}</span>
-                  </button>
+                {isAdminLoggedIn && (
+                  <div className="flex items-center justify-between text-[11px] pt-2 border-t border-zinc-100">
+                    <button
+                      onClick={() => {
+                        onOpenAdmin();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-1.5 font-bold px-3 py-1.5 rounded-lg transition bg-amber-100 text-amber-950"
+                    >
+                      <Lock size={12} />
+                      <span>{isArabic ? "لوحة الأدمن" : "Admin Panel"}</span>
+                    </button>
 
-                  {isAdminLoggedIn && (
                     <button
                       onClick={() => {
                         onLogoutAdmin();
@@ -494,8 +492,8 @@ export default function Header({
                       <ShieldAlert size={14} />
                       <span>{isArabic ? "خروج" : "Logout"}</span>
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>
