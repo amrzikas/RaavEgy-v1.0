@@ -251,4 +251,10 @@ export interface HomepageContent {
   announcementAr: string;
   announcementEn: string;
   heroSlides: HeroSlideInput[];
+  categoryImages?: {
+    women?: string;
+    men?: string;
+    kids?: string;
+    accessories?: string;
+  };
 }

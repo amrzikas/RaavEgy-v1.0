@@ -10,6 +10,12 @@ interface CategoryScrollSlicesProps {
   isArabic: boolean;
   onSelectCategory: (category: string) => void;
   onQuickAddToCart: (product: Product) => void;
+  categoryImages?: {
+    women?: string;
+    men?: string;
+    kids?: string;
+    accessories?: string;
+  };
 }
 
 export default function CategoryScrollSlices({
@@ -17,7 +23,8 @@ export default function CategoryScrollSlices({
   onSelectProduct,
   isArabic,
   onSelectCategory,
-  onQuickAddToCart
+  onQuickAddToCart,
+  categoryImages
 }: CategoryScrollSlicesProps) {
   
   const categoryConfigs = [
@@ -27,8 +34,8 @@ export default function CategoryScrollSlices({
       labelEn: "Premium Women's Atelier",
       descAr: 'تصاميم تسحر العيون، فساتين وبليزر منسق خصيصًا ليناسب رونقك الفريد.',
       descEn: 'Timeless luxury silhouettes, structured blazers, and elegant flowing textures.',
-      bgColor: 'from-rose-50/70 to-orange-50/30',
-      image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=800"
+      bgColor: 'from-rose-900/35 via-zinc-800/40 to-orange-900/15',
+      image: categoryImages?.women || "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: 'men',
@@ -36,8 +43,8 @@ export default function CategoryScrollSlices({
       labelEn: "Modern Men's Curation",
       descAr: 'قمصان من الكتان الطبيعي وهوديز عريضة مصممة لتجمع الراحة بالأناقة.',
       descEn: 'Natural heavyweight linens, sleek street hoodies, and stretch leisure wear.',
-      bgColor: 'from-amber-50/60 to-zinc-50',
-      image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=800"
+      bgColor: 'from-amber-900/35 via-zinc-800/40 to-stone-900/30',
+      image: categoryImages?.men || "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: 'kids',
@@ -45,8 +52,8 @@ export default function CategoryScrollSlices({
       labelEn: "Organic Cotton Baby & Kids",
       descAr: 'ملابس قطنية بالكامل فائقة النعومة ومحفوظة بعناية لبشرة أطفالك الحساسة.',
       descEn: 'Playtime-resilient baby garments crafted from pure premium cotton fibers.',
-      bgColor: 'from-sky-50/60 to-indigo-50/20',
-      image: "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800"
+      bgColor: 'from-sky-900/35 via-zinc-800/40 to-indigo-900/15',
+      image: categoryImages?.kids || "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: 'accessories',
@@ -54,8 +61,8 @@ export default function CategoryScrollSlices({
       labelEn: "Signature Accessories & Watches",
       descAr: 'تفاصيل بسيطة تصنع فارقًا كبيرًا! ساعات كلاسيكية ونظارات حماية ذكية.',
       descEn: 'The defining edits: analog retro leather pieces and premium UV400 frames.',
-      bgColor: 'from-zinc-100/70 to-amber-50/30',
-      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800"
+      bgColor: 'from-zinc-800/35 via-zinc-800/40 to-amber-900/15',
+      image: categoryImages?.accessories || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800"
     }
   ];
 
@@ -100,84 +107,91 @@ export default function CategoryScrollSlices({
             return (
               <div 
                 key={config.id} 
-                className="grid grid-cols-12 gap-2 sm:gap-6 lg:gap-8 items-stretch"
-                style={{ direction: isArabic ? 'rtl' : 'ltr' }}
+                className="bg-gradient-to-br from-zinc-800 via-zinc-850 to-zinc-900 border border-zinc-700/60 rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-8 lg:p-10 shadow-xl relative overflow-hidden"
               >
-                
-                {/* 1. Styled Showcase Intro Card (4 cols on all screen sizes) */}
-                <div className="col-span-4 flex">
-                  <div className={`w-full bg-gradient-to-br ${config.bgColor} border border-zinc-150/50 p-2.5 xs:p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] flex flex-col justify-between shadow-xs relative overflow-hidden group`}>
-                    
-                    {/* Gorgeous subtle background image layer with hover scaling */}
-                    {config.image && (
-                      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-2xl sm:rounded-[2rem]">
-                        <img 
-                          src={config.image} 
-                          alt="" 
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover opacity-[0.25] mix-blend-multiply transition-transform duration-[1.2s] ease-out group-hover:scale-110"
-                        />
-                        {/* Smooth ambient gradient masking */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-white/40" />
-                      </div>
-                    )}
- 
-                    {/* Tiny decor circle */}
-                    <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-white/20 blur-xl pointer-events-none" />
- 
-                    <div className="space-y-1.5 sm:space-y-3 relative z-10 text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                      <span className="text-[6px] xs:text-[8px] sm:text-[10px] font-bold bg-white/95 text-amber-950 border border-zinc-100/55 rounded-full px-1.5 py-0.5 sm:px-3 sm:py-1 font-sans uppercase tracking-widest inline-block shadow-xs">
-                        {isArabic ? "مجموعة خاصة" : "EXCLUSIVE LINE"}
-                      </span>
-                      <h3 className="text-[10px] xs:text-sm sm:text-2xl lg:text-3xl font-serif font-bold text-zinc-950 tracking-tight leading-tight drop-shadow-xs">
-                        {isArabic ? config.labelAr : config.labelEn}
-                      </h3>
-                      <p className="hidden xs:block text-zinc-800 text-[8px] sm:text-xs lg:text-sm leading-relaxed font-sans font-medium">
-                        {isArabic ? config.descAr : config.descEn}
-                      </p>
-                    </div>
- 
-                    <div className="pt-2 sm:pt-6 relative z-10 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-                      <button
-                        onClick={() => handleViewAll(config.id)}
-                        className="px-1.5 py-1 xs:px-3 xs:py-1.5 sm:px-6 sm:py-3 bg-zinc-950 hover:bg-zinc-900 text-white rounded-lg sm:rounded-full text-[7px] xs:text-[9px] sm:text-xs font-semibold tracking-wider transition uppercase shadow-sm cursor-pointer text-center"
-                      >
-                        {isArabic ? "كل الموديلات" : "BROWSE EDIT"}
-                      </button>
-                      
-                      {/* Nav Arrows */}
-                      <div className="hidden sm:flex items-center gap-1.5 self-center">
-                        <button
-                          onClick={() => scrollTrack(config.id, isArabic ? 'right' : 'left')}
-                          className="p-2.5 bg-white border border-zinc-200 hover:border-zinc-300 text-zinc-700 rounded-full cursor-pointer hover:bg-zinc-50 transition"
-                          title="Previous"
-                        >
-                          <ChevronLeft size={14} />
-                        </button>
-                        <button
-                          onClick={() => scrollTrack(config.id, isArabic ? 'left' : 'right')}
-                          className="p-2.5 bg-white border border-zinc-200 hover:border-zinc-300 text-zinc-700 rounded-full cursor-pointer hover:bg-zinc-50 transition"
-                          title="Next"
-                        >
-                          <ChevronRight size={14} />
-                        </button>
-                      </div>
-                    </div>
- 
-                  </div>
-                </div>
- 
-                {/* 2. Seamless Horizontal Scroll Track (8 cols on all screen sizes) */}
-                <div className="col-span-8 flex items-center relative">
+                {/* Ambient glow backgrounds */}
+                <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-zinc-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                <div 
+                  className="grid grid-cols-12 gap-4 sm:gap-6 lg:gap-8 items-stretch relative z-10"
+                  style={{ direction: isArabic ? 'rtl' : 'ltr' }}
+                >
                   
-                  {/* Subtle shadows indicating side scrolls */}
-                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 hidden md:block" />
-                  <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 hidden md:block" />
- 
-                  <div
-                    ref={(el) => {
-                      scrollSlidersRefs.current[config.id] = el;
-                    }}
+                  {/* 1. Styled Showcase Intro Card (5 cols on md+, 12 cols on mobile/tablet) */}
+                  <div className="col-span-12 md:col-span-4 lg:col-span-5 flex animate-fade-in text-center">
+                    <div className={`w-full bg-gradient-to-br ${config.bgColor} border border-zinc-700/40 p-4 xs:p-6 sm:p-10 rounded-2xl sm:rounded-[2.2rem] flex flex-col justify-between shadow-md relative overflow-hidden group transition-all duration-300 hover:shadow-xl hover:border-zinc-550 min-h-[220px] xs:min-h-[260px] sm:min-h-[440px] md:min-h-[500px] lg:min-h-[540px]`}>
+                      
+                      {/* Gorgeous subtle background image layer with hover scaling */}
+                      {config.image && (
+                        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-2xl sm:rounded-[2rem]">
+                          <img 
+                            src={config.image} 
+                            alt="" 
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover opacity-[0.55] transition-transform duration-[1.2s] ease-out group-hover:scale-110 group-hover:opacity-[0.65]"
+                          />
+                          {/* Premium dark tint overlay to make the clear image and white text stand out beautifully */}
+                          <div className="absolute inset-0 bg-zinc-950/45 group-hover:bg-zinc-950/55 transition-colors duration-500" />
+                        </div>
+                      )}
+   
+                      {/* Tiny decor circle */}
+                      <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
+   
+                      <div className="space-y-2.5 sm:space-y-4 relative z-10 text-center flex flex-col items-center justify-center my-auto w-full px-2 sm:px-4">
+                        <span className="text-[7.5px] xs:text-[9.5px] sm:text-[11.5px] font-bold bg-amber-600 text-white rounded-full px-3.5 py-1 font-sans uppercase tracking-[0.25em] inline-block shadow-md">
+                          {isArabic ? "مجموعة خاصة" : "EXCLUSIVE LINE"}
+                        </span>
+                        <h3 className="text-sm xs:text-xl sm:text-3xl lg:text-4xl font-serif font-extrabold text-white tracking-tight leading-tight drop-shadow-md select-none">
+                          {isArabic ? config.labelAr : config.labelEn}
+                        </h3>
+                        <p className="hidden xs:block text-zinc-100 text-[10px] sm:text-sm lg:text-base leading-relaxed font-sans font-medium drop-shadow-sm max-w-sm mx-auto select-none">
+                          {isArabic ? config.descAr : config.descEn}
+                        </p>
+                      </div>
+   
+                      <div className="pt-3 sm:pt-6 relative z-10 flex flex-col sm:flex-row gap-3 items-center justify-center w-full">
+                        <button
+                          onClick={() => handleViewAll(config.id)}
+                          className="px-3.5 py-1.5 xs:px-5 xs:py-2.5 sm:px-8 sm:py-4 bg-white hover:bg-zinc-100 text-zinc-950 font-bold rounded-lg sm:rounded-full text-[8px] xs:text-[10px] sm:text-xs tracking-[0.15em] transition uppercase shadow-md cursor-pointer text-center"
+                        >
+                          {isArabic ? "تصفح التشكيلة" : "BROWSE EDIT"}
+                        </button>
+                        
+                        {/* Nav Arrows */}
+                        <div className="hidden sm:flex items-center gap-1.5 self-center">
+                          <button
+                            onClick={() => scrollTrack(config.id, isArabic ? 'right' : 'left')}
+                            className="p-2.5 bg-white/95 hover:bg-white text-zinc-900 rounded-full cursor-pointer hover:bg-zinc-50 transition"
+                            title="Previous"
+                          >
+                            <ChevronLeft size={14} />
+                          </button>
+                          <button
+                            onClick={() => scrollTrack(config.id, isArabic ? 'left' : 'right')}
+                            className="p-2.5 bg-white/95 hover:bg-white text-zinc-900 rounded-full cursor-pointer hover:bg-zinc-50 transition"
+                            title="Next"
+                          >
+                            <ChevronRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+   
+                    </div>
+                  </div>
+   
+                  {/* 2. Seamless Horizontal Scroll Track (7 cols on md+, 12 cols on mobile/tablet) */}
+                  <div className="col-span-12 md:col-span-8 lg:col-span-7 flex items-center relative">
+                    
+                    {/* Subtle shadows indicating side scrolls matching the dark section */}
+                    <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-zinc-900 to-transparent pointer-events-none z-10 hidden md:block" />
+                    <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-zinc-900 to-transparent pointer-events-none z-10 hidden md:block" />
+   
+                    <div
+                      ref={(el) => {
+                        scrollSlidersRefs.current[config.id] = el;
+                      }}
                     className="w-full flex items-stretch gap-2.5 sm:gap-6 overflow-x-auto py-2 sm:py-4 px-1 sm:px-2 scrollbar-none snap-x snap-mandatory"
                     style={{ 
                       scrollbarWidth: 'none', 
@@ -256,15 +270,15 @@ export default function CategoryScrollSlices({
                               return (
                                 <div className="flex flex-col text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                                   {priceInfo.hasDiscount && (
-                                    <span className="text-zinc-400 line-through text-[7px] xs:text-[8px] sm:text-[9px] font-serif leading-none mb-0.5">
-                                      {priceInfo.original}
+                                    <span className="text-zinc-400 line-through text-[6.5px] xs:text-[8px] sm:text-[9px] font-sans leading-none mb-1 inline-block">
+                                      {priceInfo.original} {isArabic ? 'ج.م' : 'EGP'}
                                     </span>
                                   )}
-                                  <div>
-                                    <span className={priceInfo.hasDiscount ? "text-red-650 font-bold text-[9px] xs:text-xs sm:text-sm font-serif" : "text-zinc-900 font-bold text-[9px] xs:text-xs sm:text-sm font-serif"}>
+                                  <div className="inline-flex items-center gap-1 bg-amber-500/10 border border-amber-500/25 text-amber-950 rounded-md py-0.5 px-1.5 sm:px-2.5 text-[8.5px] xs:text-[11px] sm:text-xs font-extrabold shadow-sm font-sans">
+                                    <span className={priceInfo.hasDiscount ? "text-red-650" : "text-zinc-900"}>
                                       {priceInfo.current}
                                     </span>
-                                    <span className="text-[6px] xs:text-[8px] text-zinc-500 font-sans ml-0.5 mr-0.5">{isArabic ? 'ج.م' : 'EGP'}</span>
+                                    <span className="text-[6.5px] xs:text-[8px] sm:text-[9px] uppercase font-bold text-zinc-500/95">{isArabic ? 'ج.م' : 'EGP'}</span>
                                   </div>
                                 </div>
                               );
@@ -289,22 +303,22 @@ export default function CategoryScrollSlices({
                     ))}
  
                     {/* Final "Explore" Card inside each scroll track */}
-                    <div className="flex-none w-[80px] xs:w-[110px] sm:w-[200px] flex items-center justify-center p-2.5 xs:p-4 sm:p-6 bg-zinc-50 border border-dashed border-zinc-300 rounded-xl sm:rounded-3xl snap-end">
-                      <div className="text-center space-y-2 sm:space-y-4">
-                        <div className="w-6 h-6 xs:w-8 xs:h-8 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-xs border border-zinc-100 text-amber-800">
-                          <ShoppingBag className="w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]" />
+                    <div className="flex-none w-[100px] xs:w-[135px] sm:w-[200px] flex items-center justify-center p-4 sm:p-6 bg-zinc-900/40 border border-dashed border-zinc-700/80 rounded-xl sm:rounded-3xl snap-end group/explore transition hover:bg-zinc-900/70">
+                      <div className="text-center space-y-3 sm:space-y-4">
+                        <div className="w-8 h-8 xs:w-10 xs:h-10 sm:w-14 sm:h-14 bg-amber-600 rounded-full flex items-center justify-center mx-auto shadow-md text-white transition-transform group-hover/explore:scale-110">
+                          <ShoppingBag className="w-4 h-4 sm:w-6 sm:h-6" />
                         </div>
-                        <div className="space-y-0.5 sm:space-y-1">
-                          <h4 className="font-serif font-medium text-zinc-950 text-[9px] xs:text-xs sm:text-sm">
+                        <div className="space-y-1">
+                          <h4 className="font-serif font-medium text-zinc-100 text-[10px] xs:text-xs sm:text-base">
                             {isArabic ? "المزيد؟" : "More pieces"}
                           </h4>
-                          <p className="hidden xs:block text-[8px] sm:text-[11px] text-zinc-400 font-sans leading-tight">
+                          <p className="hidden xs:block text-[8px] sm:text-xs text-zinc-400 font-sans leading-tight">
                             {isArabic ? "تصفح هذه المجموعة بالكامل" : "See entire curated line"}
                           </p>
                         </div>
                         <button
                           onClick={() => handleViewAll(config.id)}
-                          className="px-2 py-1 sm:px-4 sm:py-2 bg-zinc-900 hover:bg-amber-800 text-white rounded-md sm:rounded-full text-[7px] xs:text-[9px] sm:text-[10px] font-semibold tracking-wider uppercase transition inline-block cursor-pointer"
+                          className="px-3 py-1.5 sm:px-5 sm:py-2.5 bg-white hover:bg-zinc-100 text-zinc-950 font-bold rounded-lg sm:rounded-full text-[8px] xs:text-[10px] sm:text-xs tracking-wider uppercase transition inline-block cursor-pointer shadow-md"
                         >
                           {isArabic ? "تصفح" : "Browse"}
                         </button>
@@ -316,7 +330,8 @@ export default function CategoryScrollSlices({
                 </div>
  
               </div>
-            );
+            </div>
+          );
           })}
         </div>
 

@@ -449,6 +449,7 @@ export default function App() {
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 onQuickAddToCart={handleQuickAddToCart}
+                categoryImages={homepageContent?.categoryImages}
               />
 
               {/* SPECIAL CUSTOM ORDERS FORM SECTION */}

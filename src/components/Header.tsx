@@ -103,13 +103,16 @@ export default function Header({
             </button>
 
             {/* SHOP Button / Dropdown */}
-            <div className="relative">
+            <div 
+              className="relative"
+              onMouseEnter={() => setShopDropdownOpen(true)}
+              onMouseLeave={() => setShopDropdownOpen(false)}
+            >
               <button 
                 onClick={() => {
                   setActiveView('shop');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                onMouseEnter={() => setShopDropdownOpen(true)}
                 className={`flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.2em] transition cursor-pointer px-2 py-1 ${
                   activeView === 'shop' ? 'text-zinc-950 border-b-2 border-zinc-950 font-bold' : 'text-zinc-550 hover:text-black'
                 }`}
@@ -124,7 +127,6 @@ export default function Header({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    onMouseLeave={() => setShopDropdownOpen(false)}
                     className="absolute left-0 mt-2 w-48 bg-white border border-zinc-100 shadow-xl rounded-lg py-2 z-55"
                   >
                     {categories.map((cat) => (

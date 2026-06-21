@@ -136,19 +136,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="mt-auto pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
           <div className="flex flex-col">
             {hasDiscount && (
-              <span className="text-zinc-400 line-through text-[11px] sm:text-xs font-serif leading-none mb-1">
+              <span className="text-zinc-400 line-through text-[11px] sm:text-xs font-sans leading-none mb-1 inline-block">
                 {original} {isArabic ? 'ج.م' : 'EGP'}
               </span>
             )}
-            <div>
-              <span className={hasDiscount ? "text-red-600 font-bold text-base sm:text-lg font-serif" : "text-zinc-900 font-bold text-base sm:text-lg font-serif"}>
-                {current} 
+            <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/25 text-amber-950 rounded-lg py-1 px-2.5 sm:px-3 text-xs sm:text-sm font-extrabold shadow-xs font-sans">
+              <span className={hasDiscount ? "text-red-650" : "text-zinc-900"}>
+                {current}
               </span>
-              <span className="text-xs text-zinc-500 font-sans ml-1 mr-1">
-                {isArabic ? 'ج.م' : 'EGP'}
-              </span>
+              <span className="text-[10px] uppercase font-bold text-zinc-500/95">{isArabic ? 'ج.م' : 'EGP'}</span>
               {hasDiscount && (
-                <span className="inline-block bg-red-50 text-red-600 text-[9px] px-1 py-0.5 rounded font-bold uppercase shrink-0 select-none align-middle ml-1 mr-1">
+                <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.2 rounded font-bold uppercase shrink-0 select-none ml-1">
                   {isArabic ? 'خصم' : 'Sale'}
                 </span>
               )}

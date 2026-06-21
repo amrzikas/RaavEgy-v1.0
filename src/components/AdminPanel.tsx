@@ -1399,6 +1399,66 @@ export default function AdminPanel({
                       ))}
                     </div>
 
+                    <h4 className="text-zinc-200 font-bold border-b border-zinc-800 pb-2 pt-6 text-sm">{isArabic ? "صور البطاقات الكبيرة للفئات (The Boutique Collections)" : "Large Category Card Cover Images (The Boutique Collections)"}</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "صورة فئة النساء" : "Women Category Image (URL)"}</label>
+                        <input
+                          type="url"
+                          placeholder="https://images.unsplash.com/..."
+                          value={homepageContent.categoryImages?.women || ''}
+                          onChange={(e) => {
+                            const images = { ...(homepageContent.categoryImages || {}) };
+                            images.women = e.target.value;
+                            setHomepageContent({ ...homepageContent, categoryImages: images });
+                          }}
+                          className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "صورة فئة الرجال" : "Men Category Image (URL)"}</label>
+                        <input
+                          type="url"
+                          placeholder="https://images.unsplash.com/..."
+                          value={homepageContent.categoryImages?.men || ''}
+                          onChange={(e) => {
+                            const images = { ...(homepageContent.categoryImages || {}) };
+                            images.men = e.target.value;
+                            setHomepageContent({ ...homepageContent, categoryImages: images });
+                          }}
+                          className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "صورة فئة الأطفال" : "Kids Category Image (URL)"}</label>
+                        <input
+                          type="url"
+                          placeholder="https://images.unsplash.com/..."
+                          value={homepageContent.categoryImages?.kids || ''}
+                          onChange={(e) => {
+                            const images = { ...(homepageContent.categoryImages || {}) };
+                            images.kids = e.target.value;
+                            setHomepageContent({ ...homepageContent, categoryImages: images });
+                          }}
+                          className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "صورة فئة الإكسسوارات" : "Accessories Category Image (URL)"}</label>
+                        <input
+                          type="url"
+                          placeholder="https://images.unsplash.com/..."
+                          value={homepageContent.categoryImages?.accessories || ''}
+                          onChange={(e) => {
+                            const images = { ...(homepageContent.categoryImages || {}) };
+                            images.accessories = e.target.value;
+                            setHomepageContent({ ...homepageContent, categoryImages: images });
+                          }}
+                          className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono"
+                        />
+                      </div>
+                    </div>
+
                     <div className="pt-4 text-left">
                       <button
                         type="submit"
