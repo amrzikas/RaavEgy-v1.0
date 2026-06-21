@@ -18,6 +18,8 @@ interface HeaderProps {
   setActiveView: (view: any) => void;
   isUserLoggedIn: boolean;
   customAnnouncement?: string;
+  announcementImage?: string;
+  announcementLink?: string;
 }
 
 export default function Header({
@@ -35,7 +37,9 @@ export default function Header({
   activeView,
   setActiveView,
   isUserLoggedIn,
-  customAnnouncement
+  customAnnouncement,
+  announcementImage,
+  announcementLink
 }: HeaderProps) {
   const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
@@ -65,14 +69,37 @@ export default function Header({
 
   return (
     <header id="app-header" className="sticky top-0 z-40 bg-white border-b border-zinc-100 text-zinc-900 transition-colors duration-300">
-      {/* Premium Minimal Announcement Bar */}
-      <div className="bg-zinc-950 font-sans text-[11px] tracking-[0.15em] text-white py-2 px-4 text-center uppercase flex items-center justify-center gap-2">
-        <span className="font-semibold text-zinc-300">
-          {customAnnouncement || (isArabic 
-            ? "توصيل سريع مجاني في مصر للطلبات الأكثر من ١٢٠٠ ج.م • كود الخصم: RAAV2026" 
-            : "FREE EXPEDITED SHIPPING IN EGYPT ON ORDERS OVER 1200 EGP • CODE: RAAV2026")}
-        </span>
-      </div>
+      {/* Premium Minimal Announcement Bar / Custom Banner */}
+      {announcementImage ? (
+        <a 
+          href={announcementLink || "#"} 
+          target={announcementLink ? "_blank" : undefined}
+          rel="noopener noreferrer"
+          className="block w-full h-[40px] xs:h-[48px] md:h-[56px] overflow-hidden relative group"
+        >
+          <img 
+            src={announcementImage} 
+            alt="Ad Banner" 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            referrerPolicy="no-referrer"
+          />
+          {customAnnouncement && (
+            <div className="absolute inset-0 bg-black/35 flex items-center justify-center px-4">
+              <span className="font-semibold text-white tracking-[0.15em] text-[10px] xs:text-[11.5px] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                {customAnnouncement}
+              </span>
+            </div>
+          )}
+        </a>
+      ) : (
+        <div className="bg-zinc-950 font-sans text-[11px] tracking-[0.15em] text-white py-2 px-4 text-center uppercase flex items-center justify-center gap-2">
+          <span className="font-semibold text-zinc-300">
+            {customAnnouncement || (isArabic 
+              ? "توصيل سريع مجاني في مصر للطلبات الأكثر من ١٢٠٠ ج.م • كود الخصم: RAAV2026" 
+              : "FREE EXPEDITED SHIPPING IN EGYPT ON ORDERS OVER 1200 EGP • CODE: RAAV2026")}
+          </span>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">

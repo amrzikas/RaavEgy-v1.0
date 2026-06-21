@@ -282,6 +282,8 @@ export default function App() {
           setActiveView={setActiveView}
           isUserLoggedIn={!!currentUser}
           customAnnouncement={isArabic ? homepageContent?.announcementAr : homepageContent?.announcementEn}
+          announcementImage={homepageContent?.announcementImage}
+          announcementLink={homepageContent?.announcementLink}
         />
 
         {/* Main Page Layout */}
@@ -450,6 +452,7 @@ export default function App() {
                 }}
                 onQuickAddToCart={handleQuickAddToCart}
                 categoryImages={homepageContent?.categoryImages}
+                categoryTexts={homepageContent?.categoryTexts}
               />
 
               {/* SPECIAL CUSTOM ORDERS FORM SECTION */}

@@ -250,11 +250,19 @@ export interface HeroSlideInput {
 export interface HomepageContent {
   announcementAr: string;
   announcementEn: string;
+  announcementImage?: string;
+  announcementLink?: string;
   heroSlides: HeroSlideInput[];
   categoryImages?: {
     women?: string;
     men?: string;
     kids?: string;
     accessories?: string;
+  };
+  categoryTexts?: {
+    women?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+    men?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+    kids?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+    accessories?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
   };
 }

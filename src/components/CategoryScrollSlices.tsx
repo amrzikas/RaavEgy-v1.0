@@ -16,6 +16,12 @@ interface CategoryScrollSlicesProps {
     kids?: string;
     accessories?: string;
   };
+  categoryTexts?: {
+    women?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+    men?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+    kids?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+    accessories?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+  };
 }
 
 export default function CategoryScrollSlices({
@@ -24,43 +30,44 @@ export default function CategoryScrollSlices({
   isArabic,
   onSelectCategory,
   onQuickAddToCart,
-  categoryImages
+  categoryImages,
+  categoryTexts
 }: CategoryScrollSlicesProps) {
   
   const categoryConfigs = [
     {
       id: 'women',
-      labelAr: 'الأزياء النسائية الراقية',
-      labelEn: "Premium Women's Atelier",
-      descAr: 'تصاميم تسحر العيون، فساتين وبليزر منسق خصيصًا ليناسب رونقك الفريد.',
-      descEn: 'Timeless luxury silhouettes, structured blazers, and elegant flowing textures.',
+      labelAr: categoryTexts?.women?.titleAr || 'الأزياء النسائية الراقية',
+      labelEn: categoryTexts?.women?.titleEn || "Premium Women's Atelier",
+      descAr: categoryTexts?.women?.descAr || 'تصاميم تسحر العيون، فساتين وبليزر منسق خصيصًا ليناسب رونقك الفريد.',
+      descEn: categoryTexts?.women?.descEn || 'Timeless luxury silhouettes, structured blazers, and elegant flowing textures.',
       bgColor: 'from-rose-900/35 via-zinc-800/40 to-orange-900/15',
       image: categoryImages?.women || "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: 'men',
-      labelAr: 'المجموعات الرجالية العصرية',
-      labelEn: "Modern Men's Curation",
-      descAr: 'قمصان من الكتان الطبيعي وهوديز عريضة مصممة لتجمع الراحة بالأناقة.',
-      descEn: 'Natural heavyweight linens, sleek street hoodies, and stretch leisure wear.',
+      labelAr: categoryTexts?.men?.titleAr || 'المجموعات الرجالية العصرية',
+      labelEn: categoryTexts?.men?.titleEn || "Modern Men's Curation",
+      descAr: categoryTexts?.men?.descAr || 'قمصان من الكتان الطبيعي وهوديز عريضة مصممة لتجمع الراحة بالأناقة.',
+      descEn: categoryTexts?.men?.descEn || 'Natural heavyweight linens, sleek street hoodies, and stretch leisure wear.',
       bgColor: 'from-amber-900/35 via-zinc-800/40 to-stone-900/30',
       image: categoryImages?.men || "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: 'kids',
-      labelAr: 'قصص الأطفال القطنية العضوية',
-      labelEn: "Organic Cotton Baby & Kids",
-      descAr: 'ملابس قطنية بالكامل فائقة النعومة ومحفوظة بعناية لبشرة أطفالك الحساسة.',
-      descEn: 'Playtime-resilient baby garments crafted from pure premium cotton fibers.',
+      labelAr: categoryTexts?.kids?.titleAr || 'قصص الأطفال القطنية العضوية',
+      labelEn: categoryTexts?.kids?.titleEn || "Organic Cotton Baby & Kids",
+      descAr: categoryTexts?.kids?.descAr || 'ملابس قطنية بالكامل فائقة النعومة ومحفوظة بعناية لبشرة أطفالك الحساسة.',
+      descEn: categoryTexts?.kids?.descEn || 'Playtime-resilient baby garments crafted from pure premium cotton fibers.',
       bgColor: 'from-sky-900/35 via-zinc-800/40 to-indigo-900/15',
       image: categoryImages?.kids || "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=800"
     },
     {
       id: 'accessories',
-      labelAr: 'الإكسسوارات الفاخرة المنسقة',
-      labelEn: "Signature Accessories & Watches",
-      descAr: 'تفاصيل بسيطة تصنع فارقًا كبيرًا! ساعات كلاسيكية ونظارات حماية ذكية.',
-      descEn: 'The defining edits: analog retro leather pieces and premium UV400 frames.',
+      labelAr: categoryTexts?.accessories?.titleAr || 'الإكسسوارات الفاخرة المنسقة',
+      labelEn: categoryTexts?.accessories?.titleEn || "Signature Accessories & Watches",
+      descAr: categoryTexts?.accessories?.descAr || 'تفاصيل بسيطة تصنع فارقًا كبيرًا! ساعات كلاسيكية ونظارات حماية ذكية.',
+      descEn: categoryTexts?.accessories?.descEn || 'The defining edits: analog retro leather pieces and premium UV400 frames.',
       bgColor: 'from-zinc-800/35 via-zinc-800/40 to-amber-900/15',
       image: categoryImages?.accessories || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800"
     }
