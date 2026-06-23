@@ -3,6 +3,7 @@ import { Eye, ShoppingCart, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Product } from '../types';
 import { getProductPrice } from '../utils';
+import { optimizeUnsplashUrl } from '../utils/imageOptimizer';
 
 interface ProductCardProps {
   product: Product;
@@ -47,13 +48,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Product Image Stage */}
       <div className="relative aspect-[4/5] bg-zinc-50 overflow-hidden cursor-pointer" onClick={() => onOpenDetails(product)}>
         <img
-          src={product.image}
+          src={optimizeUnsplashUrl(product.image, 450, 70)}
           alt={isArabic ? product.nameAr : product.nameEn}
           referrerPolicy="no-referrer"
+          loading="lazy"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           onError={(e) => {
             // Fallback image in case the remote picture fails
-            e.currentTarget.src = "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&q=80&w=600";
+            e.currentTarget.src = "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&q=70&w=450";
           }}
         />
 

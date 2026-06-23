@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Sparkles, Eye, ShoppingCart, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Product, SectionBackdrop } from '../types';
 import { getProductPrice } from '../utils';
+import { optimizeUnsplashUrl } from '../utils/imageOptimizer';
 
 interface CategoryScrollSlicesProps {
   products: Product[];
@@ -156,15 +157,16 @@ export default function CategoryScrollSlices({
                 {/* Left Column: Category Editorial Card */}
                 <div 
                   onClick={() => handleCategoryHeaderClick(cat.id)}
-                  className="w-full lg:w-[32%] relative overflow-hidden rounded-2xl md:rounded-3xl border border-zinc-800/10 hover:border-amber-500/20 shadow-md flex flex-col justify-between shrink-0 p-6 sm:p-8 cursor-pointer group/cat min-h-[300px] lg:min-h-[400px]" 
+                  className="w-full lg:w-[38%] relative overflow-hidden rounded-2xl md:rounded-3xl border border-amber-500/10 hover:border-amber-500/35 bg-zinc-950 shadow-[0_4px_30px_rgba(0,0,0,0.4)] hover:shadow-[0_12px_40px_rgba(245,158,11,0.15)] flex flex-col justify-between shrink-0 p-6 sm:p-10 cursor-pointer group/cat min-h-[340px] lg:min-h-[480px] transition-all duration-500 scale-100 hover:scale-[1.015]" 
                   style={{ direction: isArabic ? 'rtl' : 'ltr' }}
                 >
                   {/* Category Background Image */}
                   <div className="absolute inset-0 z-0">
                     <img 
-                      src={catImage} 
+                      src={optimizeUnsplashUrl(catImage, 600, 70)} 
                       alt={title} 
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover/cat:scale-105"
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover/cat:scale-[1.08] filter brightness-[0.85] contrast-[1.05]"
                       referrerPolicy="no-referrer"
                     />
                     {/* Dark contrast gradient overlay */}
@@ -172,44 +174,44 @@ export default function CategoryScrollSlices({
                   </div>
 
                   {/* Top content */}
-                  <div className="relative z-10 space-y-2 sm:space-y-3 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                    <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest tracking-[0.2em]">{isArabic ? "حياكة فاخرة" : "FINE ARTISTRY"}</span>
-                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold tracking-tight text-white">
+                  <div className="relative z-10 space-y-3 sm:space-y-4 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest tracking-[0.25em]">{isArabic ? "حياكة فاخرة" : "FINE ARTISTRY"}</span>
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold tracking-tight text-white leading-tight">
                       {title}
                     </h3>
-                    <p className="text-xs leading-relaxed font-sans text-zinc-300">
+                    <p className="text-xs sm:text-sm leading-relaxed font-sans text-zinc-200/90 max-w-sm">
                       {desc}
                     </p>
                   </div>
 
                   {/* Bottom interactions */}
-                  <div className="relative z-10 mt-6 flex flex-wrap items-center justify-between gap-4">
+                  <div className="relative z-10 mt-8 flex flex-wrap items-center justify-between gap-4">
                     <span
-                      className="text-xs font-bold uppercase tracking-wider text-amber-400 group-hover/cat:text-amber-300 underline transition cursor-pointer"
+                      className="text-xs font-bold uppercase tracking-wider text-amber-400 group-hover/cat:text-amber-300 underline underline-offset-4 decoration-2 transition cursor-pointer"
                     >
                       {isArabic ? "تصفح القسم بالكامل" : "View Entire Section"}
                     </span>
 
                     {/* Scroller controls */}
-                    <div className="hidden sm:flex items-center gap-2" dir="ltr" onClick={(e) => e.stopPropagation()}>
+                    <div className="hidden sm:flex items-center gap-2.5" dir="ltr" onClick={(e) => e.stopPropagation()}>
                       <button 
                         onClick={scrollCategoryLeft} 
-                        className="w-8 h-8 rounded-full border border-white/20 bg-zinc-950/50 hover:bg-amber-400 hover:text-black hover:border-amber-400 transition flex items-center justify-center text-white cursor-pointer text-xs"
+                        className="w-9 h-9 rounded-full border border-white/25 bg-zinc-950/60 hover:bg-amber-400 hover:text-black hover:border-amber-400 transition flex items-center justify-center text-white cursor-pointer"
                       >
-                        <ArrowLeft size={14} />
+                        <ArrowLeft size={16} />
                       </button>
                       <button 
                         onClick={scrollCategoryRight} 
-                        className="w-8 h-8 rounded-full border border-white/20 bg-zinc-950/50 hover:bg-amber-400 hover:text-black hover:border-amber-400 transition flex items-center justify-center text-white cursor-pointer text-xs"
+                        className="w-9 h-9 rounded-full border border-white/25 bg-zinc-950/60 hover:bg-amber-400 hover:text-black hover:border-amber-400 transition flex items-center justify-center text-white cursor-pointer"
                       >
-                        <ArrowRight size={14} />
+                        <ArrowRight size={16} />
                       </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Right Column: Horizontal Scroll Slices of Products */}
-                <div className="w-full lg:w-[68%] relative flex items-center min-w-0">
+                <div className="w-full lg:w-[62%] relative flex items-center min-w-0">
                   <div 
                     ref={scrollerRef}
                     className="w-full flex gap-3 xs:gap-4 sm:gap-6 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none scroll-smooth"
@@ -226,12 +228,13 @@ export default function CategoryScrollSlices({
                           {/* Image box with sold out banner */}
                           <div className="relative aspect-[3/4] bg-zinc-900 overflow-hidden shrink-0">
                             <img
-                              src={product.image}
+                              src={optimizeUnsplashUrl(product.image, 320, 65)}
                               alt={isArabic ? product.nameAr : product.nameEn}
                               referrerPolicy="no-referrer"
+                              loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-1000 group-hover/prod:scale-105"
                               onError={(e) => {
-                                e.currentTarget.src = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600";
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=65&w=320";
                               }}
                             />
                             

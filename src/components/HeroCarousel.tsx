@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { HeroSlideInput } from '../types';
+import { optimizeUnsplashUrl } from '../utils/imageOptimizer';
 
 interface HeroCarouselProps {
   onBrowseCategory: (cat: string) => void;
@@ -173,10 +174,11 @@ export default function HeroCarousel({
               {/* Round Corner Frame precisely like the screenshot */}
               <div className="relative w-full max-w-lg aspect-[5/4] sm:aspect-[4/3] rounded-[2.2rem] md:rounded-[3rem] overflow-hidden shadow-2xl">
                 <img
-                  src={currentSlide.image}
+                  src={optimizeUnsplashUrl(currentSlide.image, 1000, 75)}
                   alt={isArabic ? currentSlide.titleAr : currentSlide.titleEn}
                   className="w-full h-full object-cover select-none pointer-events-none"
                   referrerPolicy="no-referrer"
+                  fetchPriority="high"
                 />
                 
                 {/* Micro-light gradient to ensure clean overlay contrast */}

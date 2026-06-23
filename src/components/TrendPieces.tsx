@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Sparkles, Eye, ShoppingCart, ChevronUp, ChevronDown } from 'lucide-react';
 import { Product, SectionBackdrop } from '../types';
 import { getProductPrice } from '../utils';
+import { optimizeUnsplashUrl } from '../utils/imageOptimizer';
 
 interface TrendPiecesProps {
   products: Product[];
@@ -338,14 +339,15 @@ export default function TrendPieces({
                           onClick={() => onSelectProduct(product)}
                         >
                           <img
-                            src={product.image}
+                            src={optimizeUnsplashUrl(product.image, 200, 65)}
                             alt={isArabic ? product.nameAr : product.nameEn}
                             referrerPolicy="no-referrer"
+                            loading="lazy"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110"
                             onError={(e) => {
                               e.currentTarget.src = isEven 
-                                ? "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&q=80&w=600" 
-                                : "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=600";
+                                ? "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&q=65&w=200" 
+                                : "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=65&w=200";
                             }}
                           />
                         </div>

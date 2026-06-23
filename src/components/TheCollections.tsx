@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { SectionBackdrop } from '../types';
+import { optimizeUnsplashUrl } from '../utils/imageOptimizer';
 
 interface TheCollectionsProps {
   onSelectCategory: (cat: 'all' | 'men' | 'women' | 'kids' | 'accessories') => void;
@@ -146,8 +147,9 @@ export default function TheCollections({
                     className="relative w-full h-full rounded-2xl sm:rounded-[2.2rem] md:rounded-[3rem] overflow-hidden shadow-lg cursor-pointer group"
                   >
                     <img
-                      src={customImg || cfg.defaultImg}
+                      src={optimizeUnsplashUrl(customImg || cfg.defaultImg, 750, 70)}
                       alt={cfg.labelEn}
+                      loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                       referrerPolicy="no-referrer"
                     />
@@ -182,8 +184,9 @@ export default function TheCollections({
                       className="relative w-full h-full rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden shadow-md cursor-pointer group"
                     >
                       <img
-                        src={customImg || cfg.defaultImg}
+                        src={optimizeUnsplashUrl(customImg || cfg.defaultImg, 450, 65)}
                         alt={cfg.labelEn}
+                        loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                         referrerPolicy="no-referrer"
                       />
@@ -229,8 +232,9 @@ export default function TheCollections({
                     className="relative w-full h-full rounded-2xl md:rounded-[2rem] overflow-hidden shadow-md cursor-pointer group"
                   >
                     <img
-                      src={customImg || cfg.defaultImg}
+                      src={optimizeUnsplashUrl(customImg || cfg.defaultImg, index === 0 || index === 3 ? 750 : 450, 70)}
                       alt={cfg.labelEn}
+                      loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                       referrerPolicy="no-referrer"
                     />
@@ -270,8 +274,9 @@ export default function TheCollections({
                     className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner cursor-pointer group border border-zinc-850/20"
                   >
                     <img
-                      src={customImg || cfg.defaultImg}
+                      src={optimizeUnsplashUrl(customImg || cfg.defaultImg, 380, 70)}
                       alt={cfg.labelEn}
+                      loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                       referrerPolicy="no-referrer"
                     />
@@ -314,8 +319,9 @@ export default function TheCollections({
                     className="relative w-full h-full rounded-2xl md:rounded-3xl overflow-hidden shadow-lg cursor-pointer group border border-zinc-800/10"
                   >
                     <img
-                      src={customImg || cfg.defaultImg}
+                      src={optimizeUnsplashUrl(customImg || cfg.defaultImg, 350, 70)}
                       alt={cfg.labelEn}
+                      loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                       referrerPolicy="no-referrer"
                     />
