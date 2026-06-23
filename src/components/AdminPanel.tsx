@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   X, Lock, ShieldAlert, Sparkles, Plus, Edit, Trash2, CheckCircle, Clock, Truck, 
   FileText, Activity, ArrowLeft, Check, PlusCircle, ShoppingBag, Landmark, Database,
   Gift, Wallet, Award, CreditCard, ChevronRight, CheckSquare, PlusSquare, ArrowUpDown,
-  Send, Layers
+  Send, Layers, Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -84,6 +84,7 @@ export default function AdminPanel({
   // Sub-navigation tabs: 'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content'
   const [activeTab, setActiveTab] = useState<'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content'>('stats');
   const [isAdminLightMode, setIsAdminLightMode] = useState<boolean>(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   // Helper to separate shipping fee from product revenue
   const getOrderShippingFee = (o: Order) => {
@@ -105,6 +106,7 @@ export default function AdminPanel({
   // Products manager state variables
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isCustomSubcategory, setIsCustomSubcategory] = useState(false);
   const [formData, setFormData] = useState({
     nameAr: '',
     nameEn: '',
@@ -115,6 +117,8 @@ export default function AdminPanel({
     discountStart: '',
     discountEnd: '',
     category: 'men' as 'men' | 'women' | 'kids' | 'accessories',
+    subcategoryAr: '',
+    subcategoryEn: '',
     image: SAMPLE_CLOTHES_IMAGES[0].url,
     images: [SAMPLE_CLOTHES_IMAGES[0].url, '', '', '', ''] as string[],
     sizesStr: 'M, L, XL', // Comma separated sizes
@@ -125,6 +129,64 @@ export default function AdminPanel({
     quantity: 100,
     shippingPlanId: ''
   });
+
+  // Unique linked subcategories by category
+  const subcategoriesByCategory = useMemo(() => {
+    const mapping: Record<string, { ar: string; en: string }[]> = {
+      men: [
+        { ar: 'قمصان', en: 'Shirts' },
+        { ar: 'بناطيل', en: 'Pants' },
+        { ar: 'بدل', en: 'Suits' },
+        { ar: 'تيشرتات', en: 'T-Shirts' },
+        { ar: 'جاكيت ومعاطف', en: 'Jackets & Coats' },
+      ],
+      women: [
+        { ar: 'فساتين', en: 'Dresses' },
+        { ar: 'عبايات', en: 'Abayas' },
+        { ar: 'بناطيل', en: 'Pants' },
+        { ar: 'تنانير', en: 'Skirts' },
+        { ar: 'بلوزات', en: 'Blouses' },
+      ],
+      kids: [
+        { ar: 'ملابس أولاد', en: 'Boys Wear' },
+        { ar: 'ملابس بنات', en: 'Girls Wear' },
+        { ar: 'أطقم أطفال', en: 'Kids Sets' },
+      ],
+      accessories: [
+        { ar: 'حقائب', en: 'Bags' },
+        { ar: 'أحزمة', en: 'Belts' },
+        { ar: 'أحذية', en: 'Shoes' },
+        { ar: 'مجوهرات', en: 'Jewelry' },
+      ]
+    };
+
+    const seenByCat: Record<string, Set<string>> = {
+      men: new Set(mapping.men.map(i => i.en.toLowerCase())),
+      women: new Set(mapping.women.map(i => i.en.toLowerCase())),
+      kids: new Set(mapping.kids.map(i => i.en.toLowerCase())),
+      accessories: new Set(mapping.accessories.map(i => i.en.toLowerCase()))
+    };
+
+    // Extract dynamic ones from existing products list
+    products.forEach((prod) => {
+      const cat = prod.category;
+      if (prod.subcategoryAr || prod.subcategoryEn) {
+        const subAr = prod.subcategoryAr?.trim();
+        const subEn = prod.subcategoryEn?.trim();
+        if (subAr || subEn) {
+          const arName = subAr || subEn || '';
+          const enName = subEn || subAr || '';
+          const key = enName.toLowerCase();
+          if (mapping[cat] && !seenByCat[cat].has(key)) {
+            seenByCat[cat].add(key);
+            mapping[cat].push({ ar: arName, en: enName });
+          }
+        }
+      }
+    });
+
+    return mapping;
+  }, [products]);
 
   // Shipping, Loyalty, and Payments master states
   const [shippingPlans, setShippingPlans] = useState<ShippingPlan[]>([]);
@@ -160,6 +222,7 @@ export default function AdminPanel({
   const [settlements, setSettlements] = useState<SettlementPeriod[]>([]);
   const [settlementFromDate, setSettlementFromDate] = useState('');
   const [settlementToDate, setSettlementToDate] = useState('');
+  const [financeSubTab, setFinanceSubTab] = useState<'revenue' | 'by_method'>('revenue');
 
   // Dynamic Content Editor States
   const [homepageContent, setHomepageContent] = useState<HomepageContent | null>(null);
@@ -350,6 +413,7 @@ export default function AdminPanel({
   // Setup Product action form
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
+    setIsCustomSubcategory(false);
     setFormData({
       nameAr: '',
       nameEn: '',
@@ -360,6 +424,8 @@ export default function AdminPanel({
       discountStart: '',
       discountEnd: '',
       category: 'men',
+      subcategoryAr: '',
+      subcategoryEn: '',
       image: SAMPLE_CLOTHES_IMAGES[0].url,
       images: [SAMPLE_CLOTHES_IMAGES[0].url, '', '', '', ''],
       sizesStr: 'M, L, XL',
@@ -375,6 +441,17 @@ export default function AdminPanel({
 
   const handleOpenEditProduct = (prod: Product) => {
     setEditingProduct(prod);
+    
+    // Check if subcategory is custom (not in our pre-defined/existing options list for this category)
+    const currentCat = prod.category;
+    const sAr = prod.subcategoryAr || '';
+    const sEn = prod.subcategoryEn || '';
+    const hasSub = sAr !== '' || sEn !== '';
+    const match = (subcategoriesByCategory[currentCat] || []).some(
+      sub => sub.en.toLowerCase() === sEn.toLowerCase() || sub.ar.toLowerCase() === sAr.toLowerCase()
+    );
+    setIsCustomSubcategory(hasSub && !match);
+
     setFormData({
       nameAr: prod.nameAr,
       nameEn: prod.nameEn,
@@ -385,6 +462,8 @@ export default function AdminPanel({
       discountStart: prod.discountStart || '',
       discountEnd: prod.discountEnd || '',
       category: prod.category,
+      subcategoryAr: prod.subcategoryAr || '',
+      subcategoryEn: prod.subcategoryEn || '',
       image: prod.image,
       images: prod.images && prod.images.length > 0 
         ? [...prod.images, '', '', '', ''].slice(0, 5) 
@@ -416,6 +495,8 @@ export default function AdminPanel({
       descriptionEn: formData.descriptionEn.trim(),
       price: Number(formData.price),
       category: formData.category,
+      subcategoryAr: formData.subcategoryAr.trim(),
+      subcategoryEn: formData.subcategoryEn.trim(),
       image: mainImage,
       images: finalImages.length > 0 ? finalImages : [mainImage],
       sizes,
@@ -952,13 +1033,61 @@ export default function AdminPanel({
             `}} />
           )}
           
-          {/* Sub menu Navigation Sidebar */}
-          <div className="w-full md:w-64 bg-zinc-900/60 md:border-r md:border-l md:border-zinc-800 flex md:flex-col overflow-x-auto md:overflow-y-auto shrink-0 p-3 md:p-4 gap-1.5 border-b border-zinc-900">
+          {/* Mobile Top Toggle Tab Bar */}
+          <div className="md:hidden flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800 shrink-0 select-none z-10 w-full">
             <button
-              onClick={() => { setActiveTab('stats'); setShowProductForm(false); }}
+              type="button"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="flex items-center gap-2 text-xs font-black text-amber-400 bg-zinc-800/80 px-3 py-2 rounded-xl border border-zinc-700/50 cursor-pointer active:scale-95 transition"
+            >
+              <Menu size={15} />
+              <span>{isArabic ? "أقسام لوحة التحكم" : "Admin Sections"}</span>
+            </button>
+            <div className="flex items-center gap-1.5 text-xs text-zinc-300 font-bold bg-zinc-950 px-3 py-1.5 rounded-xl border border-zinc-800 leading-none">
+              <span className="w-2 h-2 rounded-full bg-amber-450 animate-pulse" />
+              <span>{
+                activeTab === 'stats' ? (isArabic ? "الإحصائيات والأرباح" : "Sales Insights") :
+                activeTab === 'products' ? (isArabic ? "قائمة الملابس والمنتجات" : "Products Inventory") :
+                activeTab === 'orders' ? (isArabic ? "إدارة الطلبات الواردة" : "Manage Client Orders") :
+                activeTab === 'shipping' ? (isArabic ? "شركات ومصاريف الشحن" : "Shipping Logistics") :
+                activeTab === 'loyalty' ? (isArabic ? "برنامج نقاط العملاء" : "Customer Loyalty Points") :
+                activeTab === 'payments' ? (isArabic ? "طرق الدفع المتاحة" : "Payment Options") :
+                activeTab === 'conversations' ? (isArabic ? "طلبات مخصصة ورسائل" : "Special Orders & Chat") :
+                activeTab === 'accounts' ? (isArabic ? "الحسابات والتسويات" : "Financial Accounts") :
+                activeTab === 'content' ? (isArabic ? "تحرير محتوى الصفحات" : "Page Content Editor") : ""
+              }</span>
+            </div>
+          </div>
+
+          {/* Backdrop overlay for mobile sidebar */}
+          {isMobileSidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300" 
+              onClick={() => setIsMobileSidebarOpen(false)}
+            />
+          )}
+
+          {/* Sub menu Navigation Sidebar */}
+          <div className={`fixed md:relative top-0 bottom-0 ${isArabic ? 'right-0 border-l' : 'left-0 border-r'} md:top-auto md:bottom-auto z-50 md:z-0 w-72 md:w-64 bg-zinc-905 md:bg-zinc-900/60 border-zinc-800 flex flex-col shrink-0 p-4 md:p-4 gap-1.5 transform transition-transform duration-300 h-full md:h-auto overflow-y-auto
+            ${isMobileSidebarOpen ? 'translate-x-0' : (isArabic ? 'translate-x-full' : '-translate-x-full')} md:translate-x-0`}>
+            
+            {/* Mobile Sidebar Close Button Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-805 mb-4 md:hidden shrink-0">
+              <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-widest">{isArabic ? "بوابات لوحة التحكم" : "Admin Navigation"}</span>
+              <button 
+                type="button"
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="p-1.5 bg-zinc-800 hover:bg-zinc-750 rounded-lg text-zinc-400 hover:text-white transition cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <button
+              onClick={() => { setActiveTab('stats'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
               className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
                 activeTab === 'stats'
-                  ? "bg-amber-400 text-black shadow-md"
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
                   : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
               }`}
             >
@@ -967,10 +1096,10 @@ export default function AdminPanel({
             </button>
 
             <button
-              onClick={() => { setActiveTab('products'); }}
+              onClick={() => { setActiveTab('products'); setIsMobileSidebarOpen(false); }}
               className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
                 activeTab === 'products'
-                  ? "bg-amber-400 text-black shadow-md"
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
                   : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
               }`}
             >
@@ -979,10 +1108,10 @@ export default function AdminPanel({
             </button>
 
             <button
-              onClick={() => { setActiveTab('orders'); setShowProductForm(false); }}
+              onClick={() => { setActiveTab('orders'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
               className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
                 activeTab === 'orders'
-                  ? "bg-amber-400 text-black shadow-md"
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
                   : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
               }`}
             >
@@ -996,10 +1125,10 @@ export default function AdminPanel({
             </button>
 
             <button
-              onClick={() => { setActiveTab('shipping'); setShowProductForm(false); }}
+              onClick={() => { setActiveTab('shipping'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
               className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
                 activeTab === 'shipping'
-                  ? "bg-amber-400 text-black shadow-md"
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
                   : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
               }`}
             >
@@ -1013,10 +1142,10 @@ export default function AdminPanel({
             </button>
 
             <button
-              onClick={() => { setActiveTab('loyalty'); setShowProductForm(false); }}
+              onClick={() => { setActiveTab('loyalty'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
               className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
                 activeTab === 'loyalty'
-                  ? "bg-amber-400 text-black shadow-md"
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
                   : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
               }`}
             >
@@ -1025,10 +1154,10 @@ export default function AdminPanel({
             </button>
 
             <button
-              onClick={() => { setActiveTab('payments'); setShowProductForm(false); }}
+              onClick={() => { setActiveTab('payments'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
               className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
                 activeTab === 'payments'
-                  ? "bg-amber-400 text-black shadow-md"
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
                   : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
               }`}
             >
@@ -1037,10 +1166,10 @@ export default function AdminPanel({
             </button>
 
             <button
-              onClick={() => { setActiveTab('conversations'); setShowProductForm(false); }}
+              onClick={() => { setActiveTab('conversations'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
               className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
                 activeTab === 'conversations'
-                  ? "bg-amber-400 text-black shadow-md"
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
                   : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
               }`}
             >
@@ -1054,10 +1183,10 @@ export default function AdminPanel({
             </button>
 
             <button
-              onClick={() => { setActiveTab('accounts'); setShowProductForm(false); }}
+              onClick={() => { setActiveTab('accounts'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
               className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
                 activeTab === 'accounts'
-                  ? "bg-amber-400 text-black shadow-md"
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
                   : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
               }`}
             >
@@ -1066,10 +1195,10 @@ export default function AdminPanel({
             </button>
 
             <button
-              onClick={() => { setActiveTab('content'); setShowProductForm(false); }}
+              onClick={() => { setActiveTab('content'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
               className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
                 activeTab === 'content'
-                  ? "bg-amber-400 text-black shadow-md"
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
                   : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
               }`}
             >
@@ -1108,13 +1237,44 @@ export default function AdminPanel({
               </div>
             </div>
 
-            <div className="hidden md:block mt-auto pt-4 border-t border-zinc-800 text-center">
-              <p className="text-[10px] text-zinc-500 font-mono mb-2">
-                ADMIN: {adminUser.email}
+            {/* Daytime Lighting switcher toggle for mobile sidebar */}
+            <div className="flex flex-col gap-1.5 pt-3 mt-3 border-t border-zinc-800/80 font-sans select-none shrink-0 text-right md:hidden">
+              <span className="text-[9.5px] text-zinc-550 font-bold uppercase tracking-wider block px-1">
+                {isArabic ? "إضاءة المعاينة:" : "Control Lighting:"}
+              </span>
+              <div className="grid grid-cols-2 gap-1 p-1 bg-zinc-950/80 rounded-xl border border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => { setIsAdminLightMode(false); setIsMobileSidebarOpen(false); }}
+                  className={`py-1.5 rounded-lg text-[9px] font-extrabold transition duration-200 cursor-pointer ${
+                    !isAdminLightMode 
+                      ? "bg-zinc-800 text-amber-400" 
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  {isArabic ? "ليلي" : "Dark"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setIsAdminLightMode(true); setIsMobileSidebarOpen(false); }}
+                  className={`py-1.5 rounded-lg text-[9px] font-extrabold transition duration-200 cursor-pointer ${
+                    isAdminLightMode 
+                      ? "bg-amber-400 text-black shadow" 
+                      : "text-zinc-500 hover:text-zinc-350"
+                  }`}
+                >
+                  {isArabic ? "نهاري" : "Daytime"}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-auto pt-4 border-t border-zinc-805 text-center shrink-0">
+              <p className="text-[10px] text-zinc-500 font-mono mb-2 overflow-hidden truncate">
+                ADMIN: {adminUser?.email}
               </p>
               <button
-                onClick={handleLogout}
-                className="w-full py-2 bg-red-950/20 hover:bg-red-950/40 text-red-400 border border-red-900/30 font-bold rounded-xl text-xs transition duration-200 cursor-pointer"
+                onClick={() => { handleLogout(); setIsMobileSidebarOpen(false); }}
+                className="w-full py-2 bg-red-950/20 hover:bg-red-950/40 text-red-450 border border-red-900/30 font-bold rounded-xl text-xs transition duration-200 cursor-pointer"
               >
                 {isArabic ? "تسجيل الخروج والعودة" : "Logout Admin"}
               </button>
@@ -1539,7 +1699,7 @@ export default function AdminPanel({
                               <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان الفرعي (عربي)" : "Overline (AR)"}</label>
                               <input
                                 type="text"
-                                value={slide.overlineAr}
+                                value={slide.overlineAr || ''}
                                 onChange={(e) => {
                                   const list = [...homepageContent.heroSlides];
                                   list[idx] = { ...slide, overlineAr: e.target.value };
@@ -1552,7 +1712,7 @@ export default function AdminPanel({
                               <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان الفرعي (إنجليزي)" : "Overline (EN)"}</label>
                               <input
                                 type="text"
-                                value={slide.overlineEn}
+                                value={slide.overlineEn || ''}
                                 onChange={(e) => {
                                   const list = [...homepageContent.heroSlides];
                                   list[idx] = { ...slide, overlineEn: e.target.value };
@@ -1565,7 +1725,7 @@ export default function AdminPanel({
                               <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان العريض (عربي)" : "Header Title (AR)"}</label>
                               <input
                                 type="text"
-                                value={slide.titleAr}
+                                value={slide.titleAr || ''}
                                 onChange={(e) => {
                                   const list = [...homepageContent.heroSlides];
                                   list[idx] = { ...slide, titleAr: e.target.value };
@@ -1578,7 +1738,7 @@ export default function AdminPanel({
                               <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان العريض (إنجليزي)" : "Header Title (EN)"}</label>
                               <input
                                 type="text"
-                                value={slide.titleEn}
+                                value={slide.titleEn || ''}
                                 onChange={(e) => {
                                   const list = [...homepageContent.heroSlides];
                                   list[idx] = { ...slide, titleEn: e.target.value };
@@ -1590,7 +1750,7 @@ export default function AdminPanel({
                             <div>
                               <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف التعريفي (عربي)" : "Description (AR)"}</label>
                               <textarea
-                                value={slide.descAr}
+                                value={slide.descAr || ''}
                                 rows={2}
                                 onChange={(e) => {
                                   const list = [...homepageContent.heroSlides];
@@ -1603,7 +1763,7 @@ export default function AdminPanel({
                             <div>
                               <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف التعريفي (إنجليزي)" : "Description (EN)"}</label>
                               <textarea
-                                value={slide.descEn}
+                                value={slide.descEn || ''}
                                 rows={2}
                                 onChange={(e) => {
                                   const list = [...homepageContent.heroSlides];
@@ -1617,7 +1777,7 @@ export default function AdminPanel({
                               <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "رابط الصورة عالية الجودة السحابي (URL)" : "High-Res Image Source URL"}</label>
                               <input
                                 type="text"
-                                value={slide.image}
+                                value={slide.image || ''}
                                 onChange={(e) => {
                                   const list = [...homepageContent.heroSlides];
                                   list[idx] = { ...slide, image: e.target.value };
@@ -1760,6 +1920,204 @@ export default function AdminPanel({
                         );
                       })}
                     </div>
+
+                    {/* DYNAMIC BACKDROP CUSTOMIZER MODULE */}
+                    {(() => {
+                      const getSectionBg = (key: 'theCollections' | 'trendPieces' | 'categoryScrollSlices' | 'customCoutureForm') => {
+                        return homepageContent.sectionBackgrounds?.[key] || {
+                          type: 'gradient',
+                          solidColor: key === 'theCollections' ? '#1b1c19'
+                                    : key === 'trendPieces' ? '#252622'
+                                    : key === 'categoryScrollSlices' ? '#353630'
+                                    : '#FAF9F5',
+                          gradientFrom: key === 'theCollections' ? '#1b1c19'
+                                      : key === 'trendPieces' ? '#252622'
+                                      : key === 'categoryScrollSlices' ? '#353630'
+                                      : '#FAF9F5',
+                          gradientTo: key === 'theCollections' ? '#252622'
+                                    : key === 'trendPieces' ? '#2d2e28'
+                                    : key === 'categoryScrollSlices' ? '#21221e'
+                                    : '#EAE8E1',
+                          gradientDirection: 'to-b',
+                          textColor: (key === 'customCoutureForm') ? 'dark' : 'light'
+                        };
+                      };
+
+                      const updateSectionBg = (key: 'theCollections' | 'trendPieces' | 'categoryScrollSlices' | 'customCoutureForm', field: string, val: any) => {
+                        const currentBgs = { ...(homepageContent.sectionBackgrounds || {}) };
+                        currentBgs[key] = {
+                          ...getSectionBg(key),
+                          [field]: val
+                        };
+                        setHomepageContent({
+                          ...homepageContent,
+                          sectionBackgrounds: currentBgs
+                        });
+                      };
+
+                      return (
+                        <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl space-y-6">
+                          <div className="border-b border-zinc-800 pb-2.5 flex items-center justify-between">
+                            <h4 className="text-sm font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                              <span className="text-amber-450 text-base">🎨</span>
+                              <span>{isArabic ? "تخصيص خلفيات أقسام الصفحة الرئيسية" : "Homepage Section Backdrops Customizer"}</span>
+                            </h4>
+                          </div>
+
+                          <p className="text-xs text-zinc-400">
+                            {isArabic 
+                              ? "تتيح لك هذه اللوحة التحكم الكامل في خلفيات كل قسم ترويجي بالصفحة الرئيسية وتحديد الألوان بدقة (لون واحد ممتد أو تدرج لوني انسيابي) مع ملاءمة تباين النصوص والسمات اللونية." 
+                              : "Manage solid colors and elegant gradients for every landing page sector. Seamlessly optimize text readability with one click."}
+                          </p>
+
+                          <div className="space-y-6">
+                            {[
+                              { id: 'theCollections', labelAr: "قسم التشكيلات الفريدة (The Collections)", labelEn: "The Collections Section" },
+                              { id: 'trendPieces', labelAr: "قسم قطع الموضة الأكثر تأثيراً (The Trend Pieces)", labelEn: "The Trend Pieces Section" },
+                              { id: 'categoryScrollSlices', labelAr: "روائع الموضة حسب ذوقك (Shop By Genre)", labelEn: "Boutique Category Slices" },
+                              { id: 'customCoutureForm', labelAr: "أتيليه الهدايا والتفصيل الملكي (Royal Bespoke Form)", labelEn: "Bespoke Royal Gift Form" }
+                            ].map((sect) => {
+                              const bOption = getSectionBg(sect.id as any);
+                              return (
+                                <div key={sect.id} className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-4">
+                                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                                    <span className="text-xs font-bold text-zinc-300 font-serif leading-none">{isArabic ? sect.labelAr : sect.labelEn}</span>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    
+                                    {/* Background Type choice */}
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "نوع الخلفية" : "Backdrop Style Type"}</label>
+                                      <select
+                                        value={bOption.type}
+                                        onChange={(e) => updateSectionBg(sect.id as any, 'type', e.target.value as any)}
+                                        className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                      >
+                                        <option value="solid">{isArabic ? "لون واحد (Solid)" : "Solid color"}</option>
+                                        <option value="gradient">{isArabic ? "تدرج لوني (Gradient)" : "Gradient color"}</option>
+                                      </select>
+                                    </div>
+
+                                    {/* Text Color for contrast assurance */}
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "لون نصوص القسم" : "Optimize Text Contrast"}</label>
+                                      <select
+                                        value={bOption.textColor || 'light'}
+                                        onChange={(e) => updateSectionBg(sect.id as any, 'textColor', e.target.value as any)}
+                                        className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                      >
+                                        <option value="light">{isArabic ? "نصوص بيضاء/فاتحة (للخلفيات الغامقة)" : "Light Text (For Dark Background)"}</option>
+                                        <option value="dark">{isArabic ? "نصوص سوداء/داكنة (للخلفيات الفاتحة)" : "Dark Text (For Light Background)"}</option>
+                                      </select>
+                                    </div>
+
+                                    {/* Solid Color Picker */}
+                                    {bOption.type === 'solid' ? (
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "اختر اللون" : "Solid hex code"}</label>
+                                        <div className="flex gap-2">
+                                          <input
+                                            type="color"
+                                            value={bOption.solidColor || '#252622'}
+                                            onChange={(e) => updateSectionBg(sect.id as any, 'solidColor', e.target.value)}
+                                            className="h-9 w-9 bg-transparent border-0 cursor-pointer rounded-lg shrink-0"
+                                          />
+                                          <input
+                                            type="text"
+                                            value={bOption.solidColor || '#252622'}
+                                            onChange={(e) => updateSectionBg(sect.id as any, 'solidColor', e.target.value)}
+                                            placeholder="#ffffff"
+                                            className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-xl outline-none focus:border-amber-400 font-mono"
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      /* Gradient Direction selector */
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "اتجاه التدرج" : "Gradient Direction"}</label>
+                                        <select
+                                          value={bOption.gradientDirection || 'to-b'}
+                                          onChange={(e) => updateSectionBg(sect.id as any, 'gradientDirection', e.target.value as any)}
+                                          className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                        >
+                                          <option value="to-b">{isArabic ? "من أعلى لأسفل" : "To Bottom (↓)"}</option>
+                                          <option value="to-r">{isArabic ? "من اليسار لليمين" : "To Right (→)"}</option>
+                                          <option value="to-tr">{isArabic ? "من أسفل اليسار لأعلى اليمين" : "To Top Right (↗)"}</option>
+                                          <option value="to-br">{isArabic ? "من أعلى اليسار لأسفل اليمين" : "To Bottom Right (↘)"}</option>
+                                        </select>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Conditional Gradient From and To Inputs */}
+                                  {bOption.type === 'gradient' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "يبدأ من لون" : "Gradient From (Hex)"}</label>
+                                        <div className="flex gap-2">
+                                          <input
+                                            type="color"
+                                            value={bOption.gradientFrom || '#252622'}
+                                            onChange={(e) => updateSectionBg(sect.id as any, 'gradientFrom', e.target.value)}
+                                            className="h-9 w-9 bg-transparent border-0 cursor-pointer rounded-lg shrink-0"
+                                          />
+                                          <input
+                                            type="text"
+                                            value={bOption.gradientFrom || '#252622'}
+                                            onChange={(e) => updateSectionBg(sect.id as any, 'gradientFrom', e.target.value)}
+                                            className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-xl outline-none focus:border-amber-400 font-mono"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "ينتهي عند لون" : "Gradient To (Hex)"}</label>
+                                        <div className="flex gap-2">
+                                          <input
+                                            type="color"
+                                            value={bOption.gradientTo || '#2d2e28'}
+                                            onChange={(e) => updateSectionBg(sect.id as any, 'gradientTo', e.target.value)}
+                                            className="h-9 w-9 bg-transparent border-0 cursor-pointer rounded-lg shrink-0"
+                                          />
+                                          <input
+                                            type="text"
+                                            value={bOption.gradientTo || '#2d2e28'}
+                                            onChange={(e) => updateSectionBg(sect.id as any, 'gradientTo', e.target.value)}
+                                            className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-xl outline-none focus:border-amber-400 font-mono"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Section Style Preview Indicator */}
+                                  <div className="flex items-center gap-3 bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-850/60 justify-between">
+                                    <span className="text-[10px] text-zinc-500">{isArabic ? "معاينة نمط الخلفية المنعكسة:" : "Backdrop Style Spec:"}</span>
+                                    <div 
+                                      style={{
+                                        background: bOption.type === 'solid' 
+                                          ? bOption.solidColor 
+                                          : `linear-gradient(${
+                                              bOption.gradientDirection === 'to-r' ? 'to right' :
+                                              bOption.gradientDirection === 'to-tr' ? 'to top right' :
+                                              bOption.gradientDirection === 'to-br' ? 'to bottom right' : 'to bottom'
+                                            }, ${bOption.gradientFrom || '#252622'}, ${bOption.gradientTo || '#2d2e28'})`
+                                      }}
+                                      className="h-8 w-48 rounded-lg border border-zinc-700 font-sans text-[10px] flex items-center justify-center font-bold tracking-widest shadow-inner overflow-hidden"
+                                    >
+                                      <span style={{ color: bOption.textColor === 'dark' ? '#000000' : '#ffffff' }}>
+                                        {isArabic ? "عينة نصوص الأناقة" : "Elegance Sample text"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <div className="pt-4 text-left">
                       <button
@@ -2154,7 +2512,12 @@ export default function AdminPanel({
                         <select
                           className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
                           value={formData.category}
-                          onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                          onChange={(e) => {
+                            const newCat = e.target.value as any;
+                            // Clear subcategory when category matches, to avoid cross-category leaks
+                            setIsCustomSubcategory(false);
+                            setFormData({ ...formData, category: newCat, subcategoryAr: '', subcategoryEn: '' });
+                          }}
                         >
                           <option value="men">{isArabic ? "ملابس رجالي" : "Men's Clothing"}</option>
                           <option value="women">{isArabic ? "ملابس حريمي" : "Women's Clothing"}</option>
@@ -2162,6 +2525,100 @@ export default function AdminPanel({
                           <option value="accessories">{isArabic ? "إكسسوارات" : "Bag/Jewelry Accs"}</option>
                         </select>
                       </div>
+
+                      {/* Subcategory dropdown Selection */}
+                      <div>
+                        <label className="block text-xs font-semibold text-zinc-400 mb-1">
+                          {isArabic ? "الفئة الفرعية (اختياري)" : "Subcategory (Optional)"}
+                        </label>
+                        <select
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                          value={isCustomSubcategory ? "custom" : (formData.subcategoryEn || '')}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "custom") {
+                              setIsCustomSubcategory(true);
+                              setFormData({ ...formData, subcategoryAr: '', subcategoryEn: '' });
+                            } else if (val === "") {
+                              setIsCustomSubcategory(false);
+                              setFormData({ ...formData, subcategoryAr: '', subcategoryEn: '' });
+                            } else {
+                              setIsCustomSubcategory(false);
+                              const list = subcategoriesByCategory[formData.category] || [];
+                              const match = list.find(sub => sub.en === val);
+                              if (match) {
+                                setFormData({ ...formData, subcategoryAr: match.ar, subcategoryEn: match.en });
+                              } else {
+                                setFormData({ ...formData, subcategoryAr: '', subcategoryEn: val });
+                              }
+                            }
+                          }}
+                        >
+                          <option value="">{isArabic ? "بلا فئة فرعية (اختياري)" : "No Subcategory (Optional)"}</option>
+                          {(subcategoriesByCategory[formData.category] || []).map((sub) => (
+                            <option key={sub.en} value={sub.en}>
+                              {isArabic ? sub.ar : sub.en}
+                            </option>
+                          ))}
+                          <option value="custom">{isArabic ? " + إضافة فئة فرعية جديدة" : " + Add New Subcategory"}</option>
+                        </select>
+                      </div>
+
+                      {/* Explicit New Subcategory name inputs shown if 'isCustomSubcategory' is true */}
+                      {isCustomSubcategory && (
+                        <div className="sm:col-span-2 bg-zinc-950 p-4 rounded-xl border border-dashed border-zinc-800 space-y-3">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-extrabold text-amber-400">
+                              {isArabic ? "إضافة فئة فرعية جديدة" : "Add New Subcategory"}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsCustomSubcategory(false);
+                                setFormData({ ...formData, subcategoryAr: '', subcategoryEn: '' });
+                              }}
+                              className="text-[10px] text-zinc-500 hover:text-white underline cursor-pointer"
+                            >
+                              {isArabic ? "إلغاء واستخدام القائمة المنسدلة" : "Cancel & Use Dropdown"}
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[10.5px] font-semibold text-zinc-400 mb-1">
+                                {isArabic ? "اسم الفئة الفرعية بالعربية" : "Subcategory in Arabic"}
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                                value={formData.subcategoryAr}
+                                onChange={(e) => setFormData({ ...formData, subcategoryAr: e.target.value })}
+                                placeholder={isArabic ? "مثال: فساتين، بدل، قمصان" : "e.g. Dresses, Suits, Shirts"}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[10.5px] font-semibold text-zinc-400 mb-1">
+                                {isArabic ? "اسم الفئة الفرعية بالإنجليزية" : "Subcategory in English"}
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                                value={formData.subcategoryEn}
+                                onChange={(e) => setFormData({ ...formData, subcategoryEn: e.target.value })}
+                                placeholder="e.g. Dresses, Suits, Shirts"
+                              />
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-zinc-500 block">
+                            {isArabic 
+                              ? `* سيتم ربط هذه الفئة الفرعية الجديدة بالفئة الرئيسية: ${formData.category}` 
+                              : `* This subcategory will be linked directly under parent category: ${formData.category}`}
+                          </span>
+                        </div>
+                      )}
 
                       {/* Stock Quantity */}
                       <div>
@@ -2471,9 +2928,16 @@ export default function AdminPanel({
                                   <div className="text-[10px] text-zinc-400 font-mono mt-0.5">{prod.sizes.join(' | ')}</div>
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap">
-                                  <span className="text-[10px] font-bold uppercase py-0.5 px-2.5 rounded-full bg-zinc-800 text-amber-300 font-mono border border-zinc-750">
-                                    {prod.category}
-                                  </span>
+                                  <div className="flex flex-col gap-1 items-start">
+                                    <span className="text-[10px] font-bold uppercase py-0.5 px-2.5 rounded-full bg-zinc-805 text-amber-300 font-mono border border-zinc-750">
+                                      {prod.category}
+                                    </span>
+                                    {(prod.subcategoryAr || prod.subcategoryEn) && (
+                                      <span className="text-[9.5px] text-zinc-400 font-sans">
+                                        {isArabic ? prod.subcategoryAr : prod.subcategoryEn}
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap font-mono text-amber-400 font-extrabold">
                                   {prod.price} ج.م
@@ -4068,7 +4532,7 @@ export default function AdminPanel({
                             </span>
                             <div className="flex justify-between items-baseline mt-2">
                               <span className="text-2xl font-black text-amber-400 font-mono">
-                                {unsettledProductsSum.toLocaleString()} ج.م
+                                {unsettledProductsSum.toLocaleString()} {isArabic ? "ج.م" : "EGP"}
                               </span>
                               <span className="text-[11px] text-zinc-500 font-bold">
                                 {unsettledCODs.length} {isArabic ? "طلبات" : "orders"}
@@ -4085,7 +4549,7 @@ export default function AdminPanel({
                             </span>
                             <div className="flex justify-between items-baseline mt-2">
                               <span className="text-2xl font-black text-emerald-400 font-mono">
-                                {settlements.reduce((sum, s) => sum + s.totalAmount, 0).toLocaleString()} ج.م
+                                {settlements.reduce((sum, s) => sum + s.totalAmount, 0).toLocaleString()} {isArabic ? "ج.م" : "EGP"}
                               </span>
                               <span className="text-[11px] text-zinc-500 font-bold">
                                 {settlements.length} {isArabic ? "دورات" : "cycles"}
@@ -4144,15 +4608,15 @@ export default function AdminPanel({
                               <hr className="border-zinc-850" />
                               <div className="flex justify-between">
                                 <span className="text-zinc-500">{isArabic ? "إجمالي كلي محصل شامل الشحن:" : "Grand Total collected:"}</span>
-                                <span className="font-mono text-zinc-300 font-medium font-bold">{(unsettledProductsSum + unsettledShippingSum).toLocaleString()} ج.م</span>
+                                <span className="font-mono text-zinc-300 font-medium font-bold">{(unsettledCODs.reduce((sum, o) => sum + (o.agreedPrice || o.total || 0), 0)).toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                               </div>
-                              <div className="flex justify-between text-red-400">
+                              <div className="flex justify-between text-red-400 font-bold">
                                 <span>{isArabic ? "يخصم مصاريف الشحن لشركة الشحن:" : "Deduct Courier Deliveries charge:"}</span>
-                                <span className="font-mono font-bold">-{unsettledShippingSum.toLocaleString()} ج.م</span>
+                                <span className="font-mono">-{unsettledShippingSum.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                               </div>
                               <div className="flex justify-between text-yellow-400 font-extrabold text-[12px] pt-1">
                                 <span>{isArabic ? "صافي قيمة الفساتين المستحقة لك:" : "Product valuation courier owes store:"}</span>
-                                <span className="font-mono">{unsettledProductsSum.toLocaleString()} ج.م</span>
+                                <span className="font-mono">{unsettledProductsSum.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                               </div>
                             </div>
 
@@ -4165,11 +4629,11 @@ export default function AdminPanel({
                               <hr className="border-zinc-850" />
                               <div className="flex justify-between">
                                 <span className="text-zinc-500">{isArabic ? "إجمالي محصل شامل مصاريف الشحن:" : "Total client paid store online:"}</span>
-                                <span className="font-mono text-zinc-300 font-medium font-bold">{(electronicProductsSum + electronicShippingFeesSum).toLocaleString()} ج.م</span>
+                                <span className="font-mono text-zinc-300 font-medium font-bold">{(electronicProductsSum + electronicShippingFeesSum).toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                               </div>
                               <div className="flex justify-between text-orange-400 font-extrabold text-[12px] pt-1">
                                 <span>{isArabic ? "قيمة الشحن المستحقة لشركة الشحن:" : "Delivery fee store owes courier:"}</span>
-                                <span className="font-mono">-{electronicShippingFeesSum.toLocaleString()} ج.م</span>
+                                <span className="font-mono">-{electronicShippingFeesSum.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                               </div>
                               <p className="text-[10px] text-zinc-500 pt-1 leading-normal">
                                 {isArabic 
@@ -4199,7 +4663,7 @@ export default function AdminPanel({
                                     {isArabic ? "صافي مستحق تحصيله من الشحن" : "RECEIVABLE FROM COURIER"}
                                   </span>
                                   <div className="text-xl font-mono font-black text-white pt-1">
-                                    {netCourierDifference.toLocaleString()} ج.م
+                                    {netCourierDifference.toLocaleString()} {isArabic ? "ج.م" : "EGP"}
                                   </div>
                                 </div>
                               ) : netCourierDifference < 0 ? (
@@ -4208,7 +4672,7 @@ export default function AdminPanel({
                                     {isArabic ? "صافي مستحق دفعه وتوريده للشحن" : "PAYABLE TO COURIER"}
                                   </span>
                                   <div className="text-xl font-mono font-black text-red-400 pt-1">
-                                    {Math.abs(netCourierDifference).toLocaleString()} ج.م
+                                    {Math.abs(netCourierDifference).toLocaleString()} {isArabic ? "ج.م" : "EGP"}
                                   </div>
                                 </div>
                               ) : (
@@ -4217,7 +4681,7 @@ export default function AdminPanel({
                                     {isArabic ? "الحساب متزن وصفر تماماً" : "BALANCED ACCOUNT"}
                                   </span>
                                   <div className="text-xl font-mono font-black text-emerald-400 pt-1">
-                                    0 ج.م
+                                    0 {isArabic ? "ج.م" : "EGP"}
                                   </div>
                                 </div>
                               )}
@@ -4270,7 +4734,7 @@ export default function AdminPanel({
                                           </span>
                                         </td>
                                         <td className="p-3.5 text-left font-black text-amber-400 font-mono">
-                                          {(ord.agreedPrice || ord.total || 0).toLocaleString()} ج.م
+                                          {(ord.agreedPrice || ord.total || 0).toLocaleString()} {isArabic ? "ج.م" : "EGP"}
                                         </td>
                                       </tr>
                                     ))}
@@ -4323,7 +4787,7 @@ export default function AdminPanel({
                                   <div className="flex justify-between items-center text-xs pt-1">
                                     <span className="text-zinc-500 font-bold">{settle.orderIds.length} {isArabic ? "طلب مالي" : "orders"}</span>
                                     <span className="font-extrabold text-emerald-400 font-mono">
-                                      {settle.totalAmount.toLocaleString()} ج.م
+                                      {settle.totalAmount.toLocaleString()} {isArabic ? "ج.م" : "EGP"}
                                     </span>
                                   </div>
                                 </div>

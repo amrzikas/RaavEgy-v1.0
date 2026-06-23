@@ -1,12 +1,14 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { SectionBackdrop } from '../types';
 
 interface TheCollectionsProps {
   onSelectCategory: (cat: 'all' | 'men' | 'women' | 'kids' | 'accessories') => void;
   isArabic: boolean;
+  backdrop?: SectionBackdrop;
 }
 
-export default function TheCollections({ onSelectCategory, isArabic }: TheCollectionsProps) {
+export default function TheCollections({ onSelectCategory, isArabic, backdrop }: TheCollectionsProps) {
   const handleCategoryClick = (cat: 'all' | 'men' | 'women' | 'kids' | 'accessories') => {
     onSelectCategory(cat);
     const catalogSection = document.getElementById('catalog-shelf');
@@ -15,18 +17,35 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
     }
   };
 
+  const isLightText = backdrop ? backdrop.textColor === 'light' : true; // Default to dark background with white text
+
+  const customStyle: React.CSSProperties = backdrop ? {
+    background: backdrop.type === 'solid'
+      ? (backdrop.solidColor || '#1b1c19')
+      : `linear-gradient(${
+          backdrop.gradientDirection === 'to-r' ? 'to right' :
+          backdrop.gradientDirection === 'to-tr' ? 'to top right' :
+          backdrop.gradientDirection === 'to-br' ? 'to bottom right' : 'to bottom'
+        }, ${backdrop.gradientFrom || '#1b1c19'}, ${backdrop.gradientTo || '#252622'})`
+  } : {};
+
   return (
-    <section className="bg-white py-12 md:py-20 border-b border-zinc-150/80 font-sans select-none">
+    <section 
+      style={customStyle}
+      className={`${
+        backdrop ? '' : 'bg-gradient-to-b from-[#1b1c19] to-[#252622]'
+      } py-12 md:py-20 border-b border-[#2d2e28] font-sans select-none`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Section */}
         <div className="flex items-end justify-between mb-8 md:mb-12" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
           <div className="text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-            <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-bold tracking-[0.25em] text-zinc-400 uppercase mb-1">
-              <span>✦</span>
+            <div className={`flex items-center gap-1.5 text-[9px] md:text-[10px] font-bold tracking-[0.25em] ${isLightText ? 'text-zinc-400' : 'text-zinc-550'} uppercase mb-1`}>
+              <span className="text-amber-400">✦</span>
               <span>{isArabic ? "مجموعات منسقة" : "CURATED STYLES"}</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-serif font-medium text-zinc-950 tracking-tight leading-tight">
+            <h2 className={`text-3xl md:text-4xl font-serif font-medium ${isLightText ? 'text-white' : 'text-zinc-950'} tracking-tight leading-tight`}>
               {isArabic ? "التشكيلات الفريدة" : "The Collections"}
             </h2>
           </div>
@@ -34,7 +53,7 @@ export default function TheCollections({ onSelectCategory, isArabic }: TheCollec
           <div>
             <button
               onClick={() => handleCategoryClick('all')}
-              className="group flex items-center gap-3 text-xs font-semibold tracking-[0.2em] text-zinc-500 hover:text-black transition uppercase cursor-pointer"
+              className={`group flex items-center gap-3 text-xs font-semibold tracking-[0.2em] ${isLightText ? 'text-zinc-400 hover:text-amber-400' : 'text-zinc-650 hover:text-amber-650'} transition uppercase cursor-pointer`}
             >
               <span>{isArabic ? "عرض الكل" : "VIEW ALL"}</span>
               <span className="text-lg transition-transform duration-300 group-hover:translate-x-1.5">—→</span>

@@ -19,6 +19,8 @@ export interface Product {
   quantity?: number;  // total stock quantity available
   shippingPlanId?: string; // assigned shipping plan id
   createdAt: number;
+  subcategoryAr?: string;
+  subcategoryEn?: string;
 }
 
 export interface ShippingPlan {
@@ -248,6 +250,15 @@ export interface HeroSlideInput {
   cat: string;
 }
 
+export interface SectionBackdrop {
+  type: 'solid' | 'gradient';
+  solidColor?: string; // hex color or similar (e.g. #353630)
+  gradientFrom?: string; // hex color or similar
+  gradientTo?: string; // hex color or similar
+  gradientDirection?: 'to-b' | 'to-r' | 'to-tr' | 'to-br';
+  textColor?: 'light' | 'dark'; // option to optimize text color contrast automatically
+}
+
 export interface HomepageContent {
   announcementAr: string;
   announcementEn: string;
@@ -265,5 +276,11 @@ export interface HomepageContent {
     men?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
     kids?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
     accessories?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+  };
+  sectionBackgrounds?: {
+    theCollections?: SectionBackdrop;
+    trendPieces?: SectionBackdrop;
+    categoryScrollSlices?: SectionBackdrop;
+    customCoutureForm?: SectionBackdrop;
   };
 }

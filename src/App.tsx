@@ -61,6 +61,7 @@ export default function App() {
 
   // Filters & Toggles
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeProductDetail, setActiveProductDetail] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -255,21 +256,21 @@ export default function App() {
   const cartTotalItemsCount = cart.reduce((count, item) => count + item.quantity, 0);
 
   return (
-    <div className="relative min-h-screen text-zinc-800 selection:bg-zinc-950 selection:text-white antialiased font-sans transition-all duration-500 bg-stone-50 overflow-hidden">
+    <div className="relative min-h-screen text-zinc-800 selection:bg-zinc-900 selection:text-white antialiased font-sans transition-all duration-500 bg-gradient-to-b from-[#353630] via-[#21221e] to-[#121311] overflow-hidden">
       
       {/* High-fashion flowing mesh backdrop with intertwined dark and light soft gradients */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Dark Onyx/Slate top-left soft glow */}
-        <div className="absolute top-[-20%] left-[-20%] w-[65%] h-[65%] rounded-full bg-gradient-to-br from-zinc-950/25 via-stone-200/35 to-transparent blur-[110px] opacity-75" />
+        {/* Rich dark olive top-left soft glow */}
+        <div className="absolute top-[-20%] left-[-20%] w-[65%] h-[65%] rounded-full bg-gradient-to-br from-[#1b1c19]/35 via-[#353630]/25 to-transparent blur-[110px] opacity-75" />
         
         {/* Soft Gold/Champagne warm light representing premium artisanal luxury */}
-        <div className="absolute top-[15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-gradient-to-tr from-amber-100/15 via-white to-stone-50 blur-[130px] opacity-70" />
+        <div className="absolute top-[15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-gradient-to-tr from-amber-100/10 via-white/5 to-[#454640]/15 blur-[130px] opacity-70" />
         
         {/* Intertwined charcoal-stone glow in middle left */}
-        <div className="absolute top-[40%] left-[-25%] w-[55%] h-[55%] rounded-full bg-gradient-to-r from-zinc-900/10 via-amber-50/30 to-transparent blur-[140px]" />
+        <div className="absolute top-[40%] left-[-25%] w-[55%] h-[55%] rounded-full bg-gradient-to-r from-[#20211d]/20 via-[#353630]/15 to-transparent blur-[140px]" />
 
         {/* Deep Slate/Carbon bottom-right soft ambient depth */}
-        <div className="absolute bottom-[-15%] right-[-15%] w-[65%] h-[65%] rounded-full bg-gradient-to-tl from-zinc-950/20 via-stone-100/50 to-amber-100/10 blur-[150px]" />
+        <div className="absolute bottom-[-15%] right-[-15%] w-[65%] h-[65%] rounded-full bg-gradient-to-tl from-[#10110f]/40 via-[#2d2e28]/25 to-transparent blur-[150px]" />
       </div>
 
       {/* Actual app content layout layer */}
@@ -283,6 +284,9 @@ export default function App() {
           onLogoutAdmin={handleLogoutAdmin}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
+          selectedSubcategory={selectedSubcategory}
+          setSelectedSubcategory={setSelectedSubcategory}
+          products={activeProducts}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           isArabic={isArabic}
@@ -374,6 +378,7 @@ export default function App() {
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 isArabic={isArabic}
+                backdrop={homepageContent?.sectionBackgrounds?.theCollections}
               />
 
               {/* INTERTWINED PREMIUM AD 2: Below The Collections Section */}
@@ -382,28 +387,28 @@ export default function App() {
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
-                  className="relative overflow-hidden rounded-[2rem] border border-zinc-200/80 shadow-lg bg-gradient-to-r from-stone-100 via-amber-50/40 to-stone-50 text-zinc-900 min-h-[160px] md:min-h-[200px] flex items-center"
+                  className="relative overflow-hidden rounded-[2rem] border border-[#2d2e28] shadow-lg bg-gradient-to-r from-[#1b1c19]/90 via-[#353630]/75 to-[#121311]/95 text-white min-h-[160px] md:min-h-[200px] flex items-center"
                 >
                   {/* Subtle artistic light visual accents */}
-                  <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-r from-zinc-200/30 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-r from-[#353630]/20 via-transparent to-transparent pointer-events-none" />
                   <div className="absolute top-[-40%] left-[-10%] w-[320px] h-[320px] bg-zinc-900/5 rounded-full blur-[90px] pointer-events-none" />
-                  <div className="absolute bottom-[-30%] right-[10%] w-[220px] h-[220px] bg-amber-200/10 rounded-full blur-[70px] pointer-events-none" />
+                  <div className="absolute bottom-[-30%] right-[10%] w-[220px] h-[220px] bg-amber-500/5 rounded-full blur-[70px] pointer-events-none" />
 
                   <div className="relative w-full px-6 py-8 md:px-12 flex flex-col md:flex-row md:items-center justify-between gap-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
                     
                     {/* Info details */}
                     <div className="space-y-2.5 max-w-xl text-right md:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                      <div className="inline-flex items-center gap-1.5 bg-zinc-950 text-amber-300 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.25em]">
-                        <span>✦</span>
-                        <span>{isArabic ? "عرض الصيف الحصري والمميز" : "EXCLUSIVE SUMMER SEASON"}</span>
+                      <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.25em]">
+                        <span className="text-amber-400">✦</span>
+                        <span className="text-amber-300">{isArabic ? "عرض الصيف الحصري والمميز" : "EXCLUSIVE SUMMER SEASON"}</span>
                       </div>
                       
-                      <h3 className="text-xl md:text-2xl font-serif font-semibold tracking-tight text-zinc-900 leading-snug">
+                      <h3 className="text-xl md:text-2xl font-serif font-semibold tracking-tight text-white leading-snug">
                         {isArabic 
                           ? "استمتعي بخصم ١٥٪ على تشكيلات الموسم الفريدة" 
                           : "Enjoy 15% Off Curated Collection Masterpieces"}
                       </h3>
-                      <p className="text-xs text-zinc-650 font-light leading-relaxed">
+                      <p className="text-xs text-zinc-300 font-light leading-relaxed">
                         {isArabic 
                           ? "أدخلي كود الخصم الحصري عند إتمام الطلب لتجربة الأزياء الرائجة لهذا الموسم. نوفر خدمة تجربة القطع للمطابقة والمعاينة عند تسليم المندوب."
                           : "Apply our premier discount code at checkout to acquire highly coveted styles. Direct shipping in Egypt with fully comfortable home trials."}
@@ -443,6 +448,7 @@ export default function App() {
                 }}
                 isArabic={isArabic}
                 onQuickAddToCart={handleQuickAddToCart}
+                backdrop={homepageContent?.sectionBackgrounds?.trendPieces}
               />
 
               {/* Category Scroll Slices Section */}
@@ -462,6 +468,7 @@ export default function App() {
                 onQuickAddToCart={handleQuickAddToCart}
                 categoryImages={homepageContent?.categoryImages}
                 categoryTexts={homepageContent?.categoryTexts}
+                backdrop={homepageContent?.sectionBackgrounds?.categoryScrollSlices}
               />
 
               {/* SPECIAL CUSTOM ORDERS FORM SECTION */}
@@ -478,6 +485,7 @@ export default function App() {
                   setActiveView('profile');
                   window.scrollTo({ top: 300, behavior: 'smooth' });
                 }}
+                backdrop={homepageContent?.sectionBackgrounds?.customCoutureForm}
               />
             </div>
           )}
@@ -492,6 +500,7 @@ export default function App() {
             }}
             isArabic={isArabic}
             initialCategory={selectedCategory as any}
+            initialSubcategory={selectedSubcategory}
           />
         )}
 

@@ -591,14 +591,14 @@ export default function CartSlider({
                   <div className="bg-zinc-50 border border-zinc-100 rounded-xl p-4 mt-6 space-y-2 text-xs">
                     <div className="flex justify-between">
                       <span className="text-zinc-500">{isArabic ? "سعر القطع مجملة:" : "Clothes Subtotal:"}</span>
-                      <span className="font-serif text-zinc-900 font-semibold">{itemsPriceTotal} ج.م</span>
+                      <span className="font-serif text-zinc-900 font-semibold">{itemsPriceTotal} {isArabic ? "ج.م" : "EGP"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500">{isArabic ? "مصاريف شحن المندوب:" : "Courier Dispatch Fee:"}</span>
                       <span className="font-sans text-zinc-700">
                         {deliveryFee === 0 ? (
                           <span className="text-emerald-700 font-bold">{isArabic ? "مجاناً" : "FREE"}</span>
-                        ) : `${deliveryFee} ج.م`}
+                        ) : `${deliveryFee} ${isArabic ? "ج.م" : "EGP"}`}
                       </span>
                     </div>
                     {itemsPriceTotal < 1200 && (customerCityId === 'cairo' || customerCityId === 'giza') && (
@@ -610,7 +610,7 @@ export default function CartSlider({
                     )}
                     <div className="flex justify-between pt-2.5 border-t border-zinc-200 text-xs font-bold text-zinc-950">
                       <span>{isArabic ? "المبلغ الكلي المستحق عند الاستلام:" : "Total Amount Due:"}</span>
-                      <span className="font-serif text-sm">{grandTotal} ج.م</span>
+                      <span className="font-serif text-sm">{grandTotal} {isArabic ? "ج.م" : "EGP"}</span>
                     </div>
                   </div>
 
@@ -726,7 +726,7 @@ export default function CartSlider({
                             </div>
 
                             <div className="text-zinc-900 font-serif font-bold text-xs">
-                              {item.price * item.quantity} ج.م
+                              {item.price * item.quantity} {isArabic ? "ج.م" : "EGP"}
                             </div>
                           </div>
                         </div>
@@ -743,7 +743,7 @@ export default function CartSlider({
               <div className="border-t border-zinc-100 bg-zinc-50 p-6 space-y-4">
                 <div className="flex justify-between items-center text-xs font-sans">
                   <span className="text-zinc-500">{isArabic ? "المجموع الفرعي للقطع:" : "Total Premium Items:"}</span>
-                  <span className="font-serif text-base font-bold text-zinc-950">{itemsPriceTotal} ج.م</span>
+                  <span className="font-serif text-base font-bold text-zinc-950">{itemsPriceTotal} {isArabic ? "ج.م" : "EGP"}</span>
                 </div>
                 <p className="text-[10px] text-zinc-400 text-center leading-relaxed font-light">
                   {isArabic 

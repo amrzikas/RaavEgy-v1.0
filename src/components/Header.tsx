@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Lock, ShieldAlert, Sparkles, ChevronDown, Search, User, Menu, X, ChevronRight, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Product } from '../types';
 
 interface HeaderProps {
   cartCount: number;
@@ -10,6 +11,9 @@ interface HeaderProps {
   onLogoutAdmin: () => void;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
+  selectedSubcategory?: string | null;
+  setSelectedSubcategory?: (subcategory: string | null) => void;
+  products?: Product[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   isArabic: boolean;
@@ -30,6 +34,9 @@ export default function Header({
   onLogoutAdmin,
   selectedCategory,
   setSelectedCategory,
+  selectedSubcategory,
+  setSelectedSubcategory,
+  products = [],
   searchQuery,
   setSearchQuery,
   isArabic,
@@ -45,6 +52,9 @@ export default function Header({
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Expanded category inside mobile viewport
+  const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
+
   const categories = [
     { id: 'all', labelAr: 'الكل', labelEn: 'All' },
     { id: 'men', labelAr: 'رجالي', labelEn: 'Men' },
@@ -53,8 +63,43 @@ export default function Header({
     { id: 'accessories', labelAr: 'إكسسوارات', labelEn: 'Accessories' }
   ];
 
+  // Helper to discover subcategories under a specific category in real-time
+  const getSubcategoriesForCategory = (catId: string) => {
+    const list: { ar: string; en: string }[] = [];
+    const seen = new Set<string>();
+
+    products.forEach((prod) => {
+      if (catId !== 'all' && prod.category !== catId) return;
+      const subAr = prod.subcategoryAr?.trim();
+      const subEn = prod.subcategoryEn?.trim();
+
+      if (subAr || subEn) {
+        const key = `${subAr || ''}|||${subEn || ''}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          list.push({ ar: subAr || subEn || '', en: subEn || subAr || '' });
+        }
+      }
+    });
+    return list;
+  };
+
   const handleCategorySelect = (catId: string) => {
     setSelectedCategory(catId);
+    if (setSelectedSubcategory) {
+      setSelectedSubcategory(null);
+    }
+    setShopDropdownOpen(false);
+    setSearchQuery('');
+    setActiveView('shop');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSubcategorySelect = (catId: string, subName: string) => {
+    setSelectedCategory(catId);
+    if (setSelectedSubcategory) {
+      setSelectedSubcategory(subName);
+    }
     setShopDropdownOpen(false);
     setSearchQuery('');
     setActiveView('shop');
@@ -68,7 +113,7 @@ export default function Header({
   };
 
   return (
-    <header id="app-header" className="sticky top-0 z-40 bg-white border-b border-zinc-100 text-zinc-900 transition-colors duration-300">
+    <header id="app-header" className="sticky top-0 z-40 bg-[#353630] border-b border-[#2d2e28] text-white transition-colors duration-300">
       {/* Premium Minimal Announcement Bar / Custom Banner */}
       {announcementImage ? (
         <a 
@@ -108,7 +153,7 @@ export default function Header({
           <div className="flex md:hidden items-center">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2 text-zinc-700 hover:text-black hover:bg-zinc-50 rounded-full transition cursor-pointer"
+              className="p-2 text-zinc-300 hover:text-white hover:bg-white/10 rounded-full transition cursor-pointer"
               title={isArabic ? "القائمة" : "Menu"}
             >
               <Menu size={20} strokeWidth={1.8} />
@@ -123,7 +168,7 @@ export default function Header({
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className={`text-xs font-semibold uppercase tracking-[0.2em] transition cursor-pointer px-2 py-1 ${
-                activeView === 'home' ? 'text-zinc-950 border-b-2 border-zinc-950 font-bold' : 'text-zinc-550 hover:text-black'
+                activeView === 'home' ? 'text-white border-b-2 border-amber-400 font-bold' : 'text-zinc-300 hover:text-white'
               }`}
             >
               {isArabic ? "الرئيسية" : "HOME"}
@@ -141,7 +186,7 @@ export default function Header({
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className={`flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.2em] transition cursor-pointer px-2 py-1 ${
-                  activeView === 'shop' ? 'text-zinc-950 border-b-2 border-zinc-950 font-bold' : 'text-zinc-550 hover:text-black'
+                  activeView === 'shop' ? 'text-white border-b-2 border-amber-400 font-bold' : 'text-zinc-300 hover:text-white'
                 }`}
               >
                 <span>{isArabic ? "المتجر" : "SHOP"}</span>
@@ -154,25 +199,52 @@ export default function Header({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute left-0 mt-2 w-48 bg-white border border-zinc-100 shadow-xl rounded-lg py-2 z-55"
+                    className="absolute left-0 mt-2 w-56 bg-white border border-zinc-150 shadow-xl rounded-lg py-2 z-55 text-zinc-900 overflow-hidden"
                   >
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => handleCategorySelect(cat.id)}
-                        className={`w-full text-left px-4 py-2.5 text-xs tracking-wider uppercase transition cursor-pointer flex justify-between items-center ${
-                          selectedCategory === cat.id 
-                            ? 'bg-amber-50/50 text-amber-900 font-bold' 
-                            : 'text-zinc-650 hover:bg-zinc-50 hover:text-black'
-                        }`}
-                        style={{ direction: isArabic ? 'rtl' : 'ltr' }}
-                      >
-                        <span>{isArabic ? cat.labelAr : cat.labelEn}</span>
-                        {selectedCategory === cat.id && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
-                        )}
-                      </button>
-                    ))}
+                    {categories.map((cat) => {
+                      const subcats = getSubcategoriesForCategory(cat.id);
+                      return (
+                        <div key={cat.id} className="border-b border-zinc-50 last:border-0 pb-1 last:pb-0">
+                          <button
+                            onClick={() => handleCategorySelect(cat.id)}
+                            className={`w-full text-left px-4 py-2 text-xs tracking-wider uppercase transition cursor-pointer flex justify-between items-center ${
+                              selectedCategory === cat.id && activeView === 'shop'
+                                ? 'bg-amber-50/55 text-amber-900 font-bold' 
+                                : 'text-zinc-650 hover:bg-zinc-50 hover:text-black font-semibold'
+                            }`}
+                            style={{ direction: isArabic ? 'rtl' : 'ltr' }}
+                          >
+                            <span>{isArabic ? cat.labelAr : cat.labelEn}</span>
+                            {selectedCategory === cat.id && activeView === 'shop' && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-650" />
+                            )}
+                          </button>
+
+                          {subcats.length > 0 && (
+                            <div className="pl-6 pr-3 py-1 flex flex-col gap-1 bg-zinc-50/50">
+                              {subcats.map((sub) => {
+                                const label = isArabic ? sub.ar : sub.en;
+                                const isSelected = selectedCategory === cat.id && (selectedSubcategory === sub.en || selectedSubcategory === sub.ar);
+                                return (
+                                  <button
+                                    key={sub.en}
+                                    onClick={() => handleSubcategorySelect(cat.id, sub.en)}
+                                    className={`text-left w-full py-1 text-[10px] uppercase font-medium transition cursor-pointer ${
+                                      isSelected 
+                                        ? 'text-amber-900 font-bold' 
+                                        : 'text-zinc-500 hover:text-black'
+                                    }`}
+                                    style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
+                                  >
+                                    — {label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -183,7 +255,7 @@ export default function Header({
                 const footer = document.querySelector('footer');
                 if (footer) footer.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="hidden sm:inline-block text-xs font-semibold uppercase tracking-[0.2em] hover:text-amber-700 transition cursor-pointer px-2 py-1 text-zinc-550"
+              className="hidden sm:inline-block text-xs font-semibold uppercase tracking-[0.2em] hover:text-white transition cursor-pointer px-2 py-1 text-zinc-305"
             >
               {isArabic ? "من نحن" : "ABOUT US"}
             </button>
@@ -198,13 +270,19 @@ export default function Header({
                 setSearchQuery('');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="cursor-pointer text-center select-none"
+              className="cursor-pointer text-center select-none flex flex-col justify-center items-center"
             >
-              <h1 id="shop-logo" className="text-3xl md:text-4xl font-serif tracking-[0.22em] font-medium text-black">
-                RAAV
-              </h1>
+              <div className="flex items-center justify-center">
+                <img 
+                  src="/src/assets/images/raav_brand_logo_1782163038345.jpg" 
+                  alt="RAAV Couture Logo" 
+                  className="h-[72px] md:h-[84px] object-contain transition duration-500 hover:scale-105 mix-blend-screen"
+                  style={{ mixBlendMode: 'screen' }}
+                  referrerPolicy="no-referrer"
+                />
+              </div>
               {activeView === 'shop' && selectedCategory !== 'all' && (
-                <div className="text-[9px] uppercase tracking-[0.15em] text-amber-700 mt-0.5 font-sans font-semibold">
+                <div className="text-[9px] uppercase tracking-[0.15em] text-amber-400 mt-0.5 font-sans font-semibold">
                   {currentCategoryLabel()}
                 </div>
               )}
@@ -224,7 +302,7 @@ export default function Header({
                     exit={{ width: 0, opacity: 0 }}
                     type="text"
                     placeholder={isArabic ? "ابحث هنا..." : "Search..."}
-                    className="bg-zinc-50 border border-zinc-200 text-xs px-3 py-1.5 rounded-full focus:outline-none focus:border-amber-600 focus:bg-white text-zinc-800 mr-2"
+                    className="bg-white/10 border border-white/20 text-xs px-3 py-1.5 rounded-full focus:outline-none focus:border-amber-450 focus:bg-white/20 text-white mr-2 placeholder-zinc-300"
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
@@ -239,7 +317,7 @@ export default function Header({
               </AnimatePresence>
               <button 
                 onClick={() => setShowSearchInput(!showSearchInput)}
-                className="p-2 text-zinc-700 hover:text-black hover:bg-zinc-50 rounded-full transition cursor-pointer"
+                className="p-2 text-zinc-300 hover:text-white hover:bg-white/10 rounded-full transition cursor-pointer"
                 title={isArabic ? "بحث" : "Search"}
               >
                 <Search size={19} strokeWidth={1.8} />
@@ -249,7 +327,7 @@ export default function Header({
             {/* Language Switch (hidden on mobile, moved to drawer) */}
             <button
               onClick={() => setIsArabic(!isArabic)}
-              className="hidden md:inline-block text-xs font-semibold tracking-wider hover:text-amber-800 px-2 py-1 cursor-pointer transition border border-zinc-200 hover:border-zinc-300 rounded"
+              className="hidden md:inline-block text-xs font-semibold tracking-wider hover:text-white hover:border-white/50 px-2 py-1 cursor-pointer transition border border-white/10 text-zinc-300 rounded"
               title={isArabic ? "Switch to English" : "تغيير للعربية"}
             >
               {isArabic ? "EN" : "عربي"}
@@ -263,14 +341,14 @@ export default function Header({
               }}
               className={`p-2 rounded-full transition cursor-pointer relative ${
                 activeView === 'profile' || isUserLoggedIn
-                  ? "text-zinc-950 bg-zinc-50 border border-zinc-200"
-                  : "text-zinc-700 hover:text-black hover:bg-zinc-50"
+                  ? "text-amber-400 bg-white/10 border border-white/20"
+                  : "text-zinc-300 hover:text-white hover:bg-white/10"
               }`}
               title={isArabic ? "حسابي الشخصي" : "My Account"}
             >
               <User size={19} strokeWidth={1.8} />
               {isUserLoggedIn && (
-                <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500" />
+                <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400" />
               )}
             </button>
 
@@ -280,8 +358,8 @@ export default function Header({
                 onClick={onOpenAdmin}
                 className={`hidden md:inline-block p-2 rounded-full transition cursor-pointer relative ${
                   isAdminLoggedIn
-                    ? "text-amber-750 bg-amber-50"
-                    : "text-zinc-400 hover:text-amber-600 hover:bg-amber-50/50"
+                    ? "text-amber-400 bg-white/10 border border-white/20"
+                    : "text-zinc-305 hover:text-amber-400 hover:bg-white/10"
                 }`}
                 title={isArabic ? "لوحة الإدارة" : "Admin Dashboard"}
               >
@@ -293,7 +371,7 @@ export default function Header({
             {isAdminLoggedIn && (
               <button
                 onClick={onLogoutAdmin}
-                className="hidden md:inline-block p-1.5 text-red-650 hover:text-red-755 hover:bg-red-50 rounded-full transition cursor-pointer"
+                className="hidden md:inline-block p-1.5 text-red-400 hover:text-red-300 hover:bg-white/10 rounded-full transition cursor-pointer"
                 title={isArabic ? "خروج المسؤول" : "Admin Logout"}
               >
                 <ShieldAlert size={19} strokeWidth={1.8} />
@@ -303,11 +381,11 @@ export default function Header({
             {/* Cart / Shopping Bag Icon */}
             <button
               onClick={onOpenCart}
-              className="relative p-2 text-zinc-700 hover:text-black hover:bg-zinc-50 rounded-full transition cursor-pointer"
+              className="relative p-2 text-zinc-300 hover:text-white hover:bg-white/10 rounded-full transition cursor-pointer"
               title={isArabic ? "سلة المشتريات" : "Shopping Bag"}
             >
               <ShoppingBag size={19} strokeWidth={1.8} />
-              <span className="absolute -top-0.5 -right-0.5 bg-zinc-950 text-white rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-bold">
+              <span className="absolute -top-0.5 -right-0.5 bg-amber-400 text-zinc-950 rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-bold">
                 {cartCount}
               </span>
             </button>
@@ -349,7 +427,7 @@ export default function Header({
               animate={{ x: 0 }}
               exit={{ x: isArabic ? '100%' : '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className={`fixed top-0 bottom-0 w-[290px] max-w-[85vw] bg-white z-55 shadow-2xl flex flex-col justify-between p-6 md:hidden ${
+              className={`fixed top-0 bottom-0 w-[290px] max-w-[85vw] bg-white text-zinc-900 z-55 shadow-2xl flex flex-col justify-between p-6 md:hidden ${
                 isArabic ? 'right-0 border-l border-zinc-100' : 'left-0 border-r border-zinc-100'
               }`}
               style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
@@ -357,9 +435,17 @@ export default function Header({
               {/* Drawer Header */}
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-zinc-100 mb-6">
-                  <h2 className="text-xl font-serif tracking-[0.2em] font-bold text-black select-none">
-                    RAAV
-                  </h2>
+                  <div className="flex items-center gap-2 select-none">
+                    <img 
+                      src="/src/assets/images/raav_clean_circle_logo_1782164055293.jpg" 
+                      alt="RAAV Couture" 
+                      className="h-7 w-7 object-cover rounded-full border border-zinc-200"
+                      referrerPolicy="no-referrer"
+                    />
+                    <h2 className="text-lg font-serif tracking-[0.15em] font-bold text-black">
+                      RAAV
+                    </h2>
+                  </div>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-1.5 bg-zinc-50 hover:bg-zinc-100 rounded-full text-zinc-650 hover:text-black transition cursor-pointer"
@@ -392,27 +478,70 @@ export default function Header({
                     </span>
                     
                     <div className="space-y-2">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat.id}
-                          onClick={() => {
-                            handleCategorySelect(cat.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center justify-between ${
-                            selectedCategory === cat.id && activeView === 'shop'
-                              ? 'bg-amber-100/40 text-amber-950 font-extrabold'
-                              : 'bg-zinc-50/50 hover:bg-zinc-50 text-zinc-650 hover:text-zinc-950'
-                          }`}
-                        >
-                          <span>{isArabic ? cat.labelAr : cat.labelEn}</span>
-                          {selectedCategory === cat.id && activeView === 'shop' ? (
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping" />
-                          ) : (
-                            <ChevronRight size={12} className={isArabic ? "rotate-180 text-zinc-400" : "text-zinc-400"} />
-                          )}
-                        </button>
-                      ))}
+                      {categories.map((cat) => {
+                        const subcats = getSubcategoriesForCategory(cat.id);
+                        const isExpanded = expandedMobileCategory === cat.id;
+
+                        return (
+                          <div key={cat.id} className="space-y-1">
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => {
+                                  handleCategorySelect(cat.id);
+                                  setMobileMenuOpen(false);
+                                }}
+                                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center justify-between ${
+                                  selectedCategory === cat.id && activeView === 'shop'
+                                    ? 'bg-amber-100/40 text-amber-950 font-extrabold'
+                                    : 'bg-zinc-50/50 hover:bg-zinc-50 text-zinc-650 hover:text-zinc-950'
+                                }`}
+                                style={{ textAlign: isArabic ? 'right' : 'left' }}
+                              >
+                                <span>{isArabic ? cat.labelAr : cat.labelEn}</span>
+                                {selectedCategory === cat.id && activeView === 'shop' ? (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping" />
+                                ) : null}
+                              </button>
+                              
+                              {subcats.length > 0 && (
+                                <button
+                                  onClick={() => setExpandedMobileCategory(isExpanded ? null : cat.id)}
+                                  className="px-3 bg-zinc-50 hover:bg-zinc-100 rounded-xl text-zinc-650 transition cursor-pointer flex items-center justify-center border border-zinc-100/30"
+                                >
+                                  <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-800' : ''}`} />
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Nesting subcategories list inside mobile menu drawer */}
+                            {subcats.length > 0 && isExpanded && (
+                              <div className="pl-4 pr-1 py-1 gap-1 flex flex-col border-l-2 border-amber-100 ml-3">
+                                {subcats.map((sub) => {
+                                  const label = isArabic ? sub.ar : sub.en;
+                                  const isSelected = selectedCategory === cat.id && (selectedSubcategory === sub.en || selectedSubcategory === sub.ar);
+                                  return (
+                                    <button
+                                      key={sub.en}
+                                      onClick={() => {
+                                        handleSubcategorySelect(cat.id, sub.en);
+                                        setMobileMenuOpen(false);
+                                      }}
+                                      className={`text-left w-full py-2 px-3 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition flex items-center justify-between ${
+                                        isSelected
+                                          ? 'text-amber-900 font-extrabold bg-amber-50/40'
+                                          : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-50'
+                                      }`}
+                                      style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
+                                    >
+                                      <span>{label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 

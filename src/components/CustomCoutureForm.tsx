@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Send, Award, CheckCircle2, ShoppingBag, Gift, Heart, HelpCircle, Star, Palette, MapPin } from 'lucide-react';
 import { createCustomOrder } from '../dbService';
+import { SectionBackdrop } from '../types';
 
 interface CustomCoutureFormProps {
   isArabic: boolean;
   currentUser: any;
   onOpenAuth: () => void;
   onGoToProfileCustom: () => void;
+  backdrop?: SectionBackdrop;
 }
 
 export default function CustomCoutureForm({
@@ -15,6 +17,7 @@ export default function CustomCoutureForm({
   currentUser,
   onOpenAuth,
   onGoToProfileCustom,
+  backdrop
 }: CustomCoutureFormProps) {
   const [customType, setCustomType] = useState<'couture' | 'accessories'>('couture');
   
@@ -127,24 +130,41 @@ export default function CustomCoutureForm({
     { id: 'Upper', nameAr: 'الصعيد والمحافظات البعيدة', nameEn: 'Upper Egypt' }
   ];
 
+  const isLightText = backdrop ? backdrop.textColor === 'light' : false;
+
+  const customStyle: React.CSSProperties = backdrop ? {
+    background: backdrop.type === 'solid'
+      ? (backdrop.solidColor || '#FAF9F5')
+      : `linear-gradient(${
+          backdrop.gradientDirection === 'to-r' ? 'to right' :
+          backdrop.gradientDirection === 'to-tr' ? 'to top right' :
+          backdrop.gradientDirection === 'to-br' ? 'to bottom right' : 'to bottom'
+        }, ${backdrop.gradientFrom || '#FAF9F5'}, ${backdrop.gradientTo || '#EAE8E1'})`
+  } : {};
+
   return (
-    <section id="special-custom-orders" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-20 font-sans focus:outline-none">
-      
-      {/* Visual Header styled elegantly in luxury serif style */}
-      <div className="text-center max-w-3xl mx-auto mb-12 space-y-3" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
-        <div className="inline-flex items-center gap-1.5 bg-[#FAF3E0] border border-[#EACCA6]/40 text-[#B88746] px-4 py-1.5 rounded-full text-[10.5px] font-bold tracking-widest uppercase">
-          <Gift size={13} className="text-[#B88746]" />
-          <span>{isArabic ? "أتيليه الهدايا والتفصيل الملكي" : "THE ROYAL BESPOKE & GIFT EXPERIENCE"}</span>
+    <section 
+      id="special-custom-orders"
+      style={customStyle}
+      className={`w-full py-12 md:py-20 border-b border-[#E6E4DC] select-none ${backdrop ? '' : 'my-20'} font-sans focus:outline-none`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Visual Header styled elegantly in luxury serif style */}
+        <div className="text-center max-w-3xl mx-auto mb-12 space-y-3" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+          <div className="inline-flex items-center gap-1.5 bg-[#FAF3E0] border border-[#EACCA6]/40 text-[#B88746] px-4 py-1.5 rounded-full text-[10.5px] font-bold tracking-widest uppercase">
+            <Gift size={13} className="text-[#B88746]" />
+            <span>{isArabic ? "أتيليه الهدايا والتفصيل الملكي" : "THE ROYAL BESPOKE & GIFT EXPERIENCE"}</span>
+          </div>
+          <h2 className={`text-3xl sm:text-4xl font-serif font-semibold tracking-tight ${isLightText ? 'text-white' : 'text-[#1F1F1F]'}`}>
+            {isArabic ? "الطلبات الخاصة والقطع المُصممة كهدية قيمة" : "Tailored Bespoke Designs & Luxurious Art Gifts"}
+          </h2>
+          <p className={`text-sm font-light leading-relaxed ${isLightText ? 'text-zinc-200' : 'text-[#666666]'}`}>
+            {isArabic 
+              ? "ندرك أن كل فستان خاص أو قطعة إكسسوار فنية هاند ميد تصممينها، تحمل قيمة عاطفية وفخامة فريدة. اطلبي تصميمك الخاص واختاري من بين خيارات التغليف الفاخر لتقدميها كتحفة فنية لا تُنسى."
+              : "Every custom luxury outfit or hand-beaded heirloom you design is crafted to become an eternal memory. Request your custom tailor piece, and customize our artisan silk-wrapped gift boxes."}
+          </p>
         </div>
-        <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-[#1F1F1F] tracking-tight">
-          {isArabic ? "الطلبات الخاصة والقطع المُصممة كهدية قيمة" : "Tailored Bespoke Designs & Luxurious Art Gifts"}
-        </h2>
-        <p className="text-sm text-[#666666] font-light leading-relaxed">
-          {isArabic 
-            ? "ندرك أن كل فستان خاص أو قطعة إكسسوار فنية هاند ميد تصممينها، تحمل قيمة عاطفية وفخامة فريدة. اطلبي تصميمك الخاص واختاري من بين خيارات التغليف الفاخر لتقدميها كتحفة فنية لا تُنسى."
-            : "Every custom luxury outfit or hand-beaded heirloom you design is crafted to become an eternal memory. Request your custom tailor piece, and customize our artisan silk-wrapped gift boxes."}
-        </p>
-      </div>
 
       {/* Main Container: Warm, soft light linen/beige aesthetic */}
       <div className="relative overflow-hidden rounded-[2.5rem] border border-[#E6E4DC] shadow-xl bg-[#FAF9F5] text-zinc-900 p-6 sm:p-10 md:p-12">
@@ -628,6 +648,7 @@ export default function CustomCoutureForm({
           </div>
         </div>
       </div>
-    </section>
-  );
+    </div>
+  </section>
+);
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, Eye, ShoppingCart, ChevronUp, ChevronDown } from 'lucide-react';
-import { Product } from '../types';
+import { Product, SectionBackdrop } from '../types';
 import { getProductPrice } from '../utils';
 
 interface TrendPiecesProps {
@@ -9,13 +9,15 @@ interface TrendPiecesProps {
   onSelectProduct: (product: Product) => void;
   isArabic: boolean;
   onQuickAddToCart: (product: Product) => void;
+  backdrop?: SectionBackdrop;
 }
 
 export default function TrendPieces({
   products,
   onSelectProduct,
   isArabic,
-  onQuickAddToCart
+  onQuickAddToCart,
+  backdrop
 }: TrendPiecesProps) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -80,28 +82,44 @@ export default function TrendPieces({
 
   if (!hero) return null;
 
+  const isLightText = backdrop ? backdrop.textColor === 'light' : true; // Default to white text on dark bg
+
+  const customStyle: React.CSSProperties = backdrop ? {
+    background: backdrop.type === 'solid'
+      ? (backdrop.solidColor || '#252622')
+      : `linear-gradient(${
+          backdrop.gradientDirection === 'to-r' ? 'to right' :
+          backdrop.gradientDirection === 'to-tr' ? 'to top right' :
+          backdrop.gradientDirection === 'to-br' ? 'to bottom right' : 'to bottom'
+        }, ${backdrop.gradientFrom || '#252622'}, ${backdrop.gradientTo || '#2d2e28'})`
+  } : {};
+
   return (
-    <section id="trend-pieces-section" className="bg-zinc-50/50 py-10 sm:py-16 md:py-24 border-b border-zinc-100 select-none">
+    <section 
+      id="trend-pieces-section" 
+      style={customStyle}
+      className={`${backdrop ? '' : 'bg-gradient-to-b from-[#252622] to-[#2d2e28]'} py-10 sm:py-16 md:py-24 border-b border-[#2d2e28] select-none ${isLightText ? 'text-white' : 'text-zinc-900'}`}
+    >
       <div className="max-w-7xl mx-auto px-2 xs:px-4 sm:px-6 lg:px-8">
         
         {/* Editorial Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-16 gap-4 sm:gap-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
           <div className="text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100/60 rounded-full text-amber-900 text-[9px] sm:text-[11px] font-bold tracking-[0.2em] uppercase mb-2 sm:mb-4">
-              <Sparkles size={11} className="text-amber-805 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-400 text-[9px] sm:text-[11px] font-bold tracking-[0.25em] uppercase mb-2 sm:mb-4">
+              <Sparkles size={11} className="text-amber-400 animate-pulse" />
               <span>{isArabic ? "موضة الموسم العصري" : "SEASON'S HOTTEST TRENDS"}</span>
             </span>
-            <h2 className="text-2xl xs:text-3xl md:text-5xl font-serif font-light text-zinc-950 tracking-tight leading-tight">
+            <h2 className={`text-2xl xs:text-3xl md:text-5xl font-serif font-light tracking-tight leading-tight ${isLightText ? 'text-white' : 'text-zinc-950'}`}>
               {isArabic ? "قطع الموضة الأكثر تأثيراً" : "The Trend Pieces"}
             </h2>
-            <p className="text-[10px] xs:text-xs text-zinc-400 mt-2 max-w-lg font-sans leading-relaxed">
+            <p className={`text-[10px] xs:text-xs mt-2 max-w-lg font-sans leading-relaxed ${isLightText ? 'text-zinc-300' : 'text-zinc-650'}`}>
               {isArabic 
                 ? "مختارات حصرية صُممت لتلائم طابع الحياة الراقية وتتميز بتفاصيل ممنوحة خيار تصفح منتجات إضافية مدهشة عبر شريط التمرير." 
                 : "A boundary-pushing curation reflecting future street style. Explore additional trend items using our dynamic vertical scroll."}
             </p>
           </div>
 
-          <div className="hidden md:flex items-center gap-2 text-zinc-350 text-[11px] font-mono tracking-widest uppercase">
+          <div className={`hidden md:flex items-center gap-2 text-[11px] font-mono tracking-widest uppercase ${isLightText ? 'text-zinc-400' : 'text-zinc-550'}`}>
             <span>RAAV // COUTURE</span>
           </div>
         </div>

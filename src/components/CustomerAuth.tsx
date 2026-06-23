@@ -114,6 +114,16 @@ export default function CustomerAuth({ onSuccess, isArabic }: CustomerAuthProps)
           {/* Visual Accent */}
           <div className="absolute top-0 right-0 left-0 h-1.5 bg-zinc-950" />
 
+          {/* Logo Brand Banner */}
+          <div className="flex justify-center pt-2">
+            <img 
+              src="/src/assets/images/raav_clean_circle_logo_1782164055293.jpg" 
+              alt="RAAV Couture" 
+              className="w-28 h-28 object-cover rounded-full border border-zinc-150 shadow-md transform hover:scale-[1.02] transition duration-300"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+
           {/* Form Header */}
           <div className="text-center space-y-2">
             <h2 className="text-2xl font-serif font-medium text-zinc-950 tracking-tight">

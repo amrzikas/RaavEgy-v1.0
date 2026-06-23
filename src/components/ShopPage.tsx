@@ -9,6 +9,7 @@ interface ShopPageProps {
   onSelectProduct: (product: Product) => void;
   isArabic: boolean;
   initialCategory?: 'all' | 'men' | 'women' | 'kids' | 'accessories';
+  initialSubcategory?: string | null;
 }
 
 const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', 'XXL', '38', '40', '42', '44'];
@@ -22,8 +23,9 @@ const PREMIUM_COLORS = [
   { hex: '#dc2626', labelEn: 'Royal Red', labelAr: 'أحمر ملكي' }
 ];
 
-export default function ShopPage({ products, onSelectProduct, isArabic, initialCategory = 'all' }: ShopPageProps) {
+export default function ShopPage({ products, onSelectProduct, isArabic, initialCategory = 'all', initialSubcategory = null }: ShopPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'men' | 'women' | 'kids' | 'accessories'>(initialCategory);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -32,9 +34,39 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
   const [sortBy, setSortBy] = useState<'default' | 'price-low' | 'price-high' | 'newest'>('default');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
+  // Sync initial category from outside (e.g. Header menu clicks)
+  React.useEffect(() => {
+    setSelectedCategory(initialCategory);
+    setSelectedSubcategory(initialSubcategory);
+  }, [initialCategory, initialSubcategory]);
+
+  // Compute unique subcategories for the current selected category
+  const availableSubcategories = useMemo(() => {
+    const list: { ar: string; en: string }[] = [];
+    const seen = new Set<string>();
+
+    products.forEach((prod) => {
+      if (selectedCategory !== 'all' && prod.category !== selectedCategory) return;
+      
+      const subAr = prod.subcategoryAr?.trim();
+      const subEn = prod.subcategoryEn?.trim();
+
+      if (subAr || subEn) {
+        const key = `${subAr || ''}|||${subEn || ''}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          list.push({ ar: subAr || subEn || '', en: subEn || subAr || '' });
+        }
+      }
+    });
+
+    return list;
+  }, [products, selectedCategory]);
+
   // Reset all filters
   const handleResetFilters = () => {
     setSelectedCategory('all');
+    setSelectedSubcategory(null);
     setSearchQuery('');
     setSelectedSize(null);
     setSelectedColor(null);
@@ -49,6 +81,14 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
       .filter((prod) => {
         // Category Filter
         if (selectedCategory !== 'all' && prod.category !== selectedCategory) return false;
+
+        // Subcategory Filter
+        if (selectedSubcategory) {
+          const subAr = prod.subcategoryAr?.toLowerCase().trim();
+          const subEn = prod.subcategoryEn?.toLowerCase().trim();
+          const filterLower = selectedSubcategory.toLowerCase();
+          if (subAr !== filterLower && subEn !== filterLower) return false;
+        }
 
         // Search Filter
         if (searchQuery.trim() !== '') {
@@ -82,7 +122,7 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
         if (sortBy === 'newest') return b.createdAt - a.createdAt;
         return 0; // Default ordering
       });
-  }, [products, selectedCategory, searchQuery, selectedSize, selectedColor, minPrice, maxPrice, sortBy]);
+  }, [products, selectedCategory, selectedSubcategory, searchQuery, selectedSize, selectedColor, minPrice, maxPrice, sortBy]);
 
   return (
     <div id="shop-top-anchor" className="bg-[#fbfcff] min-h-screen pt-24 pb-16 font-sans text-right" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
@@ -242,6 +282,44 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
               </div>
             </div>
 
+            {/* Dynamic Subcategories */}
+            {availableSubcategories.length > 0 && (
+              <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
+                  {isArabic ? "الفئة الفرعية" : "Subcategories"}
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    onClick={() => setSelectedSubcategory(null)}
+                    className={`px-3 py-1.5 rounded-full text-[10.5px] font-semibold transition cursor-pointer border ${
+                      selectedSubcategory === null
+                        ? "bg-amber-100/40 text-amber-950 border-amber-300 font-extrabold"
+                        : "bg-zinc-50 hover:bg-zinc-100 text-zinc-650 border-zinc-200"
+                    }`}
+                  >
+                    {isArabic ? "الكل" : "All"}
+                  </button>
+                  {availableSubcategories.map((sub) => {
+                    const label = isArabic ? sub.ar : sub.en;
+                    const isSelected = selectedSubcategory === sub.en || selectedSubcategory === sub.ar;
+                    return (
+                      <button
+                        key={sub.en}
+                        onClick={() => setSelectedSubcategory(isSelected ? null : sub.en)}
+                        className={`px-3 py-1.5 rounded-full text-[10.5px] font-semibold transition cursor-pointer border ${
+                          isSelected
+                            ? "bg-amber-100/40 text-amber-950 border-amber-300 font-extrabold"
+                            : "bg-zinc-50 hover:bg-zinc-100 text-zinc-650 border-zinc-200"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Price Filter Slider and text */}
             <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
               <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
@@ -258,8 +336,8 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
                   onChange={(e) => setMaxPrice(parseInt(e.target.value))}
                 />
                 <div className="flex justify-between items-center text-xs font-semibold text-zinc-700 font-mono">
-                  <span>{minPrice} ج.م</span>
-                  <span>{maxPrice} ج.م</span>
+                  <span>{minPrice} {isArabic ? "ج.م" : "EGP"}</span>
+                  <span>{maxPrice} {isArabic ? "ج.م" : "EGP"}</span>
                 </div>
               </div>
             </div>
@@ -452,7 +530,7 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
                         </div>
 
                         <div className="mt-3 pt-2 border-t border-zinc-100/60 flex items-center justify-between text-xs font-bold text-zinc-900 font-serif">
-                          <span>{product.price} ج.م</span>
+                          <span>{product.price} {isArabic ? "ج.م" : "EGP"}</span>
                           {product.inStock && (
                             <span className="text-[10px] text-zinc-400 font-sans font-light">
                               {isArabic ? "معاينة مجاناً" : "Try-on free"}

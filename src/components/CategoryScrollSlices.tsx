@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, ShoppingBag, Eye, Plus } from 'lucide-react';
-import { Product } from '../types';
+import { Product, SectionBackdrop } from '../types';
 import { getProductPrice } from '../utils';
 
 interface CategoryScrollSlicesProps {
@@ -22,6 +22,7 @@ interface CategoryScrollSlicesProps {
     kids?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
     accessories?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
   };
+  backdrop?: SectionBackdrop;
 }
 
 export default function CategoryScrollSlices({
@@ -31,7 +32,8 @@ export default function CategoryScrollSlices({
   onSelectCategory,
   onQuickAddToCart,
   categoryImages,
-  categoryTexts
+  categoryTexts,
+  backdrop
 }: CategoryScrollSlicesProps) {
   
   const categoryConfigs = [
@@ -89,17 +91,33 @@ export default function CategoryScrollSlices({
     }
   };
 
+  const isLightText = backdrop ? backdrop.textColor === 'light' : true; // Default is true because previous turn made it dark background with white text
+
+  const customStyle: React.CSSProperties = backdrop ? {
+    background: backdrop.type === 'solid'
+      ? (backdrop.solidColor || '#353630')
+      : `linear-gradient(${
+          backdrop.gradientDirection === 'to-r' ? 'to right' :
+          backdrop.gradientDirection === 'to-tr' ? 'to top right' :
+          backdrop.gradientDirection === 'to-br' ? 'to bottom right' : 'to bottom'
+        }, ${backdrop.gradientFrom || '#353630'}, ${backdrop.gradientTo || '#21221e'})`
+  } : {};
+
   return (
-    <section id="category-slices" className="bg-white py-16 md:py-24 border-b border-zinc-100 overflow-hidden">
+    <section 
+      id="category-slices" 
+      style={customStyle}
+      className={`${backdrop ? '' : 'bg-[#353630]'} py-16 md:py-24 border-b border-[#2d2e28] overflow-hidden`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Title */}
         <div className="text-center md:text-right mb-12 sm:mb-16" style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}>
-          <div className="flex items-center gap-1.5 justify-start md:justify-start text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase mb-2">
-            <span>✦</span>
-            <span>{isArabic ? "تصفح حسب الفئات" : "SHOP BY GENRE"}</span>
+          <div className="flex items-center gap-1.5 justify-start md:justify-start text-[10px] font-bold tracking-[0.2em] uppercase mb-2">
+            <span className="text-amber-400">✦</span>
+            <span className={isLightText ? 'text-zinc-300' : 'text-zinc-650'}>{isArabic ? "تصفح حسب الفئات" : "SHOP BY GENRE"}</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-serif font-light text-zinc-950 tracking-tight leading-tight">
+          <h2 className={`text-3xl md:text-4xl font-serif font-light tracking-tight leading-tight ${isLightText ? 'text-white' : 'text-zinc-950'}`}>
             {isArabic ? "روائع الموضة حسب ذوقك" : "The Boutique Collections"}
           </h2>
         </div>

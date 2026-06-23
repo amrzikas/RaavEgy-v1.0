@@ -298,11 +298,11 @@ export default function ProductPage({
               <div className="flex items-center gap-3 justify-start flex-wrap">
                 {hasDiscount && (
                   <span className="text-zinc-400 line-through text-base sm:text-lg font-serif">
-                    {original * quantity} ج.م
+                    {original * quantity} {isArabic ? "ج.م" : "EGP"}
                   </span>
                 )}
                 <span className={`text-2xl sm:text-3xl font-serif font-black ${hasDiscount ? 'text-red-650' : 'text-zinc-950'}`}>
-                  {current * quantity} ج.م
+                  {current * quantity} {isArabic ? "ج.م" : "EGP"}
                 </span>
                 {hasDiscount && (
                   <span className="inline-block bg-red-50 text-red-600 text-[10px] sm:text-xs px-2.5 py-1 rounded-full font-bold uppercase select-none font-sans">
@@ -792,7 +792,7 @@ export default function ProductPage({
                       </h4>
                     </div>
                     <div className="mt-2 text-xs font-bold text-zinc-900 font-serif">
-                      {relProduct.price} ج.م
+                      {relProduct.price} {isArabic ? "ج.م" : "EGP"}
                     </div>
                   </div>
                 </div>
