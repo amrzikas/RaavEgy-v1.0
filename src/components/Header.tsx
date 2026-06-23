@@ -24,6 +24,9 @@ interface HeaderProps {
   customAnnouncement?: string;
   announcementImage?: string;
   announcementLink?: string;
+  headerBgColor?: string;
+  logoSize?: number;
+  logoImage?: string;
 }
 
 export default function Header({
@@ -46,7 +49,10 @@ export default function Header({
   isUserLoggedIn,
   customAnnouncement,
   announcementImage,
-  announcementLink
+  announcementLink,
+  headerBgColor,
+  logoSize,
+  logoImage
 }: HeaderProps) {
   const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
@@ -113,7 +119,14 @@ export default function Header({
   };
 
   return (
-    <header id="app-header" className="sticky top-0 z-40 bg-[#353630] border-b border-[#2d2e28] text-white transition-colors duration-300">
+    <header 
+      id="app-header" 
+      className="sticky top-0 z-40 border-b text-white transition-opacity duration-300"
+      style={{
+        backgroundColor: headerBgColor || '#353630',
+        borderColor: headerBgColor ? 'rgba(255, 255, 255, 0.08)' : '#2d2e28'
+      }}
+    >
       {/* Premium Minimal Announcement Bar / Custom Banner */}
       {announcementImage ? (
         <a 
@@ -273,13 +286,30 @@ export default function Header({
               className="cursor-pointer text-center select-none flex flex-col justify-center items-center"
             >
               <div className="flex items-center justify-center">
-                <img 
-                  src="/src/assets/images/raav_brand_logo_1782163038345.jpg" 
-                  alt="RAAV Couture Logo" 
-                  className="h-[72px] md:h-[84px] object-contain transition duration-500 hover:scale-105 mix-blend-screen"
-                  style={{ mixBlendMode: 'screen' }}
-                  referrerPolicy="no-referrer"
-                />
+                {logoImage && !logoImage.includes('raav_brand_logo_1782163038345.jpg') ? (
+                  <img 
+                    src={logoImage} 
+                    alt="RAAV Couture Logo" 
+                    className="object-contain transition duration-500 hover:scale-105"
+                    style={{ 
+                      height: logoSize ? `${logoSize}px` : undefined,
+                      maxHeight: '130px',
+                      ...(!logoSize ? { height: '80px' } : {})
+                    }}
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center transition duration-500 hover:scale-[1.03] group select-none py-1">
+                    <span 
+                      className="font-serif text-amber-300 tracking-[0.32em] font-bold uppercase leading-none pl-[0.32em]"
+                      style={{ 
+                        fontSize: logoSize ? `${logoSize * 0.45}px` : '46px',
+                      }}
+                    >
+                      RAAV
+                    </span>
+                  </div>
+                )}
               </div>
               {activeView === 'shop' && selectedCategory !== 'all' && (
                 <div className="text-[9px] uppercase tracking-[0.15em] text-amber-400 mt-0.5 font-sans font-semibold">
@@ -437,7 +467,7 @@ export default function Header({
                 <div className="flex items-center justify-between pb-4 border-b border-zinc-100 mb-6">
                   <div className="flex items-center gap-2 select-none">
                     <img 
-                      src="/src/assets/images/raav_clean_circle_logo_1782164055293.jpg" 
+                      src={logoImage || "/src/assets/images/raav_clean_circle_logo_1782164055293.jpg"} 
                       alt="RAAV Couture" 
                       className="h-7 w-7 object-cover rounded-full border border-zinc-200"
                       referrerPolicy="no-referrer"

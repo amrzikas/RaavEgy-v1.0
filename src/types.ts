@@ -283,4 +283,15 @@ export interface HomepageContent {
     categoryScrollSlices?: SectionBackdrop;
     customCoutureForm?: SectionBackdrop;
   };
+  categoryBackdrops?: {
+    women?: SectionBackdrop;
+    men?: SectionBackdrop;
+    kids?: SectionBackdrop;
+    accessories?: SectionBackdrop;
+  };
+  headerBgColor?: string;
+  logoSize?: number;
+  logoImage?: string;
+  collectionsLayout?: 'split' | 'bento' | 'symmetric' | 'slider';
+  collectionsOrder?: ('women' | 'men' | 'kids' | 'accessories')[];
 }

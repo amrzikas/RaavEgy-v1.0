@@ -124,7 +124,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Info card body */}
       <div className="p-4 sm:p-5 flex flex-col flex-1" style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}>
-        <h3 className="text-zinc-900 font-serif font-medium text-base tracking-tight mb-1.5 cursor-pointer line-clamp-1 hover:text-amber-800 transition" onClick={() => onOpenDetails(product)}>
+        <h3 className="text-zinc-950 font-serif font-bold text-base sm:text-lg tracking-tight mb-1.5 cursor-pointer line-clamp-1 hover:text-amber-800 transition" onClick={() => onOpenDetails(product)}>
           {isArabic ? product.nameAr : product.nameEn}
         </h3>
         
@@ -133,38 +133,46 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </p>
 
         {/* Pricing & Cart controls */}
-        <div className="mt-auto pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
-          <div className="flex flex-col">
-            {hasDiscount && (
-              <span className="text-zinc-400 line-through text-[11px] sm:text-xs font-sans leading-none mb-1 inline-block">
-                {original} {isArabic ? 'ج.م' : 'EGP'}
+        <div className="mt-auto pt-3 border-t border-zinc-150/60 grid grid-cols-3 items-center w-full gap-1.5" dir="ltr">
+          {/* Left Visual side: Original line-through price on discount, or a luxury seal label */}
+          <div className="flex justify-start items-center">
+            {hasDiscount ? (
+              <span className="text-red-650 line-through text-[9px] xs:text-[10px] sm:text-[11px] font-sans font-bold leading-none block">
+                {original} {isArabic ? 'ج' : 'EGP'}
+              </span>
+            ) : (
+              <span className="text-[8px] xs:text-[9.5px] sm:text-[10.5px] text-zinc-400 font-sans tracking-tight uppercase leading-none font-bold">
+                {isArabic ? "سوليد" : "Elite"}
               </span>
             )}
-            <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/25 text-amber-950 rounded-lg py-1 px-2.5 sm:px-3 text-xs sm:text-sm font-extrabold shadow-xs font-sans">
-              <span className={hasDiscount ? "text-red-650" : "text-zinc-900"}>
-                {current}
-              </span>
-              <span className="text-[10px] uppercase font-bold text-zinc-500/95">{isArabic ? 'ج.م' : 'EGP'}</span>
-              {hasDiscount && (
-                <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.2 rounded font-bold uppercase shrink-0 select-none ml-1">
-                  {isArabic ? 'خصم' : 'Sale'}
-                </span>
-              )}
+          </div>
+
+          {/* Center Visual side: The actual Price centered in a prominent high-contrast solid badge */}
+          <div className="flex justify-center items-center">
+            <div className="inline-flex items-center gap-0.5 bg-amber-500 text-zinc-950 border border-amber-450 rounded-full py-1 px-2.5 sm:px-3 text-[10.5px] xs:text-[11.5px] sm:text-xs font-black shadow-xs font-sans whitespace-nowrap">
+              <span>{current}</span>
+              <span className="text-[7.5px] xs:text-[8.5px] sm:text-[9px] uppercase font-black text-zinc-900/90 ml-0.5">{isArabic ? 'ج.م' : 'EGP'}</span>
             </div>
           </div>
 
-          {product.inStock ? (
-            <button
-              onClick={() => onOpenDetails(product)}
-              className="px-3.5 py-1.5 bg-zinc-950 hover:bg-amber-800 text-white rounded-full text-xs font-medium transition cursor-pointer font-sans"
-            >
-              <span>{isArabic ? "شراء" : "Select"}</span>
-            </button>
-          ) : (
-            <span className="text-[10px] text-zinc-400 font-sans italic">
-              {isArabic ? "غير متوفر" : "Unavailable"}
-            </span>
-          )}
+          {/* Right Visual side: High-contrast BUY action badge */}
+          <div className="flex justify-end items-center">
+            {product.inStock ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenDetails(product);
+                }}
+                className="bg-zinc-950 hover:bg-amber-600 text-white rounded-full py-1 px-3 sm:py-1.5 sm:px-4.5 text-[9px] xs:text-[10.5px] sm:text-[11.5px] font-black uppercase tracking-wider transition-all duration-200 shadow-xs border border-zinc-900 hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+              >
+                {isArabic ? "شراء" : "BUY"}
+              </button>
+            ) : (
+              <span className="text-[8px] xs:text-[9.5px] sm:text-[10.5px] text-zinc-450 bg-zinc-100 border border-zinc-200 rounded-md px-1.5 py-0.5 font-bold italic shrink-0">
+                {isArabic ? "نفد" : "Out"}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>

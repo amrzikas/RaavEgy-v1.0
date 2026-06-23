@@ -211,23 +211,23 @@ export default function TrendPieces({
           </div>
 
           {/* Trend Items: Custom Scrollable Vertical Panel (Columns 8-12) */}
-          <div className="col-span-5 relative flex flex-col group/scrollbar h-[220px] xs:h-[300px] sm:h-[400px] md:h-[500px] lg:h-[620px]">
+          <div className="col-span-5 relative flex flex-col pt-5 pb-5 group/scrollbar h-[220px] xs:h-[300px] sm:h-[400px] md:h-[500px] lg:h-[620px]">
             
             {/* Scroll Up Control */}
             {sideProducts.length > 2 && (
               <button 
                 onClick={scrollUp}
-                className="absolute top-1 left-1/2 -translate-x-1/2 z-20 w-6 h-6 md:w-9 md:h-9 bg-white/90 hover:bg-amber-400 hover:text-black rounded-full shadow-lg border border-zinc-200/50 transition duration-300 cursor-pointer opacity-0 group-hover/scrollbar:opacity-100 flex items-center justify-center text-zinc-950"
+                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 w-7 h-7 md:w-11 md:h-11 bg-amber-400 hover:bg-amber-500 hover:scale-105 active:scale-95 text-zinc-950 rounded-full shadow-lg border border-zinc-900/10 transition duration-300 cursor-pointer flex items-center justify-center"
                 title={isArabic ? "تمرير للأعلى" : "Scroll Up"}
               >
-                <ChevronUp className="w-3 h-3 md:w-5 md:h-5" />
+                <ChevronUp className="w-4 h-4 md:w-6 md:h-6 stroke-[3]" />
               </button>
             )}
 
             {/* Scroll Container */}
             <div 
               ref={scrollContainerRef}
-              className="w-full h-full overflow-y-auto scrollbar-none flex flex-col gap-1.5 xs:gap-3.5 sm:gap-5 py-0.5 scroll-smooth snap-y snap-mandatory"
+              className="w-full h-full overflow-y-auto scrollbar-none flex flex-col gap-1.5 xs:gap-3.5 sm:gap-5 py-2 scroll-smooth snap-y snap-mandatory"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {sideProducts.map((product, idx) => {
@@ -361,10 +361,10 @@ export default function TrendPieces({
             {sideProducts.length > 2 && (
               <button 
                 onClick={scrollDown}
-                className="absolute bottom-1 left-1/2 -translate-x-1/2 z-20 w-6 h-6 md:w-9 md:h-9 bg-white/90 hover:bg-amber-400 hover:text-black rounded-full shadow-lg border border-zinc-200/50 transition duration-300 cursor-pointer opacity-0 group-hover/scrollbar:opacity-100 flex items-center justify-center text-zinc-950"
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-30 w-7 h-7 md:w-11 md:h-11 bg-amber-400 hover:bg-amber-500 hover:scale-105 active:scale-95 text-zinc-950 rounded-full shadow-lg border border-zinc-900/10 transition duration-300 cursor-pointer flex items-center justify-center"
                 title={isArabic ? "تمرير لأسفل" : "Scroll Down"}
               >
-                <ChevronDown className="w-3 h-3 md:w-5 md:h-5" />
+                <ChevronDown className="w-4 h-4 md:w-6 md:h-6 stroke-[3]" />
               </button>
             )}
 

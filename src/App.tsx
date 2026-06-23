@@ -297,6 +297,9 @@ export default function App() {
           customAnnouncement={isArabic ? homepageContent?.announcementAr : homepageContent?.announcementEn}
           announcementImage={homepageContent?.announcementImage}
           announcementLink={homepageContent?.announcementLink}
+          headerBgColor={homepageContent?.headerBgColor}
+          logoSize={homepageContent?.logoSize}
+          logoImage={homepageContent?.logoImage}
         />
 
         {/* Main Page Layout */}
@@ -379,6 +382,9 @@ export default function App() {
                 }}
                 isArabic={isArabic}
                 backdrop={homepageContent?.sectionBackgrounds?.theCollections}
+                layout={homepageContent?.collectionsLayout}
+                order={homepageContent?.collectionsOrder}
+                categoryImages={homepageContent?.categoryImages}
               />
 
               {/* INTERTWINED PREMIUM AD 2: Below The Collections Section */}
@@ -469,6 +475,7 @@ export default function App() {
                 categoryImages={homepageContent?.categoryImages}
                 categoryTexts={homepageContent?.categoryTexts}
                 backdrop={homepageContent?.sectionBackgrounds?.categoryScrollSlices}
+                categoryBackdrops={homepageContent?.categoryBackdrops}
               />
 
               {/* SPECIAL CUSTOM ORDERS FORM SECTION */}

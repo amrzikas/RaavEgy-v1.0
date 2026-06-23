@@ -1955,6 +1955,36 @@ export default function AdminPanel({
                         });
                       };
 
+                      const getCategoryBg = (key: 'women' | 'men' | 'kids' | 'accessories') => {
+                        const defaults = {
+                          women: { type: 'solid', solidColor: '#c9d9bc', textColor: 'dark', gradientFrom: '#c9d9bc', gradientTo: '#bdae9c', gradientDirection: 'to-r' },
+                          men: { type: 'gradient', solidColor: '#252622', textColor: 'light', gradientFrom: '#252622', gradientTo: '#1f201d', gradientDirection: 'to-r' },
+                          kids: { type: 'solid', solidColor: '#c9dfdd', textColor: 'dark', gradientFrom: '#c9dfdd', gradientTo: '#bbaea8', gradientDirection: 'to-r' },
+                          accessories: { type: 'gradient', solidColor: '#21221e', textColor: 'light', gradientFrom: '#21221e', gradientTo: '#1a1b18', gradientDirection: 'to-r' }
+                        };
+                        const fallback = defaults[key] || {
+                          type: 'solid',
+                          solidColor: '#252622',
+                          gradientFrom: '#252622',
+                          gradientTo: '#1f201d',
+                          gradientDirection: 'to-r',
+                          textColor: 'light'
+                        };
+                        return homepageContent.categoryBackdrops?.[key] || fallback;
+                      };
+
+                      const updateCategoryBg = (key: 'women' | 'men' | 'kids' | 'accessories', field: string, val: any) => {
+                        const currentBgs = { ...(homepageContent.categoryBackdrops || {}) };
+                        currentBgs[key] = {
+                          ...getCategoryBg(key),
+                          [field]: val
+                        };
+                        setHomepageContent({
+                          ...homepageContent,
+                          categoryBackdrops: currentBgs
+                        });
+                      };
+
                       return (
                         <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-2xl space-y-6">
                           <div className="border-b border-zinc-800 pb-2.5 flex items-center justify-between">
@@ -2115,11 +2145,472 @@ export default function AdminPanel({
                               );
                             })}
                           </div>
+
+                          <div className="border-b border-zinc-850 pt-8 pb-2.5 flex items-center justify-between">
+                            <h4 className="text-sm font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                              <span className="text-amber-450 text-base">✨</span>
+                              <span>{isArabic ? "تخصيص خلفيات كروت الفئات (Genre Slices)" : "Genre Slices Backdrops Customizer"}</span>
+                            </h4>
+                          </div>
+
+                          <p className="text-xs text-zinc-400">
+                            {isArabic 
+                              ? "يتيح لك هذا القسم تخصيص خلفيات كروت الفئات الأربعة الفاخرة بشكل منفصل لتطابق ذوقك الرفيع وتتحكم في تباين السلايدر الخاص بكل تصنيف."
+                              : "Optimize backdrops for individual category card sliders separately. Personalize style details for specific collections."}
+                          </p>
+
+                          <div className="space-y-6">
+                            {[
+                              { id: 'women', labelAr: "كارت تشكيلة النساء (Women Card Backdrop)", labelEn: "Women's Collection Backdrop" },
+                              { id: 'men', labelAr: "كارت تشكيلة الرجال (Men Card Backdrop)", labelEn: "Men's Collection Backdrop" },
+                              { id: 'kids', labelAr: "كارت تشكيلة الأطفال (Kids Card Backdrop)", labelEn: "Kids' Collection Backdrop" },
+                              { id: 'accessories', labelAr: "كارت تشكيلة الإكسسوارات (Accessories Card Backdrop)", labelEn: "Accessories' Collection Backdrop" }
+                            ].map((sect) => {
+                              const bOption = getCategoryBg(sect.id as any);
+                              return (
+                                <div key={sect.id} className="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-4">
+                                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                                    <span className="text-xs font-bold text-zinc-300 font-serif leading-none">{isArabic ? sect.labelAr : sect.labelEn}</span>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    
+                                    {/* Background Type choice */}
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "نوع الخلفية" : "Backdrop Style Type"}</label>
+                                      <select
+                                        value={bOption.type}
+                                        onChange={(e) => updateCategoryBg(sect.id as any, 'type', e.target.value as any)}
+                                        className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                      >
+                                        <option value="solid">{isArabic ? "لون واحد (Solid)" : "Solid color"}</option>
+                                        <option value="gradient">{isArabic ? "تدرج لوني (Gradient)" : "Gradient color"}</option>
+                                      </select>
+                                    </div>
+
+                                    {/* Text Color for contrast assurance */}
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "لون نصوص القسم" : "Optimize Text Contrast"}</label>
+                                      <select
+                                        value={bOption.textColor || 'light'}
+                                        onChange={(e) => updateCategoryBg(sect.id as any, 'textColor', e.target.value as any)}
+                                        className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                      >
+                                        <option value="light">{isArabic ? "فاتح / غامق" : "Light Text / Dark Box"}</option>
+                                        <option value="dark">{isArabic ? "داكن / فاتح" : "Dark Text / Light Box"}</option>
+                                      </select>
+                                    </div>
+
+                                    {/* Solid Color Picker */}
+                                    {bOption.type === 'solid' ? (
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "اختر اللون" : "Solid hex code"}</label>
+                                        <div className="flex gap-2">
+                                          <input
+                                            type="color"
+                                            value={bOption.solidColor || '#252622'}
+                                            onChange={(e) => updateCategoryBg(sect.id as any, 'solidColor', e.target.value)}
+                                            className="h-9 w-9 bg-transparent border-0 cursor-pointer rounded-lg shrink-0"
+                                          />
+                                          <input
+                                            type="text"
+                                            value={bOption.solidColor || '#252622'}
+                                            onChange={(e) => updateCategoryBg(sect.id as any, 'solidColor', e.target.value)}
+                                            placeholder="#ffffff"
+                                            className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-xl outline-none focus:border-amber-400 font-mono"
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      /* Gradient Direction selector */
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "اتجاه التدرج" : "Gradient Direction"}</label>
+                                        <select
+                                          value={bOption.gradientDirection || 'to-r'}
+                                          onChange={(e) => updateCategoryBg(sect.id as any, 'gradientDirection', e.target.value as any)}
+                                          className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                        >
+                                          <option value="to-b">{isArabic ? "من أعلى لأسفل" : "To Bottom (↓)"}</option>
+                                          <option value="to-r">{isArabic ? "من اليسار لليمين" : "To Right (→)"}</option>
+                                          <option value="to-tr">{isArabic ? "من أسفل اليسار لأعلى اليمين" : "To Top Right (↗)"}</option>
+                                          <option value="to-br">{isArabic ? "من أعلى اليسار لأسفل اليمين" : "To Bottom Right (↘)"}</option>
+                                        </select>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Conditional Gradient From and To Inputs */}
+                                  {bOption.type === 'gradient' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "يبدأ من لون" : "Gradient From (Hex)"}</label>
+                                        <div className="flex gap-2">
+                                          <input
+                                            type="color"
+                                            value={bOption.gradientFrom || '#252622'}
+                                            onChange={(e) => updateCategoryBg(sect.id as any, 'gradientFrom', e.target.value)}
+                                            className="h-9 w-9 bg-transparent border-0 cursor-pointer rounded-lg shrink-0"
+                                          />
+                                          <input
+                                            type="text"
+                                            value={bOption.gradientFrom || '#252622'}
+                                            onChange={(e) => updateCategoryBg(sect.id as any, 'gradientFrom', e.target.value)}
+                                            className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-xl outline-none focus:border-amber-400 font-mono"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "ينتهي عند لون" : "Gradient To (Hex)"}</label>
+                                        <div className="flex gap-2">
+                                          <input
+                                            type="color"
+                                            value={bOption.gradientTo || '#1f201d'}
+                                            onChange={(e) => updateCategoryBg(sect.id as any, 'gradientTo', e.target.value)}
+                                            className="h-9 w-9 bg-transparent border-0 cursor-pointer rounded-lg shrink-0"
+                                          />
+                                          <input
+                                            type="text"
+                                            value={bOption.gradientTo || '#1f201d'}
+                                            onChange={(e) => updateCategoryBg(sect.id as any, 'gradientTo', e.target.value)}
+                                            className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-xl outline-none focus:border-amber-400 font-mono"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Section Style Preview Indicator */}
+                                  <div className="flex items-center gap-3 bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-850/60 justify-between">
+                                    <span className="text-[10px] text-zinc-500">{isArabic ? "معاينة نمط الخلفية المنعكسة:" : "Backdrop Style Spec:"}</span>
+                                    <div 
+                                      style={{
+                                        background: bOption.type === 'solid' 
+                                          ? bOption.solidColor 
+                                          : `linear-gradient(${
+                                              bOption.gradientDirection === 'to-r' ? 'to right' :
+                                              bOption.gradientDirection === 'to-tr' ? 'to top right' :
+                                              bOption.gradientDirection === 'to-br' ? 'to bottom right' : 'to bottom'
+                                            }, ${bOption.gradientFrom || '#252622'}, ${bOption.gradientTo || '#1f201d'})`
+                                      }}
+                                      className="h-8 w-48 rounded-lg border border-zinc-700 font-sans text-[10px] flex items-center justify-center font-bold tracking-widest shadow-inner overflow-hidden"
+                                    >
+                                      <span style={{ color: bOption.textColor === 'dark' ? '#000000' : '#ffffff' }}>
+                                        {isArabic ? "عينة نصوص الأناقة" : "Elegance Sample text"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })()}
 
-                    <div className="pt-4 text-left">
+                    {/* CUSTOM HEADER & LOGO CUSTOMIZER */}
+                    <div className="border-t border-zinc-800 pt-6 mt-6 space-y-4">
+                      <h4 className="text-zinc-200 font-bold border-b border-zinc-800 pb-2 text-sm">
+                        {isArabic ? "تخصيص الهيدر وشعار المتجر" : "Header & Logo Customization"}
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Header Bg Color */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                            {isArabic ? "لون خلفية الهيدر" : "Header Background Color"}
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              value={homepageContent.headerBgColor || '#353630'}
+                              onChange={(e) => setHomepageContent({ ...homepageContent, headerBgColor: e.target.value })}
+                              className="h-9 w-12 bg-zinc-950 border border-zinc-800 rounded-lg p-1 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={homepageContent.headerBgColor || '#353630'}
+                              onChange={(e) => setHomepageContent({ ...homepageContent, headerBgColor: e.target.value })}
+                              className="flex-1 bg-zinc-950 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono"
+                              placeholder="#353630"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Logo Size */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                            {isArabic ? "عرض الشعار (حجم اللوجو بالبكسل)" : "Logo Width / Size (Pixels)"}
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="range"
+                              min="40"
+                              max="160"
+                              value={homepageContent.logoSize || 80}
+                              onChange={(e) => setHomepageContent({ ...homepageContent, logoSize: Number(e.target.value) })}
+                              className="flex-1 accent-amber-400 h-1.5 bg-zinc-850 rounded-lg cursor-pointer"
+                            />
+                            <span className="text-xs font-bold text-amber-400 font-mono shrink-0 w-12 text-center bg-zinc-950 border border-zinc-800 py-1.5 px-2 rounded-lg">
+                              {homepageContent.logoSize || 80}px
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Reset Header Style */}
+                        <div className="flex items-end">
+                          <button
+                            type="button"
+                            onClick={() => setHomepageContent({ 
+                              ...homepageContent, 
+                              headerBgColor: '#353630', 
+                              logoSize: 80, 
+                              logoImage: '' 
+                            })}
+                            className="w-full bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 hover:text-white transition py-2 px-3 rounded-xl text-[10px] uppercase font-bold"
+                          >
+                            {isArabic ? "إعادة تعيين الافتراضيات" : "Reset Styling Defaults"}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        {/* Custom Logo Link */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                            {isArabic ? "رابط صورة الشعار خارجية (URL)" : "Logo Image URL Link"}
+                          </label>
+                          <input
+                            type="url"
+                            placeholder="https://..."
+                            value={homepageContent.logoImage || ''}
+                            onChange={(e) => setHomepageContent({ ...homepageContent, logoImage: e.target.value })}
+                            className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono"
+                          />
+                        </div>
+
+                        {/* Logo Upload */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                            {isArabic ? "أو رفع ملف شعار جديد من جهازك" : "Or Upload New Logo File from Device"}
+                          </label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setHomepageContent({ ...homepageContent, logoImage: reader.result as string });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="w-full text-xs text-zinc-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-amber-400 hover:file:bg-zinc-700 cursor-pointer"
+                          />
+                        </div>
+                      </div>
+
+                      {homepageContent.logoImage && (
+                        <div className="flex items-center gap-3 bg-zinc-950/45 p-3 rounded-xl border border-zinc-850/60 w-fit">
+                          <span className="text-[10px] text-zinc-400 font-semibold">{isArabic ? "شعار مخصص نشط:" : "Custom Logo Active:"}</span>
+                          <img 
+                            src={homepageContent.logoImage} 
+                            alt="Logo preview" 
+                            className="h-10 object-contain bg-[#353630] border border-zinc-800 p-1 rounded" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setHomepageContent({ ...homepageContent, logoImage: '' })}
+                            className="text-red-400 hover:text-red-300 text-[10px] font-semibold underline cursor-pointer"
+                          >
+                            {isArabic ? "حذف واستعادة الافتراضي" : "Delete & Restore Standard"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* THE COLLECTIONS CUSTOMIZER SECTION */}
+                    <div className="border-t border-zinc-800 pt-6 mt-6 space-y-4">
+                      <h4 className="text-zinc-200 font-bold border-b border-zinc-800 pb-2 text-sm">
+                        {isArabic ? "التحكم في قسم الـ Collections ونمط العرض والترتيب" : "Collections Section Display Layout & Sort Order"}
+                      </h4>
+
+                      {/* Display Example layouts with choose selectors */}
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase">
+                          {isArabic ? "طريقة عرض التشكيلات ومثال التصميم المطبق:" : "CHOOSE A DESIGN LAYOUT PATTERN (VIEW EXAMPLES):"}
+                        </label>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          {[
+                            { 
+                              id: 'split', 
+                              nameEn: 'Classic Split Asymmetrical', 
+                              nameAr: 'التقسيم الكلاسيكي المطوّر', 
+                              descEn: 'One massive featured portrait on left with stack of items on right side.',
+                              descAr: 'صورة حريمي عملاقة في اتجاه وثلاث بطاقات فئوية مبسطة بالاتجاه الآخر.',
+                              visual: ' █ █ | █\n █ █ | █\n █ █ | █'
+                            },
+                            { 
+                              id: 'bento', 
+                              nameEn: 'Avant-Garde Bento-Box', 
+                              nameAr: 'تصميم شبكة بينتو المبتكر', 
+                              descEn: 'Asymmetrical geometric layout grid (wide block, narrow block alternating).',
+                              descAr: 'شبكة هندسية ببطاقات متفاوتة العرض والطول بطريقة عصرية ممتعة للنظر.',
+                              visual: ' █ █ █ | █\n █ | █ █ █'
+                            },
+                            { 
+                              id: 'symmetric', 
+                              nameEn: 'Symmetrical Synchronous Grid', 
+                              nameAr: 'الشبكة المتماثلة المنتظمة', 
+                              descEn: 'Four elegant equal-sized panels aligned side-by-side with border frames.',
+                              descAr: 'أربعة أعمدة متجانسة ومتساوية الأبعاد متلاصقة بوقار يشبه المعارض السويسرية.',
+                              visual: ' █ | █ | █ | █'
+                            },
+                            { 
+                              id: 'slider', 
+                              nameEn: 'Boutique Horizontal Deck Slider', 
+                              nameAr: 'شريط التمرير الدائري الفاخر', 
+                              descEn: 'Horizontal card stack with interactive slide scrolling view.',
+                              descAr: 'بطاقات تمريرية رشيقة تتدفق أفقياً لتقدم أسلوب تصفح ديناميكي كالبوتيك.',
+                              visual: ' █ -> █ -> █'
+                            }
+                          ].map((item) => {
+                            const isSelected = (homepageContent.collectionsLayout || 'split') === item.id;
+                            return (
+                              <button
+                                type="button"
+                                key={item.id}
+                                onClick={() => setHomepageContent({ ...homepageContent, collectionsLayout: item.id as any })}
+                                className={`text-left p-4 rounded-xl border transition flex flex-col justify-between h-52 cursor-pointer ${
+                                  isSelected 
+                                    ? "bg-amber-450/20 border-amber-400 shadow-md text-white" 
+                                    : "bg-zinc-950/45 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white"
+                                }`}
+                                style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
+                              >
+                                <div className="space-y-1 w-full">
+                                  <div className="flex items-center justify-between">
+                                    <span className={`text-[11px] font-bold uppercase tracking-wider ${isSelected ? 'text-amber-400' : 'text-zinc-300'}`}>
+                                      {isArabic ? item.nameAr : item.nameEn}
+                                    </span>
+                                    <input 
+                                      type="radio" 
+                                      checked={isSelected}
+                                      value={item.id}
+                                      onChange={() => {}}
+                                      className="accent-amber-400 shrink-0 cursor-pointer"
+                                    />
+                                  </div>
+                                  <p className="text-[10px] text-zinc-455 leading-normal line-clamp-4">
+                                    {isArabic ? item.descAr : item.descEn}
+                                  </p>
+                                </div>
+
+                                {/* Graphic ASCII preview */}
+                                <div className="text-[10px] font-mono text-zinc-500 bg-zinc-950 p-2 rounded-lg border border-zinc-850/60 leading-tight w-full mt-2 text-center select-none">
+                                  {item.visual}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Sorting organizer card lists */}
+                      <div className="space-y-3 pt-3">
+                        <div className="space-y-1">
+                          <label className="block text-[10px] font-bold text-zinc-500 uppercase">
+                            {isArabic ? "ترتيب عرض بطاقات التشكيلات الفريدة (ترتيب تصاعدي):" : "CUSTOM DRAG/SORT RE-ARRANGER FOR CARDS ORDER:"}
+                          </label>
+                          <p className="text-[10px] text-zinc-450 leading-relaxed">
+                            {isArabic 
+                              ? "استخدم أسهم الترتيب لتغيير تسلسل وأولويات البطاقات داخل قسم التشكيلات. البطاقة الأولى ستكون هي المميزة بالـ Split أو Bento بشكل تلقائي!" 
+                              : "Utilize ordering buttons below to sequence the cards. The top-most card will automatically acquire the massive highlight area in Split and Bento layouts!"}
+                          </p>
+                        </div>
+
+                        {(() => {
+                          const currentSort = homepageContent.collectionsOrder || ['women', 'men', 'kids', 'accessories'];
+                          const displayLabels = {
+                            women: { labelEn: 'Women Collection', labelAr: 'مجموعة ملابس النساء والمحجبات' },
+                            men: { labelEn: 'Men Collection', labelAr: 'أساسيات وتصميمات الموضة للرجال' },
+                            kids: { labelEn: 'Kids Collection', labelAr: 'ملابس الصغار والأطفال الدقيقة' },
+                            accessories: { labelEn: 'Luxe Accessories', labelAr: 'الإكسسوارات والحقائب الفاخرة' }
+                          };
+
+                          return (
+                            <div className="bg-zinc-950 p-4 rounded-2xl border border-zinc-850 flex flex-col gap-2 max-w-xl">
+                              {currentSort.map((key, index) => {
+                                const labels = displayLabels[key as 'women'|'men'|'kids'|'accessories'];
+                                if (!labels) return null;
+                                return (
+                                  <div 
+                                    key={key}
+                                    className="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-3 rounded-xl hover:border-zinc-700 transition"
+                                    style={{ direction: isArabic ? 'rtl' : 'ltr' }}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-[10px] bg-zinc-950 text-amber-400 font-mono font-bold w-6 h-6 flex items-center justify-center rounded-lg border border-zinc-800">
+                                        {index + 1}
+                                      </span>
+                                      <div className="flex flex-col text-right sm:text-right font-sans" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                                        <span className="text-xs font-semibold text-white uppercase tracking-wider">
+                                          {isArabic ? labels.labelAr : labels.labelEn}
+                                        </span>
+                                        <span className="text-[9px] text-zinc-500 font-mono mt-0.5">
+                                          ID: {key}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Action sorters */}
+                                    <div className="flex items-center gap-1.5" dir="ltr">
+                                      <button
+                                        type="button"
+                                        disabled={index === 0}
+                                        onClick={() => {
+                                          if (index === 0) return;
+                                          const newSort = [...currentSort];
+                                          const temp = newSort[index];
+                                          newSort[index] = newSort[index - 1];
+                                          newSort[index - 1] = temp;
+                                          setHomepageContent({ ...homepageContent, collectionsOrder: newSort as any });
+                                        }}
+                                        className="p-1.5 px-3 bg-zinc-800 hover:bg-zinc-750 active:bg-zinc-950 text-zinc-300 disabled:opacity-30 rounded-lg text-xs font-black transition cursor-pointer"
+                                        title="Move Up"
+                                      >
+                                        ▲
+                                      </button>
+                                      <button
+                                        type="button"
+                                        disabled={index === currentSort.length - 1}
+                                        onClick={() => {
+                                          if (index === currentSort.length - 1) return;
+                                          const newSort = [...currentSort];
+                                          const temp = newSort[index];
+                                          newSort[index] = newSort[index + 1];
+                                          newSort[index + 1] = temp;
+                                          setHomepageContent({ ...homepageContent, collectionsOrder: newSort as any });
+                                        }}
+                                        className="p-1.5 px-3 bg-zinc-800 hover:bg-zinc-750 active:bg-zinc-950 text-zinc-300 disabled:opacity-30 rounded-lg text-xs font-black transition cursor-pointer"
+                                        title="Move Down"
+                                      >
+                                        ▼
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-zinc-850 text-left">
                       <button
                         type="submit"
                         disabled={isSavingContent}
