@@ -299,11 +299,13 @@ export default function Header({
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-center transition duration-500 hover:scale-[1.03] group select-none py-1">
+                  <div className="flex flex-col items-center justify-center text-center transition duration-500 hover:scale-[1.05] group select-none py-1">
                     <span 
-                      className="font-serif text-amber-300 tracking-[0.32em] font-bold uppercase leading-none pl-[0.32em]"
+                      className="font-serif tracking-[0.45em] font-extrabold uppercase leading-none pl-[0.45em]"
                       style={{ 
-                        fontSize: logoSize ? `${logoSize * 0.45}px` : '46px',
+                        fontSize: logoSize ? `${logoSize * 0.7}px` : '58px',
+                        color: '#ffe299',
+                        textShadow: '0 2px 10px rgba(0,0,0,0.15)'
                       }}
                     >
                       RAAV

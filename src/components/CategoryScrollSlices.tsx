@@ -157,17 +157,23 @@ export default function CategoryScrollSlices({
                 {/* Left Column: Category Editorial Card */}
                 <div 
                   onClick={() => handleCategoryHeaderClick(cat.id)}
-                  className="w-full lg:w-[38%] relative overflow-hidden rounded-2xl md:rounded-3xl border border-amber-500/10 hover:border-amber-500/35 bg-zinc-950 shadow-[0_4px_30px_rgba(0,0,0,0.4)] hover:shadow-[0_12px_40px_rgba(245,158,11,0.15)] flex flex-col justify-between shrink-0 p-6 sm:p-10 cursor-pointer group/cat min-h-[340px] lg:min-h-[480px] transition-all duration-500 scale-100 hover:scale-[1.015]" 
+                  className="w-full lg:w-[44%] relative overflow-hidden rounded-2xl md:rounded-[2.25rem] border border-amber-500/20 hover:border-amber-400 bg-zinc-950 shadow-[0_10px_40px_rgba(0,0,0,0.6)] hover:shadow-[0_15px_50px_rgba(245,158,11,0.22)] flex flex-col justify-between shrink-0 p-8 sm:p-12 cursor-pointer group/cat min-h-[400px] lg:min-h-[570px] transition-all duration-500 scale-100 hover:scale-[1.025]" 
                   style={{ direction: isArabic ? 'rtl' : 'ltr' }}
                 >
                   {/* Category Background Image */}
                   <div className="absolute inset-0 z-0">
                     <img 
-                      src={optimizeUnsplashUrl(catImage, 600, 70)} 
+                      src={optimizeUnsplashUrl(catImage, 700, 75)} 
                       alt={title} 
                       loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover/cat:scale-[1.08] filter brightness-[0.85] contrast-[1.05]"
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover/cat:scale-[1.10] filter brightness-[0.82] contrast-[1.05]"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.src = cat.id === 'women' ? "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1000" :
+                                              cat.id === 'men' ? "https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&q=80&w=1000" :
+                                              cat.id === 'kids' ? "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&q=80&w=1000" :
+                                              "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=1000";
+                      }}
                     />
                     {/* Dark contrast gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-zinc-950/40" />
@@ -211,7 +217,7 @@ export default function CategoryScrollSlices({
                 </div>
 
                 {/* Right Column: Horizontal Scroll Slices of Products */}
-                <div className="w-full lg:w-[62%] relative flex items-center min-w-0">
+                <div className="w-full lg:w-[56%] relative flex items-center min-w-0">
                   <div 
                     ref={scrollerRef}
                     className="w-full flex gap-3 xs:gap-4 sm:gap-6 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none scroll-smooth"

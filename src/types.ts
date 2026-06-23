@@ -108,6 +108,10 @@ export interface Order {
   cancelReason?: string; // Predefined or custom reason for order cancellation or return
   paymentStatus?: 'pending_verification' | 'verified' | 'rejected'; // State of electronic payment verification
   paymentProofNotes?: string; // Additional customer notes for payment resubmission
+  installments?: { id: string; date: number; amount: number; type: string; notes?: string; }[];
+  materialCosts?: number;
+  tailoringCosts?: number;
+  otherCosts?: number;
 }
 
 export interface SettlementPeriod {
@@ -118,6 +122,14 @@ export interface SettlementPeriod {
   createdAt: number;
   orderIds: string[];
   notes?: string;
+}
+
+export interface BusinessExpense {
+  id: string;
+  category: 'Fabrics & Supplies' | 'Tailor Wages' | 'Atelier Rent & Care' | 'Advertising' | 'Logistics' | 'Other';
+  amount: number;
+  date: number;
+  description: string;
 }
 
 export interface SavedAddress {

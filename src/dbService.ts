@@ -13,7 +13,7 @@ import {
   where
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import { Product, Order, OrderStatus, Review, ShippingPlan, LoyaltyConfig, PaymentConfig, SavedAddress, FavoriteItem, Notification, Conversation, ConversationMessage, SettlementPeriod, SupportPagesContent, HomepageContent } from './types';
+import { Product, Order, OrderStatus, Review, ShippingPlan, LoyaltyConfig, PaymentConfig, SavedAddress, FavoriteItem, Notification, Conversation, ConversationMessage, SettlementPeriod, SupportPagesContent, HomepageContent, BusinessExpense } from './types';
 import { initialProducts } from './initialProducts';
 
 // Collection references
@@ -1375,6 +1375,31 @@ export async function saveHomepageContent(content: HomepageContent): Promise<voi
   try {
     const docRef = doc(db, 'settings', 'homepage');
     await setDoc(docRef, content);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, pathForWrite);
+  }
+}
+
+// === OPERATIONS FOR OPERATIONAL STYLE BUSINESS EXPENSES ===
+export async function getExpenses(): Promise<BusinessExpense[]> {
+  const pathForGet = 'settings/expenses';
+  try {
+    const docRef = doc(db, 'settings', 'expenses');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return (docSnap.data().expenses || []) as BusinessExpense[];
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, pathForGet);
+  }
+  return [];
+}
+
+export async function saveExpenses(expenses: BusinessExpense[]): Promise<void> {
+  const pathForWrite = 'settings/expenses';
+  try {
+    const docRef = doc(db, 'settings', 'expenses');
+    await setDoc(docRef, { expenses });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, pathForWrite);
   }
