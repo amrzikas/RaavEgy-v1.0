@@ -271,11 +271,33 @@ export interface SectionBackdrop {
   textColor?: 'light' | 'dark'; // option to optimize text color contrast automatically
 }
 
+export interface CustomAdBanner {
+  id: string; // 'ad1' | 'ad2' etc.
+  badgeAr?: string;
+  badgeEn?: string;
+  titleAr?: string;
+  titleEn?: string;
+  descAr?: string;
+  descEn?: string;
+  buttonTextAr?: string;
+  buttonTextEn?: string;
+  buttonLink?: string;
+  bannerImage?: string; // image overlay background
+  backgroundColor?: string; // hex colour for background, e.g. #222222
+  textColor?: string; // hex color for text, e.g. #ffffff
+  badgeBgColor?: string; // e.g. bg-amber-500/15 or custom hex color
+  badgeTextColor?: string; // e.g. #e5d3b3
+  buttonBgColor?: string; // e.g. #facc15
+  buttonTextColor?: string; // e.g. #000000
+}
+
 export interface HomepageContent {
   announcementAr: string;
   announcementEn: string;
   announcementImage?: string;
   announcementLink?: string;
+  adBanner1?: CustomAdBanner;
+  adBanner2?: CustomAdBanner;
   heroSlides: HeroSlideInput[];
   categoryImages?: {
     women?: string;
@@ -304,6 +326,25 @@ export interface HomepageContent {
   headerBgColor?: string;
   logoSize?: number;
   logoImage?: string;
+  logoText?: string;
+  logoTextColor?: string;
+  logoTextFont?: string;
   collectionsLayout?: 'split' | 'bento' | 'symmetric' | 'slider';
   collectionsOrder?: ('women' | 'men' | 'kids' | 'accessories')[];
+  heroSectionEnabled?: boolean;
+  heroSectionShowTexts?: boolean;
+  heroSectionTitleAr?: string;
+  heroSectionTitleEn?: string;
+  heroSectionSubAr?: string;
+  heroSectionSubEn?: string;
+  heroSectionBtnTextAr?: string;
+  heroSectionBtnTextEn?: string;
+  heroSectionBtnLink?: string;
+  heroSectionImages?: string[];
+  heroSectionLayout?: 'single' | 'split' | 'grid' | 'slider';
+  heroCarouselEnabled?: boolean;
+  collectionsSectionEnabled?: boolean;
+  trendSectionEnabled?: boolean;
+  categorySlicesSectionEnabled?: boolean;
+  customCoutureSectionEnabled?: boolean;
 }

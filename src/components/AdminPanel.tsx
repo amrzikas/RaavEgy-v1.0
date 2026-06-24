@@ -1618,16 +1618,16 @@ export default function AdminPanel({
                     </p>
                     <div>
                       <h4 className="text-2xl font-black font-mono text-emerald-400">
-                        {totalDeliveredSum.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                        {totalDeliveredSum.toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                       </h4>
                       <div className="mt-2 pt-2 border-t border-zinc-800/60 space-y-1 text-[10.5px] text-zinc-400">
                         <div className="flex justify-between">
                           <span>{isArabic ? "سعر الفساتين المستلمة:" : "Products net value:"}</span>
-                          <span className="font-mono text-zinc-300 font-bold">{totalDeliveredProductsOnly.toLocaleString()} ج.م</span>
+                          <span className="font-mono text-zinc-300 font-bold">{totalDeliveredProductsOnly.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                         </div>
-                        <div className="flex justify-between text-[10px] text-zinc-500">
+                        <div className="flex justify-between text-[10px] text-zinc-500" style={{ fontWeight: 'bold', fontSize: '17px', color: '#f7f2f2', textAlign: 'right' }}>
                            <span>{isArabic ? "مصاريف شحن محصلة:" : "Shipping fees:"}</span>
-                           <span className="font-mono">{totalDeliveredShippingOnly.toLocaleString()} ج.م</span>
+                           <span className="font-mono">{totalDeliveredShippingOnly.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                         </div>
                       </div>
                       <p className="text-[9.5px] text-zinc-500 mt-2">
@@ -1637,14 +1637,14 @@ export default function AdminPanel({
                   </div>
 
                   {/* Bespoke Couture active Pipeline */}
-                  <div className="bg-zinc-900 border border-zinc-805 p-5 rounded-2xl flex flex-col justify-between shadow-sm relative overflow-hidden text-right font-sans">
+                  <div className="bg-zinc-900 border border-zinc-850 p-5 rounded-2xl flex flex-col justify-between shadow-sm relative overflow-hidden text-right font-sans">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-[4rem] pointer-events-none" />
                     <p className="text-[10px] uppercase font-bold text-amber-400 tracking-wider mb-2">
                       {isArabic ? "مبيعات تفصيل الفساتين بالطلب" : "Haute-Couture Bespoke Pipeline"}
                     </p>
                     <div>
                       <h4 className="text-2xl font-black font-mono text-amber-400">
-                        {(bespokeSales + bespokePending).toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                        {(bespokeSales + bespokePending).toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                       </h4>
                       <div className="mt-2 pt-2 border-t border-zinc-800/60 space-y-1 text-[10.5px] text-zinc-400">
                         <div className="flex justify-between">
@@ -1653,7 +1653,7 @@ export default function AdminPanel({
                         </div>
                         <div className="flex justify-between text-[10px] text-zinc-500">
                           <span>{isArabic ? "قيمة العربونات المدفوعة:" : "Escrowed deposits estimated:"}</span>
-                          <span className="font-mono">{Math.round((bespokeSales + bespokePending) * 0.35).toLocaleString()} ج.م</span>
+                          <span className="font-mono">{Math.round((bespokeSales + bespokePending) * 0.35).toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                         </div>
                       </div>
                       <p className="text-[9.5px] text-zinc-500 mt-2">
@@ -1670,16 +1670,16 @@ export default function AdminPanel({
                     </p>
                     <div>
                       <h4 className="text-2xl font-black font-mono text-blue-400">
-                        {readyToWearPending.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                        {readyToWearPending.toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                       </h4>
                       <div className="mt-2 pt-2 border-t border-zinc-800/60 space-y-1 text-[10.5px] text-zinc-400">
                         <div className="flex justify-between">
                           <span>{isArabic ? "أوردرات جاهزة للشحن الحالية:" : "Stock orders pending:"}</span>
-                          <span className="font-mono text-zinc-300 font-bold">{readyToWearOrders.filter(o => ['pending', 'preparing', 'shipped'].includes(o.status)).length} أوردر</span>
+                          <span className="font-mono text-zinc-300 font-bold">{readyToWearOrders.filter(o => ['pending', 'preparing', 'shipped'].includes(o.status)).length} {isArabic ? "أوردر" : "orders"}</span>
                         </div>
                         <div className="flex justify-between text-[10px] text-zinc-500">
                           <span>{isArabic ? "مصاريف شحن أوردرات معلقة:" : "General shipping pending:"}</span>
-                          <span className="font-mono">{totalPendingShippingOnly.toLocaleString()} ج.م</span>
+                          <span className="font-mono">{totalPendingShippingOnly.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                         </div>
                       </div>
                       <p className="text-[9.5px] text-zinc-500 mt-2">
@@ -1696,7 +1696,7 @@ export default function AdminPanel({
                     </p>
                     <div>
                       <h4 className="text-2xl font-black font-mono text-amber-400">
-                        {averageOrderValue.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                        {averageOrderValue.toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                       </h4>
                       <div className="mt-2 pt-2 border-t border-zinc-800/60 space-y-1 text-[10.5px] text-zinc-400">
                         <div className="flex justify-between">
@@ -1705,7 +1705,7 @@ export default function AdminPanel({
                         </div>
                         <div className="flex justify-between text-[10px] text-zinc-500">
                           <span>{isArabic ? "إجمالي الأوردرات الملغاة والمسترجعة:" : "Total cancelled valuation:"}</span>
-                          <span className="font-mono text-red-400">{totalCancelledSum.toLocaleString()} ج.م</span>
+                          <span className="font-mono text-red-400">{totalCancelledSum.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                         </div>
                       </div>
                       <p className="text-[9.5px] text-zinc-500 mt-2">
@@ -1770,7 +1770,7 @@ export default function AdminPanel({
                                 {isArabic ? "الفساتين المخصصة والتفصيل بالطلب:" : "Custom Haute-Couture:"}
                               </p>
                               <p className="text-white font-bold font-mono mt-0.5">
-                                {bespokeSales.toLocaleString()} ج.م <span className="text-amber-400 text-[10px]">({bespokePct}%)</span>
+                                {bespokeSales.toLocaleString()} {isArabic ? "ج.م" : "EGP"} <span className="text-amber-400 text-[10px]">({bespokePct}%)</span>
                               </p>
                               <span className="text-[10px] text-zinc-500">({bespokeOrders.length} {isArabic ? "طلب عبر شات المقاسات الخاصة" : "orders via bespoke chat"})</span>
                             </div>
@@ -1784,7 +1784,7 @@ export default function AdminPanel({
                                 {isArabic ? "الفساتين الجاهزة من الكولكشن (شراء مباشر):" : "RTW Standard Stock Purchases:"}
                               </p>
                               <p className="text-white font-bold font-mono mt-0.5">
-                                {readyToWearSales.toLocaleString()} ج.م <span className="text-blue-400 text-[10px]">({rtwPct}%)</span>
+                                {readyToWearSales.toLocaleString()} {isArabic ? "ج.م" : "EGP"} <span className="text-blue-400 text-[10px]">({rtwPct}%)</span>
                               </p>
                               <span className="text-[10px] text-zinc-500">({readyToWearOrders.length} {isArabic ? "طلب جاهز مباشر بضغطة زر" : "direct checkout orders"})</span>
                             </div>
@@ -1861,7 +1861,7 @@ export default function AdminPanel({
                                   {/* Hover Tooltip */}
                                   <div className="absolute bottom-full mb-2 bg-black text-white text-[9px] font-mono p-1.5 rounded border border-zinc-800 opacity-0 group-hover:opacity-100 transition duration-200 pointer-events-none z-10 whitespace-nowrap">
                                     <div>{isArabic ? "الأوردرات: " : "Orders: "}{item.count}</div>
-                                    <div>{isArabic ? "المحصل: " : "Cleared: "}{item.amount.toLocaleString()} ج.م</div>
+                                    <div>{isArabic ? "المحصل: " : "Cleared: "}{item.amount.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</div>
                                   </div>
 
                                   <div className="w-full bg-zinc-850 hover:bg-amber-400/80 rounded-t-lg transition-all duration-300 relative overflow-hidden" style={{ height: barHeight }}>
@@ -1922,7 +1922,7 @@ export default function AdminPanel({
                                   {item.qty} {isArabic ? "مباع" : "Units"}
                                 </span>
                                 <span className="text-[10px] text-zinc-400 font-mono mt-0.5 block">
-                                  {item.revenue.toLocaleString()} ج.م
+                                  {item.revenue.toLocaleString()} {isArabic ? "ج.م" : "EGP"}
                                 </span>
                               </div>
                             </div>
@@ -2430,7 +2430,1023 @@ export default function AdminPanel({
                       )}
                     </div>
 
-                    <h4 className="text-zinc-200 font-bold border-b border-zinc-800 pb-2 pt-4 text-sm">{isArabic ? "سلايد صور وخلفيات الكاروسيل بمقدمة المتجر" : "Frontpage Landscape Carousel Slides"}</h4>
+                    {/* DYNAMIC PROMOTIONAL BANNERS SECTOR */}
+                    <div className="border-t border-zinc-800 pt-6 mt-6">
+                      <h4 className="text-zinc-150 font-extrabold pb-1.5 text-sm flex items-center gap-2">
+                        <span className="p-1 rounded bg-amber-500/10 text-amber-400">✦</span>
+                        <span>{isArabic ? "محرر بنرات الإعلانات والخصومات المتقدمة" : "Dynamic Promotional/Ad Banners Manager"}</span>
+                      </h4>
+                      <p className="text-[11px] text-zinc-500 mb-6 font-sans">
+                        {isArabic 
+                          ? "تحكم بشكل كامل في البنرات الإعلانية التفاعلية المنتشرة بصفحتك الرئيسية: عدل شاراتها، نصوصها باللغتين، الأزرار، روابط التوصيل، الصور، وألوان الخلفيات والخطوط بدقة فائقة."
+                          : "Fully configure interactive card display banners scattered across the homepage layout. Personalize colors, buttons, target actions, imagery and titles perfectly."}
+                      </p>
+
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                        {/* BANNER 1 (Under Hero Carousel) */}
+                        <div className="p-5 bg-zinc-950/80 border border-zinc-850 rounded-2xl space-y-4 font-sans relative">
+                          <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-yellow-400/10 text-yellow-400 text-[10px] px-2.5 py-0.5 rounded font-bold font-mono">
+                            <span>BANNER #1</span>
+                          </div>
+                          <h5 className="text-xs font-black text-zinc-200 uppercase tracking-widest pb-2 border-b border-zinc-900">
+                            {isArabic ? "البانر الإعلاني الأول (أسفل سلايدر الهيرو)" : "PROMOTIONAL AD CARD 1 (BELOW SLIDER)"}
+                          </h5>
+
+                          {/* Badge settings */}
+                          <div className="grid grid-cols-2 gap-3 pb-3 border-b border-zinc-900/50">
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "شارات الإعلان (Ar)" : "Badge Text (Ar)"}</label>
+                              <input
+                                type="text"
+                                value={homepageContent.adBanner1?.badgeAr || ''}
+                                onChange={(e) => {
+                                  const ad1 = homepageContent.adBanner1 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner1: { ...ad1, id: 'ad1', badgeAr: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "شارات الإعلان (En)" : "Badge Text (En)"}</label>
+                              <input
+                                type="text"
+                                value={homepageContent.adBanner1?.badgeEn || ''}
+                                onChange={(e) => {
+                                  const ad1 = homepageContent.adBanner1 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner1: { ...ad1, id: 'ad1', badgeEn: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-805 text-xs text-white p-2 rounded-lg outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Main texts */}
+                          <div className="space-y-3 pb-3 border-b border-zinc-900/50">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان بالعربية" : "Title (Ar)"}</label>
+                                <input
+                                  type="text"
+                                  value={homepageContent.adBanner1?.titleAr || ''}
+                                  onChange={(e) => {
+                                    const ad1 = homepageContent.adBanner1 || {};
+                                    setHomepageContent({
+                                      ...homepageContent,
+                                      adBanner1: { ...ad1, id: 'ad1', titleAr: e.target.value }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان بالإنجليزية" : "Title (En)"}</label>
+                                <input
+                                  type="text"
+                                  value={homepageContent.adBanner1?.titleEn || ''}
+                                  onChange={(e) => {
+                                    const ad1 = homepageContent.adBanner1 || {};
+                                    setHomepageContent({
+                                      ...homepageContent,
+                                      adBanner1: { ...ad1, id: 'ad1', titleEn: e.target.value }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف بالعربية" : "Description (Ar)"}</label>
+                                <textarea
+                                  value={homepageContent.adBanner1?.descAr || ''}
+                                  rows={2}
+                                  onChange={(e) => {
+                                    const ad1 = homepageContent.adBanner1 || {};
+                                    setHomepageContent({
+                                      ...homepageContent,
+                                      adBanner1: { ...ad1, id: 'ad1', descAr: e.target.value }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none resize-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف بالإنجليزية" : "Description (En)"}</label>
+                                <textarea
+                                  value={homepageContent.adBanner1?.descEn || ''}
+                                  rows={2}
+                                  onChange={(e) => {
+                                    const ad1 = homepageContent.adBanner1 || {};
+                                    setHomepageContent({
+                                      ...homepageContent,
+                                      adBanner1: { ...ad1, id: 'ad1', descEn: e.target.value }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none resize-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Button text & link */}
+                          <div className="grid grid-cols-3 gap-3 pb-3 border-b border-zinc-900/50">
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "زر بالعربية" : "Btn Text (Ar)"}</label>
+                              <input
+                                type="text"
+                                value={homepageContent.adBanner1?.buttonTextAr || ''}
+                                onChange={(e) => {
+                                  const ad1 = homepageContent.adBanner1 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner1: { ...ad1, id: 'ad1', buttonTextAr: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "زر بالإنجليزية" : "Btn Text (En)"}</label>
+                              <input
+                                type="text"
+                                value={homepageContent.adBanner1?.buttonTextEn || ''}
+                                onChange={(e) => {
+                                  const ad1 = homepageContent.adBanner1 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner1: { ...ad1, id: 'ad1', buttonTextEn: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "رابط زر الأوردر" : "Button Target url"}</label>
+                              <input
+                                type="text"
+                                placeholder="custom-couture / shop"
+                                value={homepageContent.adBanner1?.buttonLink || ''}
+                                onChange={(e) => {
+                                  const ad1 = homepageContent.adBanner1 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner1: { ...ad1, id: 'ad1', buttonLink: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Image upload settings */}
+                          <div className="pb-3 border-b border-zinc-900/50 space-y-2">
+                            <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-0.5">{isArabic ? "صورة خلفية البانر الإعلاني" : "Banner Target Image overlay"}</label>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="text"
+                                placeholder="https://unsplash.com/..."
+                                value={homepageContent.adBanner1?.bannerImage || ''}
+                                onChange={(e) => {
+                                  const ad1 = homepageContent.adBanner1 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner1: { ...ad1, id: 'ad1', bannerImage: e.target.value }
+                                  });
+                                }}
+                                className="flex-1 bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none font-mono"
+                              />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                id="ad1-file-upload"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      const ad1 = homepageContent.adBanner1 || {};
+                                      setHomepageContent({
+                                        ...homepageContent,
+                                        adBanner1: { ...ad1, id: 'ad1', bannerImage: reader.result as string }
+                                      });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                              <label
+                                htmlFor="ad1-file-upload"
+                                className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 transition font-bold text-[10.5px] rounded-lg text-amber-400 cursor-pointer text-center"
+                              >
+                                {isArabic ? "رفع" : "Upload"}
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Visual overrides segment (background, text, badge, button colors) */}
+                          <div className="space-y-3">
+                            <span className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{isArabic ? "ألوان وتفاصيل البانر الإعلاني البصرية" : "Banner Aesthetics & Colors"}</span>
+                            <div className="grid grid-cols-2 xs:grid-cols-3 gap-3">
+                              {/* Background color */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "لون خلفية البانر" : "Card Background"}</label>
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                    <input 
+                                      type="color" 
+                                      value={homepageContent.adBanner1?.backgroundColor && homepageContent.adBanner1?.backgroundColor !== 'transparent' ? homepageContent.adBanner1.backgroundColor : '#18181b'} 
+                                      onChange={(e) => {
+                                        const ad1 = homepageContent.adBanner1 || {};
+                                        setHomepageContent({ ...homepageContent, adBanner1: { ...ad1, backgroundColor: e.target.value } });
+                                      }}
+                                      className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                    />
+                                    <span className="text-[10px] text-zinc-400 font-mono text-ellipsis overflow-hidden whitespace-nowrap">{homepageContent.adBanner1?.backgroundColor || 'transparent'}</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const ad1 = homepageContent.adBanner1 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner1: { ...ad1, backgroundColor: 'transparent' } });
+                                    }}
+                                    className="text-[9px] text-amber-400 hover:text-amber-300 font-bold underline text-right cursor-pointer"
+                                  >
+                                    {isArabic ? "جعله شفافاً ✕" : "Make Transparent ✕"}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Base Text Color */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "لون نصوص العناوين" : "Hero Text Color"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner1?.textColor || '#ffffff'} 
+                                    onChange={(e) => {
+                                      const ad1 = homepageContent.adBanner1 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner1: { ...ad1, textColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner1?.textColor || '#ffffff'}</span>
+                                </div>
+                              </div>
+
+                              {/* Button background */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "خلفية زر التحويل" : "Button Background"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner1?.buttonBgColor || '#fbbf24'} 
+                                    onChange={(e) => {
+                                      const ad1 = homepageContent.adBanner1 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner1: { ...ad1, buttonBgColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner1?.buttonBgColor || '#fbbf24'}</span>
+                                </div>
+                              </div>
+
+                              {/* Button text */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "لون خط زر التحويل" : "Button Label Color"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner1?.buttonTextColor || '#09090b'} 
+                                    onChange={(e) => {
+                                      const ad1 = homepageContent.adBanner1 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner1: { ...ad1, buttonTextColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner1?.buttonTextColor || '#09090b'}</span>
+                                </div>
+                              </div>
+
+                              {/* Badge background color */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "خلفية شارة العنوان" : "Badge Background"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner1?.badgeBgColor || '#fbbf24'} 
+                                    onChange={(e) => {
+                                      const ad1 = homepageContent.adBanner1 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner1: { ...ad1, badgeBgColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner1?.badgeBgColor || '#fbbf24'}</span>
+                                </div>
+                              </div>
+
+                              {/* Badge text color */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "لون خط شارة العنوان" : "Badge Text Color"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner1?.badgeTextColor || '#fef3c7'} 
+                                    onChange={(e) => {
+                                      const ad1 = homepageContent.adBanner1 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner1: { ...ad1, badgeTextColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner1?.badgeTextColor || '#fef3c7'}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* BANNER 2 (Under Boutique Collections) */}
+                        <div className="p-5 bg-zinc-950/80 border border-zinc-850 rounded-2xl space-y-4 font-sans relative">
+                          <div className="absolute top-4 left-4 flex items-center gap-1.5 bg-cyan-400/10 text-cyan-400 text-[10px] px-2.5 py-0.5 rounded font-bold font-mono">
+                            <span>BANNER #2</span>
+                          </div>
+                          <h5 className="text-xs font-black text-zinc-200 uppercase tracking-widest pb-2 border-b border-zinc-900">
+                            {isArabic ? "البانر الإعلاني الثاني (أسفل التصنيفات الرئيسية)" : "PROMOTIONAL AD CARD 2 (BELOW COLLECTIONS)"}
+                          </h5>
+
+                          {/* Badge settings */}
+                          <div className="grid grid-cols-2 gap-3 pb-3 border-b border-zinc-900/50">
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "شارات الإعلان (Ar)" : "Badge Text (Ar)"}</label>
+                              <input
+                                type="text"
+                                value={homepageContent.adBanner2?.badgeAr || ''}
+                                onChange={(e) => {
+                                  const ad2 = homepageContent.adBanner2 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner2: { ...ad2, id: 'ad2', badgeAr: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "شارات الإعلان (En)" : "Badge Text (En)"}</label>
+                              <input
+                                type="text"
+                                value={homepageContent.adBanner2?.badgeEn || ''}
+                                onChange={(e) => {
+                                  const ad2 = homepageContent.adBanner2 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner2: { ...ad2, id: 'ad2', badgeEn: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-808 text-xs text-white p-2 rounded-lg outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Main texts */}
+                          <div className="space-y-3 pb-3 border-b border-zinc-900/50">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان بالعربية" : "Title (Ar)"}</label>
+                                <input
+                                  type="text"
+                                  value={homepageContent.adBanner2?.titleAr || ''}
+                                  onChange={(e) => {
+                                    const ad2 = homepageContent.adBanner2 || {};
+                                    setHomepageContent({
+                                      ...homepageContent,
+                                      adBanner2: { ...ad2, id: 'ad2', titleAr: e.target.value }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان بالإنجليزية" : "Title (En)"}</label>
+                                <input
+                                  type="text"
+                                  value={homepageContent.adBanner2?.titleEn || ''}
+                                  onChange={(e) => {
+                                    const ad2 = homepageContent.adBanner2 || {};
+                                    setHomepageContent({
+                                      ...homepageContent,
+                                      adBanner2: { ...ad2, id: 'ad2', titleEn: e.target.value }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف بالعربية" : "Description (Ar)"}</label>
+                                <textarea
+                                  value={homepageContent.adBanner2?.descAr || ''}
+                                  rows={2}
+                                  onChange={(e) => {
+                                    const ad2 = homepageContent.adBanner2 || {};
+                                    setHomepageContent({
+                                      ...homepageContent,
+                                      adBanner2: { ...ad2, id: 'ad2', descAr: e.target.value }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none resize-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف بالإنجليزية" : "Description (En)"}</label>
+                                <textarea
+                                  value={homepageContent.adBanner2?.descEn || ''}
+                                  rows={2}
+                                  onChange={(e) => {
+                                    const ad2 = homepageContent.adBanner2 || {};
+                                    setHomepageContent({
+                                      ...homepageContent,
+                                      adBanner2: { ...ad2, id: 'ad2', descEn: e.target.value }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none resize-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Button text & link */}
+                          <div className="grid grid-cols-3 gap-3 pb-3 border-b border-zinc-900/50">
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "زر بالعربية" : "Btn Text (Ar)"}</label>
+                              <input
+                                type="text"
+                                value={homepageContent.adBanner2?.buttonTextAr || ''}
+                                onChange={(e) => {
+                                  const ad2 = homepageContent.adBanner2 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner2: { ...ad2, id: 'ad2', buttonTextAr: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "زر بالإنجليزية" : "Btn Text (En)"}</label>
+                              <input
+                                type="text"
+                                value={homepageContent.adBanner2?.buttonTextEn || ''}
+                                onChange={(e) => {
+                                  const ad2 = homepageContent.adBanner2 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner2: { ...ad2, id: 'ad2', buttonTextEn: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "رابط زر الأوردر" : "Button Target url"}</label>
+                              <input
+                                type="text"
+                                placeholder="#shop / women"
+                                value={homepageContent.adBanner2?.buttonLink || ''}
+                                onChange={(e) => {
+                                  const ad2 = homepageContent.adBanner2 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner2: { ...ad2, id: 'ad2', buttonLink: e.target.value }
+                                  });
+                                }}
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Image upload settings */}
+                          <div className="pb-3 border-b border-zinc-900/50 space-y-2">
+                            <label className="block text-[9.5px] font-bold text-zinc-500 uppercase mb-0.5">{isArabic ? "صورة خلفية البانر الإعلاني" : "Banner Target Image overlay"}</label>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="text"
+                                placeholder="https://unsplash.com/..."
+                                value={homepageContent.adBanner2?.bannerImage || ''}
+                                onChange={(e) => {
+                                  const ad2 = homepageContent.adBanner2 || {};
+                                  setHomepageContent({
+                                    ...homepageContent,
+                                    adBanner2: { ...ad2, id: 'ad2', bannerImage: e.target.value }
+                                  });
+                                }}
+                                className="flex-1 bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none font-mono"
+                              />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                id="ad2-file-upload"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      const ad2 = homepageContent.adBanner2 || {};
+                                      setHomepageContent({
+                                        ...homepageContent,
+                                        adBanner2: { ...ad2, id: 'ad2', bannerImage: reader.result as string }
+                                      });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                              <label
+                                htmlFor="ad2-file-upload"
+                                className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 transition font-bold text-[10.5px] rounded-lg text-amber-400 cursor-pointer text-center"
+                              >
+                                {isArabic ? "رفع" : "Upload"}
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Visual overrides segment (background, text, badge, button colors) */}
+                          <div className="space-y-3">
+                            <span className="block text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{isArabic ? "ألوان وتفاصيل البانر الإعلاني البصرية" : "Banner Aesthetics & Colors"}</span>
+                            <div className="grid grid-cols-2 xs:grid-cols-3 gap-3">
+                              {/* Background color */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "لون خلفية البانر" : "Card Background"}</label>
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                    <input 
+                                      type="color" 
+                                      value={homepageContent.adBanner2?.backgroundColor && homepageContent.adBanner2?.backgroundColor !== 'transparent' ? homepageContent.adBanner2.backgroundColor : '#1b1c19'} 
+                                      onChange={(e) => {
+                                        const ad2 = homepageContent.adBanner2 || {};
+                                        setHomepageContent({ ...homepageContent, adBanner2: { ...ad2, backgroundColor: e.target.value } });
+                                      }}
+                                      className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                    />
+                                    <span className="text-[10px] text-zinc-400 font-mono text-ellipsis overflow-hidden whitespace-nowrap">{homepageContent.adBanner2?.backgroundColor || 'transparent'}</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const ad2 = homepageContent.adBanner2 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner2: { ...ad2, backgroundColor: 'transparent' } });
+                                    }}
+                                    className="text-[9px] text-amber-400 hover:text-amber-300 font-bold underline text-right cursor-pointer"
+                                  >
+                                    {isArabic ? "جعله شفافاً ✕" : "Make Transparent ✕"}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Base Text Color */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "لون نصوص العناوين" : "Hero Text Color"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner2?.textColor || '#ffffff'} 
+                                    onChange={(e) => {
+                                      const ad2 = homepageContent.adBanner2 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner2: { ...ad2, textColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner2?.textColor || '#ffffff'}</span>
+                                </div>
+                              </div>
+
+                              {/* Button background */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "خلفية زر التحويل" : "Button Background"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner2?.buttonBgColor || '#09090b'} 
+                                    onChange={(e) => {
+                                      const ad2 = homepageContent.adBanner2 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner2: { ...ad2, buttonBgColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner2?.buttonBgColor || '#09090b'}</span>
+                                </div>
+                              </div>
+
+                              {/* Button text */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "لون خط زر التحويل" : "Button Label Color"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner2?.buttonTextColor || '#ffffff'} 
+                                    onChange={(e) => {
+                                      const ad2 = homepageContent.adBanner2 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner2: { ...ad2, buttonTextColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner2?.buttonTextColor || '#ffffff'}</span>
+                                </div>
+                              </div>
+
+                              {/* Badge background color */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "خلفية شارة العنوان" : "Badge Background"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner2?.badgeBgColor || '#fbbf24'} 
+                                    onChange={(e) => {
+                                      const ad2 = homepageContent.adBanner2 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner2: { ...ad2, badgeBgColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner2?.badgeBgColor || '#fbbf24'}</span>
+                                </div>
+                              </div>
+
+                              {/* Badge text color */}
+                              <div>
+                                <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "لون خط شارة العنوان" : "Badge Text Color"}</label>
+                                <div className="flex items-center gap-1.5 bg-zinc-905 p-1 rounded-lg border border-zinc-800">
+                                  <input 
+                                    type="color" 
+                                    value={homepageContent.adBanner2?.badgeTextColor || '#fef3c7'} 
+                                    onChange={(e) => {
+                                      const ad2 = homepageContent.adBanner2 || {};
+                                      setHomepageContent({ ...homepageContent, adBanner2: { ...ad2, badgeTextColor: e.target.value } });
+                                    }}
+                                    className="w-6 h-6 rounded bg-transparent border-0 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] text-zinc-400 font-mono">{homepageContent.adBanner2?.badgeTextColor || '#fef3c7'}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* HOMEPAGE SECTIONS VISIBILITY CONTROLLER */}
+                    <div className="bg-zinc-950/80 border border-zinc-850 p-6 rounded-2xl space-y-4 mt-6">
+                      <div className="border-b border-zinc-800 pb-3">
+                        <h4 className="text-zinc-100 font-bold text-sm">
+                          {isArabic ? "⚙️ التحكم بظهور أقسام الصفحة الرئيسية" : "⚙️ Homepage Sections Visibility Control"}
+                        </h4>
+                        <p className="text-[10px] text-zinc-500">
+                          {isArabic 
+                            ? "قم بتفعيل أو إلغاء تفعيل أي قسم من أقسام المتجر في الصفحة الرئيسية حسب رغبتك" 
+                            : "Easily show or hide any of your store's homepage sections as you prefer"}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {/* 1. Hero Carousel Ticker */}
+                        <div className="bg-zinc-900/40 border border-zinc-850/60 p-3 rounded-xl flex items-center justify-between">
+                          <span className="text-xs text-zinc-300 font-medium">
+                            {isArabic ? "شريط التشكيلات المصغر" : "Mini Carousel Looks"}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer select-none">
+                            <input 
+                              type="checkbox" 
+                              checked={homepageContent.heroCarouselEnabled !== false} 
+                              onChange={(e) => setHomepageContent({ ...homepageContent, heroCarouselEnabled: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-400"></div>
+                          </label>
+                        </div>
+
+                        {/* 2. The Collections Section */}
+                        <div className="bg-zinc-900/40 border border-zinc-850/60 p-3 rounded-xl flex items-center justify-between">
+                          <span className="text-xs text-zinc-300 font-medium">
+                            {isArabic ? "أقسام التشكيلات الرئيسية" : "Main Collections Grid"}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer select-none">
+                            <input 
+                              type="checkbox" 
+                              checked={homepageContent.collectionsSectionEnabled !== false} 
+                              onChange={(e) => setHomepageContent({ ...homepageContent, collectionsSectionEnabled: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-400"></div>
+                          </label>
+                        </div>
+
+                        {/* 3. Trend Pieces */}
+                        <div className="bg-zinc-900/40 border border-zinc-850/60 p-3 rounded-xl flex items-center justify-between">
+                          <span className="text-xs text-zinc-300 font-medium">
+                            {isArabic ? "قسم القطع الأكثر رواجاً" : "Trend Pieces Slider"}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer select-none">
+                            <input 
+                              type="checkbox" 
+                              checked={homepageContent.trendSectionEnabled !== false} 
+                              onChange={(e) => setHomepageContent({ ...homepageContent, trendSectionEnabled: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-400"></div>
+                          </label>
+                        </div>
+
+                        {/* 4. Category Scroll Slices */}
+                        <div className="bg-zinc-900/40 border border-zinc-850/60 p-3 rounded-xl flex items-center justify-between">
+                          <span className="text-xs text-zinc-300 font-medium">
+                            {isArabic ? "قسم استعراض الفئات والمجموعات" : "Category Scroll Sections"}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer select-none">
+                            <input 
+                              type="checkbox" 
+                              checked={homepageContent.categorySlicesSectionEnabled !== false} 
+                              onChange={(e) => setHomepageContent({ ...homepageContent, categorySlicesSectionEnabled: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-400"></div>
+                          </label>
+                        </div>
+
+                        {/* 5. Custom Couture Request Form */}
+                        <div className="bg-zinc-900/40 border border-zinc-850/60 p-3 rounded-xl flex items-center justify-between">
+                          <span className="text-xs text-zinc-300 font-medium">
+                            {isArabic ? "نموذج التفصيل والخياطة" : "Bespoke Couture Form"}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer select-none">
+                            <input 
+                              type="checkbox" 
+                              checked={homepageContent.customCoutureSectionEnabled !== false} 
+                              onChange={(e) => setHomepageContent({ ...homepageContent, customCoutureSectionEnabled: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-400"></div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* NEW MAIN HERO SECTION SETUP */}
+                    <div className="bg-zinc-950/80 border border-zinc-850 p-6 rounded-2xl space-y-6 mt-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-3 gap-3">
+                        <div className="space-y-1">
+                          <h4 className="text-zinc-100 font-bold text-sm">
+                            {isArabic ? "✦ إعدادات قسم الهيرو الرئيسي الجديد" : "✦ New Main Hero Section Setup"}
+                          </h4>
+                          <p className="text-[10px] text-zinc-500">
+                            {isArabic 
+                              ? "هذا القسم يظهر في مقدمة الصفحة الرئيسية قبل شريط التشكيلات المصغر" 
+                              : "This section appears at the top of the homepage before the mini lookbook ticker"}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4">
+                          <label className="relative inline-flex items-center cursor-pointer select-none">
+                            <input 
+                              type="checkbox" 
+                              checked={homepageContent.heroSectionEnabled !== false} 
+                              onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionEnabled: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-400"></div>
+                            <span className="ms-1.5 text-[11px] font-bold text-zinc-400">
+                              {isArabic ? "تفعيل القسم" : "Enable Section"}
+                            </span>
+                          </label>
+
+                          <label className="relative inline-flex items-center cursor-pointer select-none">
+                            <input 
+                              type="checkbox" 
+                              checked={homepageContent.heroSectionShowTexts !== false} 
+                              onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionShowTexts: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-350 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-400"></div>
+                            <span className="ms-1.5 text-[11px] font-bold text-zinc-400">
+                              {isArabic ? "عرض النصوص" : "Show Texts"}
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {homepageContent.heroSectionEnabled !== false && (
+                        <div className="space-y-6">
+                          {/* Layout Select */}
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                              {isArabic ? "تصميم وتخطيط قسم الهيرو" : "Hero Section Design Layout"}
+                            </label>
+                            <select
+                              value={homepageContent.heroSectionLayout || 'split'}
+                              onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionLayout: e.target.value as any })}
+                              className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 cursor-pointer"
+                            >
+                              <option value="split">{isArabic ? "كولاج منقسم (Split Screen Collage) - كلاسيكي فخم" : "Split Collage - Classical Luxury"}</option>
+                              <option value="slider">{isArabic ? "سلايدر ملء الشاشة (Full-screen ambient slider)" : "Full-screen Ambient Slider"}</option>
+                              <option value="grid">{isArabic ? "شبكة بينتو المبتكرة (Bento Grid Collage)" : "Bento Grid Collage"}</option>
+                              <option value="single">{isArabic ? "بانر موحد بخلفية عريضة (Single luxury banner)" : "Single Luxury Banner"}</option>
+                            </select>
+                          </div>
+
+                          {/* Titles Input */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                                {isArabic ? "العنوان الرئيسي (عربي)" : "Hero Main Title (AR)"}
+                              </label>
+                              <input
+                                type="text"
+                                value={homepageContent.heroSectionTitleAr || ''}
+                                onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionTitleAr: e.target.value })}
+                                placeholder="فخامة ترتقي بحضورك."
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                                {isArabic ? "العنوان الرئيسي (إنجليزي)" : "Hero Main Title (EN)"}
+                              </label>
+                              <input
+                                type="text"
+                                value={homepageContent.heroSectionTitleEn || ''}
+                                onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionTitleEn: e.target.value })}
+                                placeholder="Luxury Tailored to Your Presence."
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Subtitles Input */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                                {isArabic ? "الوصف والنبذة (عربي)" : "Hero Description (AR)"}
+                              </label>
+                              <textarea
+                                value={homepageContent.heroSectionSubAr || ''}
+                                onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionSubAr: e.target.value })}
+                                placeholder="اكتشف روعة التفصيل الخاص والقطع الراقية المنتقاة بعناية..."
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl h-20 outline-none resize-none focus:border-amber-400"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                                {isArabic ? "الوصف والنبذة (إنجليزي)" : "Hero Description (EN)"}
+                              </label>
+                              <textarea
+                                value={homepageContent.heroSectionSubEn || ''}
+                                onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionSubEn: e.target.value })}
+                                placeholder="Explore our premium custom bespoke atelier and ready-to-wear lines..."
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl h-20 outline-none resize-none focus:border-amber-400"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Button CTA settings */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                                {isArabic ? "نص الزر (عربي)" : "Button CTA Text (AR)"}
+                              </label>
+                              <input
+                                type="text"
+                                value={homepageContent.heroSectionBtnTextAr || ''}
+                                onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionBtnTextAr: e.target.value })}
+                                placeholder="استكشف الكولكشن"
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                                {isArabic ? "نص الزر (إنجليزي)" : "Button CTA Text (EN)"}
+                              </label>
+                              <input
+                                type="text"
+                                value={homepageContent.heroSectionBtnTextEn || ''}
+                                onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionBtnTextEn: e.target.value })}
+                                placeholder="EXPLORE THE COLLECTION"
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                                {isArabic ? "رابط الزر أو القسم المستهدف" : "Button Redirection Path"}
+                              </label>
+                              <select
+                                value={homepageContent.heroSectionBtnLink || 'all'}
+                                onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionBtnLink: e.target.value })}
+                                className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 cursor-pointer"
+                              >
+                                <option value="all">{isArabic ? "كل المنتجات (All Products)" : "All Products"}</option>
+                                <option value="women">{isArabic ? "ملابس نسائية (Women)" : "Women Category"}</option>
+                                <option value="men">{isArabic ? "ملابس رجالية (Men)" : "Men Category"}</option>
+                                <option value="kids">{isArabic ? "ملابس أطفال (Kids)" : "Kids Category"}</option>
+                                <option value="accessories">{isArabic ? "إكسسوارات وحقائب (Accessories)" : "Accessories Category"}</option>
+                                <option value="custom">{isArabic ? "فورم التفصيل والطلب المخصص (Couture Request)" : "Couture Design Request"}</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Hero Images Management with Upload/Link options */}
+                          <div className="space-y-4">
+                            <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-900 pb-1.5">
+                              📸 {isArabic ? "إدارة صور الهيرو الرئيسي (الروابط أو التحميل)" : "Hero Images Manager (Links or Device Uploads)"}
+                            </label>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {[0, 1, 2, 3].map((imgIdx) => {
+                                const currentImages = homepageContent.heroSectionImages || [];
+                                const imageUrl = currentImages[imgIdx] || '';
+
+                                return (
+                                  <div key={imgIdx} className="bg-zinc-900/50 border border-zinc-850 p-4 rounded-xl space-y-3">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-[10px] font-bold text-amber-500 font-mono">IMAGE #{imgIdx + 1}</span>
+                                      {imageUrl && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const updated = [...currentImages];
+                                            updated[imgIdx] = '';
+                                            setHomepageContent({ ...homepageContent, heroSectionImages: updated });
+                                          }}
+                                          className="text-[9px] text-rose-400 hover:text-rose-300 font-bold uppercase transition"
+                                        >
+                                          {isArabic ? "حذف الصورة" : "Clear"}
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    {/* Thumbnail preview if exists */}
+                                    {imageUrl && (
+                                      <div className="w-full h-24 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950">
+                                        <img src={imageUrl} alt={`Hero ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                                      </div>
+                                    )}
+
+                                    {/* Link input */}
+                                    <div>
+                                      <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                                        {isArabic ? "رابط الصورة الخارجي" : "External Image Link / URL"}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={imageUrl.startsWith('data:') ? '' : imageUrl}
+                                        onChange={(e) => {
+                                          const updated = [...currentImages];
+                                          updated[imgIdx] = e.target.value;
+                                          setHomepageContent({ ...homepageContent, heroSectionImages: updated });
+                                        }}
+                                        placeholder="https://images.unsplash.com/... or enter image link"
+                                        className="w-full bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-300 p-2 rounded-lg outline-none font-mono focus:border-amber-400"
+                                      />
+                                    </div>
+
+                                    {/* File uploader */}
+                                    <div>
+                                      <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                                        {isArabic ? "أو رفع ملف من جهازك" : "Or Upload Image from Device"}
+                                      </label>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                              const updated = [...currentImages];
+                                              updated[imgIdx] = reader.result as string;
+                                              setHomepageContent({ ...homepageContent, heroSectionImages: updated });
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                        className="w-full text-[10px] text-zinc-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-zinc-800 file:text-amber-400 hover:file:bg-zinc-750 cursor-pointer"
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <h4 className="text-zinc-200 font-bold border-b border-zinc-800 pb-2 pt-8 text-sm">{isArabic ? "سلايد صور وخلفيات الكاروسيل بمقدمة المتجر" : "Frontpage Landscape Carousel Slides"}</h4>
                     <div className="space-y-6">
                       {homepageContent.heroSlides.map((slide, idx) => (
                         <div key={slide.id} className="p-4 bg-zinc-950 border border-zinc-850 rounded-xl space-y-4">
@@ -3110,12 +4126,73 @@ export default function AdminPanel({
                               ...homepageContent, 
                               headerBgColor: '#353630', 
                               logoSize: 80, 
-                              logoImage: '' 
+                              logoImage: '',
+                              logoText: '',
+                              logoTextColor: '',
+                              logoTextFont: ''
                             })}
                             className="w-full bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 hover:text-white transition py-2 px-3 rounded-xl text-[10px] uppercase font-bold"
                           >
                             {isArabic ? "إعادة تعيين الافتراضيات" : "Reset Styling Defaults"}
                           </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-zinc-850/50 pt-4">
+                        {/* Logo Word / Text */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                            {isArabic ? "نص الشعار (إذا لم يكن صورة)" : "Logo Word/Text (if no image)"}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. RAAV"
+                            value={homepageContent.logoText || ''}
+                            onChange={(e) => setHomepageContent({ ...homepageContent, logoText: e.target.value })}
+                            className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-sans"
+                          />
+                        </div>
+
+                        {/* Logo Text Color */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                            {isArabic ? "لون نص الشعار" : "Logo Text Color"}
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              value={homepageContent.logoTextColor || '#ffe299'}
+                              onChange={(e) => setHomepageContent({ ...homepageContent, logoTextColor: e.target.value })}
+                              className="h-9 w-12 bg-zinc-950 border border-zinc-800 rounded-lg p-1 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              placeholder="#ffe299"
+                              value={homepageContent.logoTextColor || ''}
+                              onChange={(e) => setHomepageContent({ ...homepageContent, logoTextColor: e.target.value })}
+                              className="flex-1 bg-zinc-950 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Logo Text Font Style */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                            {isArabic ? "خط نص الشعار" : "Logo Text Font Style"}
+                          </label>
+                          <select
+                            value={homepageContent.logoTextFont || 'font-serif'}
+                            onChange={(e) => setHomepageContent({ ...homepageContent, logoTextFont: e.target.value })}
+                            className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-sans cursor-pointer"
+                          >
+                            <option value="font-serif">Serif (Times New Roman / Standard Traditional)</option>
+                            <option value="font-sans">Sans-Serit (Inter / Modern Clean)</option>
+                            <option value="font-mono">Monospace (JetBrains Mono / Tech Brutalist)</option>
+                            <option value="Playfair Display">Playfair Display (Premium Editorial)</option>
+                            <option value="Space Grotesk">Space Grotesk (Tech Forward)</option>
+                            <option value="Outfit">Outfit (Luxurious Sans)</option>
+                            <option value="Montserrat">Montserrat (Geometric Modern)</option>
+                          </select>
                         </div>
                       </div>
 
@@ -4176,7 +5253,7 @@ export default function AdminPanel({
                                   </div>
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap font-mono text-amber-400 font-extrabold">
-                                  {prod.price} ج.م
+                                  {prod.price} {isArabic ? "ج.م" : "EGP"}
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap">
                                   <button
@@ -4312,7 +5389,7 @@ export default function AdminPanel({
 
                             {/* Total price received */}
                             <span className="text-zinc-200 font-black font-mono text-sm sm:text-base">
-                              {ord.total} ج.م
+                              {ord.total} {isArabic ? "ج.م" : "EGP"}
                             </span>
                           </div>
                         </div>
@@ -4348,7 +5425,7 @@ export default function AdminPanel({
                                       </div>
                                     </div>
                                     <div className="ml-auto text-amber-500 font-mono font-bold text-xs">
-                                      {it.price * it.quantity} ج.م
+                                      {it.price * it.quantity} {isArabic ? "ج.م" : "EGP"}
                                     </div>
                                   </div>
                                 ))}
@@ -4787,7 +5864,7 @@ export default function AdminPanel({
                               {plan.isActive ? (isArabic ? 'نشط' : 'Active') : (isArabic ? 'موقف' : 'Inactive')}
                             </span>
                             <span className="text-lg font-mono font-black text-amber-400">
-                              {plan.price} ج.م
+                              {plan.price} {isArabic ? "ج.م" : "EGP"}
                             </span>
                           </div>
 
@@ -5286,7 +6363,7 @@ export default function AdminPanel({
                               {linkedOrder && (
                                 <div className="flex flex-wrap gap-2 items-center">
                                   <div className="text-xs font-mono text-zinc-400 bg-zinc-950 px-3 py-1.5 rounded-xl border border-zinc-805">
-                                    {isArabic ? "السعر:" : "Price:"} {linkedOrder.agreedPrice || linkedOrder.total || 0} ج.م
+                                    {isArabic ? "السعر:" : "Price:"} {linkedOrder.agreedPrice || linkedOrder.total || 0} {isArabic ? "ج.م" : "EGP"}
                                   </div>
                                   <button
                                     onClick={async () => {
@@ -5329,7 +6406,7 @@ export default function AdminPanel({
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                   <div><span className="text-zinc-500">{isArabic ? "الخامة المطلوبة:" : "Material:"}</span> <strong className="text-zinc-200">{linkedOrder.customMaterial}</strong></div>
                                   <div><span className="text-zinc-500">{isArabic ? "اللون المحدد:" : "Color tones:"}</span> <strong className="text-zinc-200">{linkedOrder.customColor}</strong></div>
-                                  <div><span className="text-zinc-500">{isArabic ? "الميزانية المخصصة:" : "Budget limit:"}</span> <strong className="text-amber-400 font-mono">{linkedOrder.customBudget} ج.م</strong></div>
+                                  <div><span className="text-zinc-500">{isArabic ? "الميزانية المخصصة:" : "Budget limit:"}</span> <strong className="text-amber-400 font-mono">{linkedOrder.customBudget} {isArabic ? "ج.م" : "EGP"}</strong></div>
                                 </div>
                                 <div className="border-t border-zinc-900 pt-2 mt-2">
                                   <span className="text-zinc-500">{isArabic ? "الهاتف الشاحن:" : "Buyer Phone:"}</span> <strong className="text-zinc-200 select-all">{linkedOrder.customerPhone}</strong>
@@ -6098,7 +7175,7 @@ export default function AdminPanel({
                             {orders
                               .filter(o => o.status === 'delivered')
                               .reduce((sum, o) => sum + (o.agreedPrice || o.total || 0), 0)
-                              .toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                              .toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                           </h4>
                           <p className="text-[9.5px] text-zinc-500 mt-2 leading-relaxed">
                             {isArabic ? "مجموع قيمة مبيعات الفساتين والأوردرات المكتملة المسلمة" : "Gross cleared revenue of all ready-to-wear and bespoke files."}
@@ -6115,7 +7192,7 @@ export default function AdminPanel({
                           <h4 className="text-2xl font-black font-mono text-indigo-400 font-sans">
                             {orders
                               .reduce((sum, o) => sum + (o.materialCosts || 0) + (o.tailoringCosts || 0) + (o.otherCosts || 0), 0)
-                              .toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                              .toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                           </h4>
                           <p className="text-[9.5px] text-zinc-500 mt-2 leading-relaxed">
                             {isArabic ? "مجموع خامات وأجور خياطي التفصيل المسجلة بالطلب" : "Direct cost of fabrics, supplies and tailors wages assigned to bespoke orders."}
@@ -6130,7 +7207,7 @@ export default function AdminPanel({
                         </p>
                         <div>
                           <h4 className="text-2xl font-black font-mono text-amber-500 font-sans">
-                            {expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                            {expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                           </h4>
                           <p className="text-[9.5px] text-zinc-500 mt-2 leading-relaxed">
                             {isArabic ? "إجمالي مصاريف الأتيليه، إعلانات السوشيال ميديا، والخدمات العادية" : "Accumulated overhead costs, workspace rent, and ad campaigns."}
@@ -6157,7 +7234,7 @@ export default function AdminPanel({
                             </p>
                             <div>
                               <h4 className={`text-2xl font-black font-mono font-sans ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                {netProfit.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                                {netProfit.toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                               </h4>
                               <div className="mt-2 pt-2 border-t border-zinc-800/60 flex justify-between items-center text-[10.5px]">
                                 <span className="text-zinc-550">{isArabic ? "هامش الربح الصافي:" : "Net Margin percentage:"}</span>
@@ -6305,7 +7382,7 @@ export default function AdminPanel({
 
                                   <div className="flex items-center gap-3">
                                     <span className="text-sm font-mono font-extrabold text-white">
-                                      -{exp.amount.toLocaleString()} ج.م
+                                      -{exp.amount.toLocaleString()} {isArabic ? "ج.م" : "EGP"}
                                     </span>
                                     <button
                                       type="button"
@@ -6359,7 +7436,7 @@ export default function AdminPanel({
                             </span>
                             <div className="mt-2">
                               <h4 className="text-2xl font-black text-amber-400 font-mono font-sans">
-                                {totalCustomAgreedValue.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                                {totalCustomAgreedValue.toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                               </h4>
                               <p className="text-[9.5px] text-zinc-500 mt-1">({customOrdersList.length} {isArabic ? "طلبات تفصيل وتعديل خاصة" : "royal boutique commission orders"})</p>
                             </div>
@@ -6371,7 +7448,7 @@ export default function AdminPanel({
                             </span>
                             <div className="mt-2">
                               <h4 className="text-2xl font-black text-emerald-400 font-mono font-sans">
-                                {totalCustomCollectedInstallments.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                                {totalCustomCollectedInstallments.toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                               </h4>
                               <p className="text-[9.5px] text-zinc-500 mt-1">({isArabic ? "عربون حجز، دفعات بروفات، وتصفية عند الاستلام" : "downpayments, fitting milestones, final bills"})</p>
                             </div>
@@ -6384,7 +7461,7 @@ export default function AdminPanel({
                             </span>
                             <div className="mt-2">
                               <h4 className="text-2xl font-black text-red-400 font-mono font-sans">
-                                {totalCustomOutstandingReceivables.toLocaleString()} <span className="text-xs font-sans text-zinc-400">ج.م</span>
+                                {totalCustomOutstandingReceivables.toLocaleString()} <span className="text-xs font-sans text-zinc-400">{isArabic ? "ج.م" : "EGP"}</span>
                               </h4>
                               <p className="text-[9.5px] text-zinc-500 mt-1">{isArabic ? "مبالغ آجلة يتم التوريد والتحصيل عند تسليم الفساتين" : "Uncollected debts outstanding on royal commission orders."}</p>
                             </div>
@@ -6431,15 +7508,15 @@ export default function AdminPanel({
                                   <div className="flex flex-wrap items-center gap-4 text-xs font-sans text-right">
                                     <div className="text-right">
                                       <span className="text-[10px] text-zinc-500 block">{isArabic ? "المتفق عليه:" : "Agreed Price:"}</span>
-                                      <span className="font-extrabold text-white font-mono">{agreedPr.toLocaleString()} ج.م</span>
+                                      <span className="font-extrabold text-white font-mono">{agreedPr.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                                     </div>
                                     <div className="text-right">
                                       <span className="text-[10px] text-zinc-500 block">{isArabic ? "المحصل:" : "Collected:"}</span>
-                                      <span className="font-extrabold text-emerald-400 font-mono">{collectedSoFar.toLocaleString()} ج.م</span>
+                                      <span className="font-extrabold text-emerald-400 font-mono">{collectedSoFar.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                                     </div>
                                     <div className="text-right">
                                       <span className="text-[10px] text-zinc-500 block">{isArabic ? "المتبقي:" : "Outstanding:"}</span>
-                                      <span className="font-extrabold text-red-500 font-mono">{remainingBalance.toLocaleString()} ج.م</span>
+                                      <span className="font-extrabold text-red-500 font-mono">{remainingBalance.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                                     </div>
 
                                     <button
@@ -6463,7 +7540,7 @@ export default function AdminPanel({
                                     <div className="space-y-4">
                                       {/* Section A: Costs management */}
                                       <div className="bg-zinc-900/40 border border-zinc-800 p-4 rounded-xl space-y-3">
-                                        <h5 className="font-black text-zinc-300 text-[11.5px]">{isArabic ? "تكاليف ومصاريف إنتاج هذا الفستان" : "Direct Dress Production Expenses"}</h5>
+                                        <h5 className="font-black text-zinc-300 text-[11.5px]" style={{ textAlign: 'left' }}>{isArabic ? "تكاليف ومصاريف إنتاج هذا الفستان" : "Direct Dress Production Expenses"}</h5>
                                         <div className="grid grid-cols-2 gap-3">
                                           <div className="space-y-1">
                                             <label className="text-zinc-500 font-bold block">{isArabic ? "تكلفة الخامات والأقمشة:" : "Material Cost (EGP):"}</label>
@@ -6518,10 +7595,10 @@ export default function AdminPanel({
 
                                       {/* Section B: New installment */}
                                       <div className="bg-zinc-900/40 border border-zinc-800 p-4 rounded-xl space-y-3 font-sans text-right">
-                                        <h5 className="font-black text-zinc-300 text-[11.5px]">{isArabic ? "تسجيل دفعة / عربون مالي جديد" : "Post Downpayment / Installment Payment"}</h5>
+                                        <h5 className="font-black text-zinc-300 text-[11.5px]" style={{ paddingRight: '0px', textAlign: 'left' }}>{isArabic ? "تسجيل دفعة / عربون مالي جديد" : "Post Downpayment / Installment Payment"}</h5>
                                         <div className="grid grid-cols-2 gap-3">
                                           <div className="space-y-1">
-                                            <label className="text-zinc-500 font-bold block">{isArabic ? "قيمة الدفعة الجارية (ج.م):" : "Amount (EGP):"}</label>
+                                            <label className="text-zinc-500 font-bold block" style={{ textAlign: 'left' }}>{isArabic ? "قيمة الدفعة الجارية (ج.م):" : "Amount (EGP):"}</label>
                                             <input
                                               type="number"
                                               placeholder="e.g. 2000"
@@ -6531,7 +7608,7 @@ export default function AdminPanel({
                                             />
                                           </div>
                                           <div className="space-y-1">
-                                            <label className="text-zinc-550 font-bold block">{isArabic ? "نوع الدفعة:" : "Payment Type:"}</label>
+                                            <label className="text-zinc-550 font-bold block" style={{ textAlign: 'left' }}>{isArabic ? "نوع الدفعة:" : "Payment Type:"}</label>
                                             <select
                                               value={newInstallmentType}
                                               onChange={(e) => setNewInstallmentType(e.target.value)}
@@ -6546,7 +7623,7 @@ export default function AdminPanel({
                                         </div>
 
                                         <div className="space-y-1">
-                                          <label className="text-zinc-500 block font-bold">{isArabic ? "ملاحظات الدفعة:" : "Internal notes:"}</label>
+                                          <label className="text-zinc-500 block font-bold" style={{ textAlign: 'left' }}>{isArabic ? "ملاحظات الدفعة:" : "Internal notes:"}</label>
                                           <input
                                             type="text"
                                             placeholder={isArabic ? "مثال: استلام كاش في الأتيليه أو تحويل بنكي" : "e.g. Handed over physically during first measurements visit"}
@@ -6601,7 +7678,7 @@ export default function AdminPanel({
                                     {/* Installments History table */}
                                     <div className="bg-zinc-900/40 border border-zinc-800 p-4 rounded-xl flex flex-col justify-between">
                                       <div>
-                                        <h5 className="font-extrabold text-zinc-300 text-[11px] mb-3">{isArabic ? "سجل الدفعات المستلمة للفساتين" : "Payments History Log"}</h5>
+                                        <h5 className="font-extrabold text-zinc-300 text-[11px] mb-3" style={{ textAlign: 'left' }}>{isArabic ? "سجل الدفعات المستلمة للفساتين" : "Payments History Log"}</h5>
                                         
                                         {(!ord.installments || ord.installments.length === 0) ? (
                                           <div className="text-zinc-500 p-6 text-center border border-dashed border-zinc-800 rounded-xl">
@@ -6613,7 +7690,7 @@ export default function AdminPanel({
                                               <div key={inst.id} className="p-2.5 flex justify-between items-center text-right font-sans">
                                                 <div>
                                                   <div className="flex items-center gap-1.5">
-                                                    <span className="font-black text-white">{inst.amount.toLocaleString()} ج.م</span>
+                                                    <span className="font-black text-white">{inst.amount.toLocaleString()} {isArabic ? "ج.م" : "EGP"}</span>
                                                     <span className="text-[8.5px] bg-emerald-500/15 text-emerald-400 font-bold px-1.5 rounded">
                                                       {isArabic ? (
                                                         inst.type === 'Araboun' || inst.type === 'Downpayment' ? 'عربون حجز' :

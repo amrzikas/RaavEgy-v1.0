@@ -165,7 +165,12 @@ export default function TrendPieces({
                   <h3 className="text-[10px] xs:text-base sm:text-2xl md:text-3xl font-serif font-medium text-white tracking-tight leading-tight group-hover:text-amber-300 transition line-clamp-1">
                     {isArabic ? hero.nameAr : hero.nameEn}
                   </h3>
-                  <p className="hidden sm:block text-zinc-350 text-xs sm:text-sm max-w-xl font-sans font-light leading-relaxed line-clamp-2">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className={`text-[8px] xs:text-[10px] font-mono px-2 py-0.5 rounded-full ${hero.quantity && hero.quantity > 0 ? (hero.quantity <= 5 ? 'bg-rose-500/30 text-rose-300 font-bold' : 'bg-white/10 text-zinc-300') : 'bg-red-500/30 text-red-300 font-bold'}`}>
+                      {isArabic ? `المخزون المتوفر: ${hero.quantity !== undefined ? hero.quantity : 100}` : `Stock Available: ${hero.quantity !== undefined ? hero.quantity : 100}`}
+                    </span>
+                  </div>
+                  <p className="hidden sm:block text-zinc-350 text-xs sm:text-sm max-w-xl font-sans font-light leading-relaxed line-clamp-2 mt-1">
                     {isArabic ? hero.descriptionAr : hero.descriptionEn}
                   </p>
                 </div>
@@ -262,11 +267,20 @@ export default function TrendPieces({
                         {/* Info Column */}
                         <div className="flex-1 flex flex-col justify-between py-0.5 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                           <div className="space-y-0.5 sm:space-y-1.5">
-                            <span className={`text-[4px] xs:text-[7px] sm:text-[9px] font-sans font-bold tracking-wider uppercase block ${
-                              isEven ? "text-amber-805" : "text-amber-400"
-                            }`}>
-                              {isArabic ? "تنسيق مذهل" : "TREND ELEMENT"}
-                            </span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`text-[4px] xs:text-[7px] sm:text-[9px] font-sans font-bold tracking-wider uppercase block ${
+                                isEven ? "text-amber-805" : "text-amber-400"
+                              }`}>
+                                {isArabic ? "تنسيق مذهل" : "TREND ELEMENT"}
+                              </span>
+                              <span className={`text-[6px] xs:text-[8px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                                product.quantity && product.quantity > 0 
+                                  ? (product.quantity <= 5 ? 'bg-rose-500/20 text-rose-300 font-bold' : (isEven ? 'bg-zinc-200 text-zinc-600' : 'bg-white/10 text-zinc-300')) 
+                                  : 'bg-red-500/20 text-red-300 font-bold'
+                              }`}>
+                                {isArabic ? `المخزون: ${product.quantity !== undefined ? product.quantity : 100}` : `Stock: ${product.quantity !== undefined ? product.quantity : 100}`}
+                              </span>
+                            </div>
                             <h3 
                               onClick={() => onSelectProduct(product)}
                               className={`text-[9px] xs:text-xs sm:text-base lg:text-lg font-serif font-semibold tracking-tight leading-snug cursor-pointer transition line-clamp-1 ${

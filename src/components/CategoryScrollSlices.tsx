@@ -81,8 +81,8 @@ export default function CategoryScrollSlices({
         
         {/* Editorial Title */}
         <div className="flex flex-col mb-10 sm:mb-16 text-center max-w-2xl mx-auto space-y-3">
-          <span className="inline-flex items-center gap-1.5 justify-center py-1 px-3 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-400 text-[10px] sm:text-xs font-semibold tracking-widest uppercase">
-            <Sparkles size={12} className="animate-pulse text-amber-400" />
+          <span className="inline-flex items-center gap-1.5 justify-center py-1 px-3 bg-[#ffffff] border border-[#000000] rounded-full text-[#050505] text-[10px] sm:text-xs font-semibold tracking-widest uppercase">
+            <Sparkles size={12} className="animate-pulse text-[#050505]" />
             <span>{isArabic ? "تصفح عبر الأقسام" : "EXPLORE BY PORTFOLIO SLICES"}</span>
           </span>
           <h2 className={`text-2xl xs:text-3.5xl md:text-5xl font-serif font-light tracking-tight leading-tight ${isLightTextMain ? 'text-white' : 'text-zinc-950'}`}>
@@ -260,14 +260,19 @@ export default function CategoryScrollSlices({
                           </div>
 
                           {/* Info Panel */}
-                          <div className="p-3 sm:p-4 flex flex-col flex-1 justify-between gap-2.5 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                          <div className="p-3 sm:p-4 flex flex-col flex-1 justify-between gap-2.5 text-right sm:text-right bg-[#000000]" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                             <div>
-                              <h4 className="text-[11px] xs:text-xs sm:text-sm font-serif font-medium text-white hover:text-amber-400 transition leading-snug line-clamp-1">
+                              <h4 className="text-[17px] font-bold text-white hover:text-amber-400 transition leading-snug line-clamp-1">
                                 {isArabic ? product.nameAr : product.nameEn}
                               </h4>
-                              <p className="text-[8px] xs:text-[9.5px] text-zinc-455 font-mono tracking-wider mt-0.5 uppercase">
-                                {isArabic ? (product.subcategoryAr || "تصميم راقٍ") : (product.subcategoryEn || "COUTURE")}
-                              </p>
+                              <div className="flex items-center justify-between gap-1.5 mt-0.5 flex-wrap">
+                                <p className="text-[8px] xs:text-[9.5px] text-zinc-455 font-mono tracking-wider uppercase">
+                                  {isArabic ? (product.subcategoryAr || "تصميم راقٍ") : (product.subcategoryEn || "COUTURE")}
+                                </p>
+                                <span className={`text-[10.5px] font-mono px-1.5 py-0.2 rounded-full border border-[#ffffff] font-bold text-[#ffffff] ${product.quantity && product.quantity > 0 ? (product.quantity <= 5 ? 'bg-rose-500/20' : 'bg-zinc-900') : 'bg-red-500/20'}`}>
+                                  {isArabic ? `المخزون: ${product.quantity !== undefined ? product.quantity : 100}` : `Stock: ${product.quantity !== undefined ? product.quantity : 100}`}
+                                </span>
+                              </div>
                             </div>
 
                             <div className="pt-2.5 border-t border-zinc-900 flex items-center justify-between gap-1">
@@ -282,7 +287,7 @@ export default function CategoryScrollSlices({
                                   <span className={`text-[10.5px] xs:text-xs sm:text-sm font-bold ${priceInfo.hasDiscount ? 'text-red-400' : 'text-white'}`}>
                                     {priceInfo.current}
                                   </span>
-                                  <span className="text-[7.5px] xs:text-[8px] text-zinc-500 uppercase">{isArabic ? 'ج' : 'EGP'}</span>
+                                  <span className="text-[11.5px] text-[#ffffff] font-bold uppercase">{isArabic ? 'ج' : 'EGP'}</span>
                                 </div>
                               </div>
 

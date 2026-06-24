@@ -516,13 +516,18 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
                       {/* Meta tags and pricing */}
                       <div className="p-4 flex-1 flex flex-col justify-between" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                         <div>
-                          {/* Category meta label */}
-                          <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest font-sans block mb-1">
-                            {product.category === 'men' && (isArabic ? 'رجالي' : 'Men')}
-                            {product.category === 'women' && (isArabic ? 'حريمي' : 'Women')}
-                            {product.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
-                            {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
-                          </span>
+                          {/* Category meta label & Stock Indicator */}
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest font-sans block">
+                              {product.category === 'men' && (isArabic ? 'رجالي' : 'Men')}
+                              {product.category === 'women' && (isArabic ? 'حريمي' : 'Women')}
+                              {product.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
+                              {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
+                            </span>
+                            <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full ${product.quantity && product.quantity > 0 ? (product.quantity <= 5 ? 'bg-rose-50 text-rose-600 font-bold' : 'bg-zinc-100 text-zinc-600') : 'bg-red-50 text-red-500 font-bold'}`}>
+                              {isArabic ? `المخزون: ${product.quantity !== undefined ? product.quantity : 100}` : `Stock: ${product.quantity !== undefined ? product.quantity : 100}`}
+                            </span>
+                          </div>
                           
                           <h4 className="text-xs sm:text-sm font-medium text-zinc-900 leading-tight line-clamp-1 group-hover:text-black transition">
                             {isArabic ? product.nameAr : product.nameEn}

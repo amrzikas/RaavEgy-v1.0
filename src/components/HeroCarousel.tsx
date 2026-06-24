@@ -8,6 +8,7 @@ interface HeroCarouselProps {
   onBrowseCategory: (cat: string) => void;
   isArabic: boolean;
   customSlides?: HeroSlideInput[];
+  isCompactRibbon?: boolean;
 }
 
 const HERO_SLIDES = [
@@ -55,7 +56,8 @@ const HERO_SLIDES = [
 export default function HeroCarousel({
   onBrowseCategory,
   isArabic,
-  customSlides
+  customSlides,
+  isCompactRibbon = false
 }: HeroCarouselProps) {
   const slides = customSlides && customSlides.length > 0 ? customSlides : HERO_SLIDES;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -63,9 +65,9 @@ export default function HeroCarousel({
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 8500);
+    }, isCompactRibbon ? 6000 : 8500);
     return () => clearInterval(timer);
-  }, [slides]);
+  }, [slides, isCompactRibbon]);
 
   const handleNext = () => {
     setCurrentIndex((currentIndex + 1) % slides.length);
@@ -114,6 +116,103 @@ export default function HeroCarousel({
       </>
     );
   };
+
+  if (isCompactRibbon) {
+    return (
+      <div id="hero-slider-stage" className="relative bg-[#ffffff] overflow-hidden w-full py-6 md:py-8 border-b border-zinc-150 select-none">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="flex items-center justify-between mb-4" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <span className="text-[10px] md:text-xs font-semibold tracking-[0.2em] text-zinc-400 uppercase font-sans">
+                {isArabic ? "شريط التشكيلات المصغر" : "MINI COUTURE LOOKS"}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handlePrev}
+                className="p-1.5 border border-zinc-200 hover:border-zinc-300 rounded-full text-zinc-500 hover:text-zinc-805 transition bg-white shadow-sm cursor-pointer"
+                title={isArabic ? "السابق" : "Previous"}
+              >
+                <ChevronLeft size={13} />
+              </button>
+              <button
+                onClick={handleNext}
+                className="p-1.5 border border-zinc-200 hover:border-zinc-300 rounded-full text-zinc-500 hover:text-zinc-805 transition bg-white shadow-sm cursor-pointer"
+                title={isArabic ? "التالي" : "Next"}
+              >
+                <ChevronRight size={13} />
+              </button>
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, x: isArabic ? 15 : -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isArabic ? -15 : 15 }}
+              transition={{ duration: 0.4 }}
+              className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-zinc-50 p-4 sm:p-5 rounded-2xl border border-zinc-200/60"
+              style={{ direction: isArabic ? 'rtl' : 'ltr' }}
+            >
+              {/* Thumbnail left (or right based on RTL) */}
+              <div className="md:col-span-3 aspect-[16/10] md:aspect-[4/3] rounded-xl overflow-hidden shadow-sm relative">
+                <img
+                  src={optimizeUnsplashUrl(currentSlide.image || '', 400, 75)}
+                  alt={isArabic ? currentSlide.titleAr : currentSlide.titleEn}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+
+              {/* Copy middle */}
+              <div className="md:col-span-6 space-y-1.5 text-center md:text-start" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                <div className="text-[9px] font-bold tracking-[0.15em] text-amber-800 uppercase">
+                  {isArabic ? currentSlide.overlineAr : currentSlide.overlineEn}
+                </div>
+                <h3 className="text-base sm:text-lg font-serif font-light text-zinc-950">
+                  {isArabic ? currentSlide.titleAr : currentSlide.titleEn}
+                </h3>
+                <p className="text-zinc-500 text-[11px] sm:text-xs leading-relaxed font-sans font-light line-clamp-2">
+                  {isArabic ? currentSlide.descAr : currentSlide.descEn}
+                </p>
+              </div>
+
+              {/* Action right */}
+              <div className="md:col-span-3 flex justify-center md:justify-end">
+                <button
+                  onClick={() => onBrowseCategory(currentSlide.cat || 'all')}
+                  className="px-5 py-2.5 bg-zinc-950 hover:bg-zinc-900 text-white hover:text-amber-100 rounded-full font-bold text-[10px] tracking-wider uppercase transition shadow-sm flex items-center gap-1.5 cursor-pointer font-sans"
+                >
+                  <span>{isArabic ? "استكشف" : "EXPLORE"}</span>
+                  <span className="text-xs">→</span>
+                </button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Indicators */}
+          <div className="mt-3 flex justify-center gap-1.5">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  currentIndex === idx 
+                    ? "w-6 bg-zinc-800" 
+                    : "w-1.5 bg-zinc-200"
+                }`}
+              />
+            ))}
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div id="hero-slider-stage" className="relative bg-[#ffffff] overflow-hidden w-full py-8 md:py-16 border-b border-zinc-100 select-none">

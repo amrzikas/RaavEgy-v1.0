@@ -112,7 +112,6 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
   // Live collections setup
   useEffect(() => {
     let unsubsProfile: () => void = () => {};
-    let unsubsOrders: () => void = () => {};
     let unsubsProducts: () => void = () => {};
     let unsubsNotifs: () => void = () => {};
     let unsubsChats: () => void = () => {};
@@ -151,11 +150,6 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
           }
         });
 
-        // 1. Subscribe to consumer orders
-        unsubsOrders = subscribeToCustomerOrders(uid, (orderList) => {
-          setOrders(orderList);
-        });
-
         // 2. Subscribe to catalog products for wishlist linking
         unsubsProducts = subscribeToProducts((prodList) => {
           setProducts(prodList);
@@ -184,12 +178,25 @@ export default function CustomerProfile({ uid, onLogout, isArabic, onBrowseShop,
 
     return () => {
       unsubsProfile();
-      unsubsOrders();
       unsubsProducts();
       unsubsNotifs();
       unsubsChats();
     };
   }, [uid]);
+
+  // Handle orders subscription dynamically with fallback matching on phone variations
+  const userPhone = profileData?.phone;
+  useEffect(() => {
+    let unsubOrders = () => {};
+    if (uid) {
+      unsubOrders = subscribeToCustomerOrders(uid, userPhone, (orderList) => {
+        setOrders(orderList);
+      });
+    }
+    return () => {
+      unsubOrders();
+    };
+  }, [uid, userPhone]);
 
   useEffect(() => {
     if (!selectedConversationId) {

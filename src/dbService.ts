@@ -200,12 +200,83 @@ export function subscribeToOrders(callback: (orders: Order[]) => void) {
 }
 
 /**
+ * Normalize Egyptian phone numbers to canonical 11-digit starting with 01
+ */
+export function normalizeEgyptianPhone(phone: string): string {
+  if (!phone) return '';
+  let cleaned = phone.trim().replace(/[\s\-\(\)\+]+/g, '');
+  
+  if (cleaned.startsWith('0020') && cleaned.length === 15) {
+    cleaned = '0' + cleaned.substring(4);
+  } else if (cleaned.startsWith('20') && cleaned.length === 12) {
+    cleaned = '0' + cleaned.substring(2);
+  } else if (cleaned.startsWith('002') && cleaned.length === 14) {
+    cleaned = '0' + cleaned.substring(3);
+  } else if (cleaned.startsWith('2') && cleaned.length === 12) {
+    cleaned = '0' + cleaned.substring(1);
+  }
+  
+  if (cleaned.length === 10 && cleaned.startsWith('1')) {
+    cleaned = '0' + cleaned;
+  }
+  
+  return cleaned;
+}
+
+/**
+ * Auto-save address to user profile if it's new
+ */
+export async function autoSaveAddressIfNew(
+  userId: string, 
+  recipientName: string, 
+  phone: string, 
+  cityId: string, 
+  addressDetails: string
+): Promise<void> {
+  if (!userId || userId === 'guest') return;
+  try {
+    const docRef = doc(db, 'users', userId);
+    const docSnap = await getDoc(docRef);
+    let addresses: SavedAddress[] = [];
+    if (docSnap.exists()) {
+      addresses = docSnap.data().addresses || [];
+    }
+    
+    const normPhone = normalizeEgyptianPhone(phone);
+    const exists = addresses.some(a => 
+      a.addressDetails?.trim().toLowerCase() === addressDetails.trim().toLowerCase() && 
+      normalizeEgyptianPhone(a.phone) === normPhone
+    );
+    
+    if (!exists) {
+      const newId = 'add_' + Math.random().toString(36).substring(2, 9);
+      const isFirst = addresses.length === 0;
+      
+      addresses.push({
+        id: newId,
+        recipientName: recipientName.trim(),
+        phone: normPhone || phone.trim(),
+        cityId: cityId || 'cairo',
+        addressDetails: addressDetails.trim(),
+        isDefault: isFirst
+      });
+      
+      await setDoc(docRef, { addresses }, { merge: true });
+    }
+  } catch (err) {
+    console.warn("Failed to auto-save address:", err);
+  }
+}
+
+/**
  * Create a new customer order
  */
 export async function createOrder(order: Omit<Order, 'id' | 'createdAt' | 'status'> & { customerId?: string }): Promise<string> {
   const pathForWrite = ORDERS_COLL;
   try {
     const currentUid = auth.currentUser?.uid || undefined;
+    const finalCustomerId = order.customerId || currentUid;
+    const normalizedPhone = normalizeEgyptianPhone(order.customerPhone);
     
     // Filter out undefined properties to avoid Firestore payload crashes
     const cleanedOrder: any = {};
@@ -215,12 +286,47 @@ export async function createOrder(order: Omit<Order, 'id' | 'createdAt' | 'statu
       }
     });
 
+    cleanedOrder.customerPhone = normalizedPhone || order.customerPhone;
+
     const docRef = await addDoc(collection(db, ORDERS_COLL), {
       ...cleanedOrder,
-      customerId: order.customerId || currentUid,
+      customerId: finalCustomerId,
       status: 'pending' as OrderStatus,
       createdAt: Date.now()
     });
+
+    // Subtract stock for items ordered
+    if (order.items && order.items.length > 0) {
+      for (const item of order.items) {
+        try {
+          const prodDocRef = doc(db, PRODUCTS_COLL, item.productId);
+          const prodSnap = await getDoc(prodDocRef);
+          if (prodSnap.exists()) {
+            const prodData = prodSnap.data();
+            const currentQty = prodData.quantity !== undefined ? prodData.quantity : 100;
+            const newQty = Math.max(0, currentQty - item.quantity);
+            await updateDoc(prodDocRef, {
+              quantity: newQty,
+              inStock: newQty > 0
+            });
+          }
+        } catch (e) {
+          console.error("Failed to decrease stock for product:", item.productId, e);
+        }
+      }
+    }
+
+    // Auto-save shipping address for registered user
+    if (finalCustomerId) {
+      await autoSaveAddressIfNew(
+        finalCustomerId,
+        order.customerName,
+        order.customerPhone,
+        order.customerCity || 'cairo',
+        order.customerAddress
+      );
+    }
+
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, pathForWrite);
@@ -248,8 +354,10 @@ export async function saveUserProfile(uid: string, data: { name: string; phone: 
   const pathForWrite = `users/${uid}`;
   try {
     const docRef = doc(db, 'users', uid);
+    const normalizedPhone = normalizeEgyptianPhone(data.phone);
     await setDoc(docRef, {
       ...data,
+      phone: normalizedPhone || data.phone,
       updatedAt: Date.now()
     }, { merge: true });
   } catch (error) {
@@ -258,31 +366,105 @@ export async function saveUserProfile(uid: string, data: { name: string; phone: 
 }
 
 /**
+ * Generate unique Egyptian phone number variations for robust Firestore querying
+ */
+function getPhoneVariations(phone: string): string[] {
+  const cleaned = phone.trim().replace(/[\s\-\(\)\+]+/g, '');
+  if (!cleaned) return [];
+  
+  const variations = new Set<string>();
+  variations.add(cleaned);
+  variations.add(phone.trim()); // Original entered format
+  
+  // Extract the raw local 10-digit number (without leading 0 or country code)
+  let local10 = '';
+  if (cleaned.startsWith('20') && cleaned.length === 12) {
+    local10 = cleaned.substring(2);
+  } else if (cleaned.startsWith('0') && cleaned.length === 11) {
+    local10 = cleaned.substring(1);
+  } else if (cleaned.length === 10) {
+    local10 = cleaned;
+  }
+  
+  if (local10 && /^\d+$/.test(local10)) {
+    variations.add(local10);
+    variations.add('0' + local10);
+    variations.add('20' + local10);
+    variations.add('+20' + local10);
+  }
+  
+  return Array.from(variations).slice(0, 10); // Firestore 'in' allows up to 10
+}
+
+/**
  * Subscribe to order history for a specific customer
  * Enforces Zero-Trust constraints by querying with a secure customerId filter
- * and sorting client-side to prevent missing indexes.
+ * and optionally combining with phone-number-based lookup for older guest orders,
+ * sorting client-side to prevent missing indexes.
  */
-export function subscribeToCustomerOrders(uid: string, callback: (orders: Order[]) => void) {
+export function subscribeToCustomerOrders(uid: string, phone: string | undefined, callback: (orders: Order[]) => void) {
   const pathForOnSnapshot = ORDERS_COLL;
-  const q = query(
+  
+  let uidOrders: Order[] = [];
+  let phoneOrders: Order[] = [];
+  
+  const mergeAndCallback = () => {
+    const mergedMap = new Map<string, Order>();
+    uidOrders.forEach(o => mergedMap.set(o.id, o));
+    phoneOrders.forEach(o => mergedMap.set(o.id, o));
+    
+    const combined = Array.from(mergedMap.values());
+    combined.sort((a, b) => b.createdAt - a.createdAt);
+    callback(combined);
+  };
+
+  // 1. Subscribe by UID
+  const qUid = query(
     collection(db, ORDERS_COLL),
     where('customerId', '==', uid)
   );
-  return onSnapshot(q, (snapshot) => {
-    const ordersList: Order[] = [];
+  
+  const unsubUid = onSnapshot(qUid, (snapshot) => {
+    const list: Order[] = [];
     snapshot.forEach((doc) => {
-      const data = doc.data();
-      ordersList.push({
-        id: doc.id,
-        ...data
-      } as Order);
+      list.push({ id: doc.id, ...doc.data() } as Order);
     });
-    // Sort in-memory descending by createdAt to circumvent index requirements
-    ordersList.sort((a, b) => b.createdAt - a.createdAt);
-    callback(ordersList);
+    uidOrders = list;
+    mergeAndCallback();
   }, (error) => {
     handleFirestoreError(error, OperationType.GET, pathForOnSnapshot);
   });
+
+  // 2. Subscribe by Phone Variations (if present)
+  let unsubPhone: (() => void) | null = null;
+  const variations = phone ? getPhoneVariations(phone) : [];
+  
+  if (variations.length > 0) {
+    const qPhone = query(
+      collection(db, ORDERS_COLL),
+      where('customerPhone', 'in', variations)
+    );
+    
+    unsubPhone = onSnapshot(qPhone, (snapshot) => {
+      const list: Order[] = [];
+      snapshot.forEach((doc) => {
+        list.push({ id: doc.id, ...doc.data() } as Order);
+      });
+      phoneOrders = list;
+      mergeAndCallback();
+    }, (error) => {
+      console.warn("Failed subscribing to phone orders (this can occur if index is missing):", error);
+      // Fallback: still notify with UID-only orders
+      mergeAndCallback();
+    });
+  }
+
+  return () => {
+    unsubUid();
+    if (unsubPhone) {
+      unsubPhone();
+    }
+  };
 }
 
 /**
@@ -292,16 +474,73 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus, ca
   const pathForWrite = `${ORDERS_COLL}/${orderId}`;
   try {
     const docRef = doc(db, ORDERS_COLL, orderId);
+    
+    // Read previous status before we overwrite it
+    const preSnap = await getDoc(docRef);
+    let previousStatus: OrderStatus | undefined;
+    let orderData: any;
+    if (preSnap.exists()) {
+      orderData = preSnap.data();
+      previousStatus = orderData.status;
+    }
+
     const updateData: any = { status };
     if (cancelReason) {
       updateData.cancelReason = cancelReason;
     }
     await updateDoc(docRef, updateData);
 
-    // Try reading order to get customerId & send them status notification
-    const orderSnap = await getDoc(docRef);
-    if (orderSnap.exists()) {
-      const orderData = orderSnap.data();
+    // Handle inventory changes
+    if (orderData) {
+      // Transition to cancelled -> restore/refund stock
+      if (status === 'cancelled' && previousStatus !== 'cancelled') {
+        if (orderData.items && orderData.items.length > 0) {
+          for (const item of orderData.items) {
+            try {
+              const prodDocRef = doc(db, PRODUCTS_COLL, item.productId);
+              const prodSnap = await getDoc(prodDocRef);
+              if (prodSnap.exists()) {
+                const prodData = prodSnap.data();
+                const currentQty = prodData.quantity !== undefined ? prodData.quantity : 100;
+                const newQty = currentQty + item.quantity;
+                await updateDoc(prodDocRef, {
+                  quantity: newQty,
+                  inStock: true
+                });
+              }
+            } catch (e) {
+              console.error("Failed to restore stock for cancelled order item:", item.productId, e);
+            }
+          }
+        }
+      }
+
+      // Transition FROM cancelled to active -> subtract stock again
+      if (previousStatus === 'cancelled' && status !== 'cancelled') {
+        if (orderData.items && orderData.items.length > 0) {
+          for (const item of orderData.items) {
+            try {
+              const prodDocRef = doc(db, PRODUCTS_COLL, item.productId);
+              const prodSnap = await getDoc(prodDocRef);
+              if (prodSnap.exists()) {
+                const prodData = prodSnap.data();
+                const currentQty = prodData.quantity !== undefined ? prodData.quantity : 100;
+                const newQty = Math.max(0, currentQty - item.quantity);
+                await updateDoc(prodDocRef, {
+                  quantity: newQty,
+                  inStock: newQty > 0
+                });
+              }
+            } catch (e) {
+              console.error("Failed to decrease stock for reactivated order item:", item.productId, e);
+            }
+          }
+        }
+      }
+    }
+
+    // Send customer notification
+    if (orderData) {
       const customerId = orderData.customerId;
       if (customerId) {
         let textAr = '';
@@ -785,10 +1024,11 @@ export async function createCustomOrder(orderData: {
     });
 
     // 3. Create the custom order linking to conversationId
+    const normalizedPhone = normalizeEgyptianPhone(orderData.customerPhone);
     const orderRef = await addDoc(collection(db, 'orders'), {
       customerId,
       customerName: orderData.customerName,
-      customerPhone: orderData.customerPhone,
+      customerPhone: normalizedPhone || orderData.customerPhone,
       customerAddress: orderData.customerAddress,
       customerCity: orderData.customerCity,
       customerNotes: orderData.customerNotes || '',
@@ -805,6 +1045,17 @@ export async function createCustomOrder(orderData: {
       linkedConversationId: conversationId,
       createdAt: Date.now()
     });
+
+    // Auto-save address to profile if they are a registered user
+    if (customerId && customerId !== 'guest') {
+      await autoSaveAddressIfNew(
+        customerId,
+        orderData.customerName,
+        orderData.customerPhone,
+        orderData.customerCity || 'cairo',
+        orderData.customerAddress
+      );
+    }
 
     // Update conversation with orderId
     await updateDoc(doc(db, 'conversations', conversationId), {
@@ -1366,7 +1617,45 @@ export async function getHomepageContent(): Promise<HomepageContent> {
         image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&q=80&w=1200",
         cat: "accessories",
       }
-    ]
+    ],
+    adBanner1: {
+      id: "ad1",
+      badgeAr: "خدمة التفصيل اليدوي الفاخرة",
+      badgeEn: "LUXURY HANDMADE SERVICES",
+      titleAr: "هل تبحثين عن تفصيل وتصميم مخصص تماماً؟",
+      titleEn: "Looking for a Completely Customized Tailored Design?",
+      descAr: "نحن نحول خيالك إلى قطع ملابس هاند ميد فريدة مصممة خصيصاً بمقاساتك الدقيقة وخامات مختارة لترضي ذوقك. ابدئي طلبك المخصص الآن وتواصلي معنا مباشرة.",
+      descEn: "We transform your sartorial thoughts into unique, hand-tailored clothing made to your exact body measurements and fine fabrics. Start your custom order details and chat now.",
+      buttonTextAr: "طلبي المخصص الآن",
+      buttonTextEn: "MY CUSTOM COUTURE NOW",
+      buttonLink: "custom-couture",
+      bannerImage: "",
+      backgroundColor: "#18181b",
+      textColor: "#ffffff",
+      badgeBgColor: "rgba(245, 158, 11, 0.15)",
+      badgeTextColor: "#fbbf24",
+      buttonBgColor: "#fbbf24",
+      buttonTextColor: "#09090b"
+    },
+    adBanner2: {
+      id: "ad2",
+      badgeAr: "عرض الصيف الحصري والمميز",
+      badgeEn: "EXCLUSIVE SUMMER SEASON",
+      titleAr: "استمتعي بخصم ١٥٪ على تشكيلات الموسم الفريدة",
+      titleEn: "Enjoy 15% Off Curated Collection Masterpieces",
+      descAr: "أدخلي كود الخصم الحصري عند إتمام الطلب لتجربة الأزياء الرائجة لهذا الموسم. نوفر خدمة تجربة القطع للمطابقة والمعاينة عند تسليم المندوب.",
+      descEn: "Apply our premier discount code at checkout to acquire highly coveted styles. Direct shipping in Egypt with fully comfortable home trials.",
+      buttonTextAr: "تسوق الآن",
+      buttonTextEn: "SHOP COLL",
+      buttonLink: "#shop",
+      bannerImage: "",
+      backgroundColor: "#1b1c19",
+      textColor: "#ffffff",
+      badgeBgColor: "rgba(245, 158, 11, 0.10)",
+      badgeTextColor: "#fef3c7",
+      buttonBgColor: "#09090b",
+      buttonTextColor: "#ffffff"
+    }
   };
 }
 

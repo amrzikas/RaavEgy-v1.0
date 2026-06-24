@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header.tsx';
 import HeroCarousel from './components/HeroCarousel.tsx';
+import MainHeroSection from './components/MainHeroSection.tsx';
 import ProductCard from './components/ProductCard.tsx';
 import ProductDetailsModal from './components/ProductDetailsModal.tsx';
 import CartSlider from './components/CartSlider.tsx';
@@ -255,6 +256,67 @@ export default function App() {
 
   const cartTotalItemsCount = cart.reduce((count, item) => count + item.quantity, 0);
 
+  const handleBannerClick = (link?: string) => {
+    if (!link) return;
+    if (link.includes('shop') || link.startsWith('#')) {
+      setSelectedCategory('all');
+      setActiveView('shop');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (link.includes('custom') || link.includes('profile')) {
+      setActiveView('profile');
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    } else {
+      setSelectedCategory('all');
+      setActiveView('shop');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const getAdBannerBg = (color?: string) => {
+    if (!color || color === '#18181b' || color === '#1b1c19' || color === 'transparent') {
+      return 'rgba(255, 255, 255, 0.02)'; // extremely clean premium semi-transparent overlay
+    }
+    return color;
+  };
+
+  const ad1 = homepageContent?.adBanner1 || {
+    badgeAr: "خدمة التفصيل اليدوي الفاخرة",
+    badgeEn: "LUXURY HANDMADE SERVICES",
+    titleAr: "هل تبحثين عن تفصيل وتصميم مخصص تماماً؟",
+    titleEn: "Looking for a Completely Customized Tailored Design?",
+    descAr: "نحن نحول خيالك إلى قطع ملابس هاند ميد فريدة مصممة خصيصاً بمقاساتك الدقيقة وخامات مختارة لترضي ذوقك. ابدئي طلبك المخصص الآن وتواصلي معنا مباشرة.",
+    descEn: "We transform your sartorial thoughts into unique, hand-tailored clothing made to your exact body measurements and fine fabrics. Start your custom order details and chat now.",
+    buttonTextAr: "طلبي المخصص الآن",
+    buttonTextEn: "MY CUSTOM COUTURE NOW",
+    buttonLink: "custom-couture",
+    bannerImage: "",
+    backgroundColor: "transparent",
+    textColor: "#ffffff",
+    badgeBgColor: "rgba(245, 158, 11, 0.15)",
+    badgeTextColor: "#fbbf24",
+    buttonBgColor: "#fbbf24",
+    buttonTextColor: "#09090b"
+  };
+
+  const ad2 = homepageContent?.adBanner2 || {
+    badgeAr: "عرض الصيف الحصري والمميز",
+    badgeEn: "EXCLUSIVE SUMMER SEASON",
+    titleAr: "استمتعي بخصم ١٥٪ على تشكيلات الموسم الفريدة",
+    titleEn: "Enjoy 15% Off Curated Collection Masterpieces",
+    descAr: "أدخلي كود الخصم الحصري عند إتمام الطلب لتجربة الأزياء الرائجة لهذا الموسم. نوفر خدمة تجربة القطع للمطابقة والمعاينة عند تسليم المندوب.",
+    descEn: "Apply our premier discount code at checkout to acquire highly coveted styles. Direct shipping in Egypt with fully comfortable home trials.",
+    buttonTextAr: "تسوق الآن",
+    buttonTextEn: "SHOP COLL",
+    buttonLink: "#shop",
+    bannerImage: "",
+    backgroundColor: "transparent",
+    textColor: "#ffffff",
+    badgeBgColor: "rgba(245, 158, 11, 0.10)",
+    badgeTextColor: "#fef3c7",
+    buttonBgColor: "#09090b",
+    buttonTextColor: "#ffffff"
+  };
+
   return (
     <div className="relative min-h-screen text-zinc-800 selection:bg-zinc-900 selection:text-white antialiased font-sans transition-all duration-500 bg-gradient-to-b from-[#353630] via-[#21221e] to-[#121311] overflow-hidden">
       
@@ -300,6 +362,9 @@ export default function App() {
           headerBgColor={homepageContent?.headerBgColor}
           logoSize={homepageContent?.logoSize}
           logoImage={homepageContent?.logoImage}
+          logoText={homepageContent?.logoText}
+          logoTextColor={homepageContent?.logoTextColor}
+          logoTextFont={homepageContent?.logoTextFont}
         />
 
         {/* Main Page Layout */}
@@ -308,192 +373,125 @@ export default function App() {
             <div>
               {/* Only display Hero slides if search query is empty */}
               {!searchQuery && (
-                <HeroCarousel
-                  isArabic={isArabic}
-                  onBrowseCategory={(cat) => {
+                <>
+                  {homepageContent?.heroSectionEnabled !== false && (
+                    <MainHeroSection
+                      isArabic={isArabic}
+                      enabled={true}
+                      showTexts={homepageContent?.heroSectionShowTexts !== false}
+                      titleAr={homepageContent?.heroSectionTitleAr}
+                      titleEn={homepageContent?.heroSectionTitleEn}
+                      subAr={homepageContent?.heroSectionSubAr}
+                      subEn={homepageContent?.heroSectionSubEn}
+                      btnTextAr={homepageContent?.heroSectionBtnTextAr}
+                      btnTextEn={homepageContent?.heroSectionBtnTextEn}
+                      btnLink={homepageContent?.heroSectionBtnLink}
+                      images={homepageContent?.heroSectionImages}
+                      layout={homepageContent?.heroSectionLayout || 'split'}
+                      onActionClick={(link) => {
+                        if (link === 'custom' || link?.includes('custom')) {
+                          const formEl = document.getElementById('custom-couture-form-section');
+                          if (formEl) {
+                            formEl.scrollIntoView({ behavior: 'smooth' });
+                          } else {
+                            setSelectedCategory('all');
+                            setActiveView('shop');
+                          }
+                        } else {
+                          setSelectedCategory(link || 'all');
+                          setActiveView('shop');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
+                    />
+                  )}
+                  {homepageContent?.heroCarouselEnabled !== false && (
+                    <HeroCarousel
+                      isArabic={isArabic}
+                      isCompactRibbon={true}
+                      onBrowseCategory={(cat) => {
+                        setSelectedCategory(cat);
+                        setActiveView('shop');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      customSlides={homepageContent?.heroSlides}
+                    />
+                  )}
+                </>
+              )}
+
+              {/* The Collections Section - ALWAYS BELOW HERO SECTION */}
+              {homepageContent?.collectionsSectionEnabled !== false && (
+                <TheCollections
+                  onSelectCategory={(cat) => {
                     setSelectedCategory(cat);
                     setActiveView('shop');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  customSlides={homepageContent?.heroSlides}
+                  isArabic={isArabic}
+                  backdrop={homepageContent?.sectionBackgrounds?.theCollections}
+                  layout={homepageContent?.collectionsLayout}
+                  order={homepageContent?.collectionsOrder}
+                  categoryImages={homepageContent?.categoryImages}
                 />
               )}
 
-              {/* INTERTWINED PREMIUM AD 1: Below Hero Carousel */}
-              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-10 md:my-14 font-sans focus:outline-none relative">
-                <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                  className="relative overflow-hidden rounded-[2rem] border border-amber-900/10 shadow-xl bg-gradient-to-r from-zinc-950 via-zinc-900 to-amber-950/90 text-white min-h-[160px] md:min-h-[200px] flex items-center"
-                >
-                  {/* Subtle luxurious ambient lights */}
-                  <div className="absolute top-0 right-0 w-[40%] h-full bg-gradient-to-l from-amber-500/10 via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute bottom-[-50%] left-[-10%] w-[350px] h-[350px] bg-amber-500/5 rounded-full blur-[80px] pointer-events-none" />
-                  <div className="absolute top-[-30%] right-[15%] w-[180px] h-[180px] bg-white/5 rounded-full blur-[60px] pointer-events-none" />
-
-                  <div className="relative w-full px-6 py-8 md:px-12 flex flex-col md:flex-row md:items-center justify-between gap-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
-                    
-                    {/* Message section */}
-                    <div className="space-y-2 max-w-xl text-right md:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                      <div className="inline-flex items-center gap-2 bg-amber-500/15 border border-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.25em]">
-                        <Sparkles size={11} className="text-amber-400 animate-pulse" />
-                        <span>{isArabic ? "خدمة التفصيل اليدوي الفاخرة" : "LUXURY HANDMADE SERVICES"}</span>
-                      </div>
-                      <h3 className="text-xl md:text-2xl font-serif font-semibold tracking-tight text-white leading-snug">
-                        {isArabic 
-                          ? "هل تبحثين عن تفصيل وتصميم مخصص تماماً؟" 
-                          : "Looking for a Completely Customized Tailored Design?"}
-                      </h3>
-                      <p className="text-xs text-zinc-300 font-light leading-relaxed">
-                        {isArabic 
-                          ? "نحن نحول خيالك إلى قطع ملابس هاند ميد فريدة مصممة خصيصاً بمقاساتك الدقيقة وخامات مختارة لترضي ذوقك. ابدئي طلبك المخصص الآن وتواصلي معنا مباشرة."
-                          : "We transform your sartorial thoughts into unique, hand-tailored clothing made to your exact body measurements and fine fabrics. Start your custom order details and chat now."}
-                      </p>
-                    </div>
-
-                    {/* Action button */}
-                    <div className="shrink-0 self-start md:self-center">
-                      <button
-                        onClick={() => {
-                          setActiveView('profile');
-                          window.scrollTo({ top: 300, behavior: 'smooth' });
-                        }}
-                        className="group relative inline-flex items-center justify-center bg-gradient-to-r from-amber-400 to-amber-500 text-zinc-950 font-bold px-6 py-3.5 rounded-xl text-xs tracking-widest uppercase transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10 hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
-                      >
-                        <span className="relative z-10 flex items-center gap-1.5 font-bold">
-                          {isArabic ? "طلبي المخصص الآن" : "MY CUSTOM COUTURE NOW"}
-                          <span className="text-sm transition-transform duration-300 group-hover:translate-x-1">—→</span>
-                        </span>
-                      </button>
-                    </div>
-
-                  </div>
-                </motion.div>
-              </section>
-
-              {/* The Collections Section - ALWAYS BELOW HERO SECTION */}
-              <TheCollections
-                onSelectCategory={(cat) => {
-                  setSelectedCategory(cat);
-                  setActiveView('shop');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                isArabic={isArabic}
-                backdrop={homepageContent?.sectionBackgrounds?.theCollections}
-                layout={homepageContent?.collectionsLayout}
-                order={homepageContent?.collectionsOrder}
-                categoryImages={homepageContent?.categoryImages}
-              />
-
-              {/* INTERTWINED PREMIUM AD 2: Below The Collections Section */}
-              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-10 md:my-14 font-sans focus:outline-none relative">
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  className="relative overflow-hidden rounded-[2rem] border border-[#2d2e28] shadow-lg bg-gradient-to-r from-[#1b1c19]/90 via-[#353630]/75 to-[#121311]/95 text-white min-h-[160px] md:min-h-[200px] flex items-center"
-                >
-                  {/* Subtle artistic light visual accents */}
-                  <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-r from-[#353630]/20 via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute top-[-40%] left-[-10%] w-[320px] h-[320px] bg-zinc-900/5 rounded-full blur-[90px] pointer-events-none" />
-                  <div className="absolute bottom-[-30%] right-[10%] w-[220px] h-[220px] bg-amber-500/5 rounded-full blur-[70px] pointer-events-none" />
-
-                  <div className="relative w-full px-6 py-8 md:px-12 flex flex-col md:flex-row md:items-center justify-between gap-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
-                    
-                    {/* Info details */}
-                    <div className="space-y-2.5 max-w-xl text-right md:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                      <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.25em]">
-                        <span className="text-amber-400">✦</span>
-                        <span className="text-amber-300">{isArabic ? "عرض الصيف الحصري والمميز" : "EXCLUSIVE SUMMER SEASON"}</span>
-                      </div>
-                      
-                      <h3 className="text-xl md:text-2xl font-serif font-semibold tracking-tight text-white leading-snug">
-                        {isArabic 
-                          ? "استمتعي بخصم ١٥٪ على تشكيلات الموسم الفريدة" 
-                          : "Enjoy 15% Off Curated Collection Masterpieces"}
-                      </h3>
-                      <p className="text-xs text-zinc-300 font-light leading-relaxed">
-                        {isArabic 
-                          ? "أدخلي كود الخصم الحصري عند إتمام الطلب لتجربة الأزياء الرائجة لهذا الموسم. نوفر خدمة تجربة القطع للمطابقة والمعاينة عند تسليم المندوب."
-                          : "Apply our premier discount code at checkout to acquire highly coveted styles. Direct shipping in Egypt with fully comfortable home trials."}
-                      </p>
-                    </div>
-
-                    {/* Coupon / Redeem widget */}
-                    <div className="shrink-0 flex items-center gap-3.5 self-start md:self-center">
-                      <div className="border border-dashed border-zinc-400 bg-white/90 rounded-xl px-5 py-3 text-center shadow-sm">
-                        <span className="block text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">{isArabic ? "كوبون الخصم" : "PROMO CODE"}</span>
-                        <span className="font-mono text-sm md:text-base font-bold text-zinc-950 tracking-widest select-all">RAAV15</span>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setSelectedCategory('all');
-                          setActiveView('shop');
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="group bg-zinc-950 text-white font-bold px-5 py-3.5 rounded-xl text-xs tracking-widest uppercase transition-all duration-300 hover:bg-zinc-800 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                      >
-                        <span>{isArabic ? "تسوق الآن" : "SHOP COLL"}</span>
-                      </button>
-                    </div>
-
-                  </div>
-                </motion.div>
-              </section>
-
               {/* Trend Pieces Section */}
-              <TrendPieces
-                products={activeProducts}
-                onSelectProduct={(p) => {
-                  setSelectedProduct(p);
-                  setActiveView('product-details');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                isArabic={isArabic}
-                onQuickAddToCart={handleQuickAddToCart}
-                backdrop={homepageContent?.sectionBackgrounds?.trendPieces}
-              />
+              {homepageContent?.trendSectionEnabled !== false && (
+                <TrendPieces
+                  products={activeProducts}
+                  onSelectProduct={(p) => {
+                    setSelectedProduct(p);
+                    setActiveView('product-details');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  isArabic={isArabic}
+                  onQuickAddToCart={handleQuickAddToCart}
+                  backdrop={homepageContent?.sectionBackgrounds?.trendPieces}
+                />
+              )}
 
               {/* Category Scroll Slices Section */}
-              <CategoryScrollSlices
-                products={activeProducts}
-                onSelectProduct={(p) => {
-                  setSelectedProduct(p);
-                  setActiveView('product-details');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                isArabic={isArabic}
-                onSelectCategory={(cat) => {
-                  setSelectedCategory(cat);
-                  setActiveView('shop');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                onQuickAddToCart={handleQuickAddToCart}
-                categoryImages={homepageContent?.categoryImages}
-                categoryTexts={homepageContent?.categoryTexts}
-                backdrop={homepageContent?.sectionBackgrounds?.categoryScrollSlices}
-                categoryBackdrops={homepageContent?.categoryBackdrops}
-              />
+              {homepageContent?.categorySlicesSectionEnabled !== false && (
+                <CategoryScrollSlices
+                  products={activeProducts}
+                  onSelectProduct={(p) => {
+                    setSelectedProduct(p);
+                    setActiveView('product-details');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  isArabic={isArabic}
+                  onSelectCategory={(cat) => {
+                    setSelectedCategory(cat);
+                    setActiveView('shop');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  onQuickAddToCart={handleQuickAddToCart}
+                  categoryImages={homepageContent?.categoryImages}
+                  categoryTexts={homepageContent?.categoryTexts}
+                  backdrop={homepageContent?.sectionBackgrounds?.categoryScrollSlices}
+                  categoryBackdrops={homepageContent?.categoryBackdrops}
+                />
+              )}
 
               {/* SPECIAL CUSTOM ORDERS FORM SECTION */}
-              <CustomCoutureForm
-                isArabic={isArabic}
-                currentUser={currentUser}
-                onOpenAuth={() => {
-                  setProfileTab('custom');
-                  setActiveView('profile');
-                  window.scrollTo({ top: 300, behavior: 'smooth' });
-                }}
-                onGoToProfileCustom={() => {
-                  setProfileTab('custom');
-                  setActiveView('profile');
-                  window.scrollTo({ top: 300, behavior: 'smooth' });
-                }}
-                backdrop={homepageContent?.sectionBackgrounds?.customCoutureForm}
-              />
+              {homepageContent?.customCoutureSectionEnabled !== false && (
+                <CustomCoutureForm
+                  isArabic={isArabic}
+                  currentUser={currentUser}
+                  onOpenAuth={() => {
+                    setProfileTab('custom');
+                    setActiveView('profile');
+                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                  }}
+                  onGoToProfileCustom={() => {
+                    setProfileTab('custom');
+                    setActiveView('profile');
+                    window.scrollTo({ top: 300, behavior: 'smooth' });
+                  }}
+                  backdrop={homepageContent?.sectionBackgrounds?.customCoutureForm}
+                />
+              )}
             </div>
           )}
 

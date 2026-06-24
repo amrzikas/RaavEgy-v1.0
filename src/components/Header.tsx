@@ -27,6 +27,9 @@ interface HeaderProps {
   headerBgColor?: string;
   logoSize?: number;
   logoImage?: string;
+  logoText?: string;
+  logoTextColor?: string;
+  logoTextFont?: string;
 }
 
 export default function Header({
@@ -52,7 +55,10 @@ export default function Header({
   announcementLink,
   headerBgColor,
   logoSize,
-  logoImage
+  logoImage,
+  logoText,
+  logoTextColor,
+  logoTextFont
 }: HeaderProps) {
   const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
@@ -118,13 +124,59 @@ export default function Header({
     return isArabic ? cat.labelAr : cat.labelEn;
   };
 
+  const isLightColor = (color?: string) => {
+    if (!color) return false;
+    const hex = color.replace('#', '');
+    if (hex.length === 3) {
+      const r = parseInt(hex[0] + hex[0], 16);
+      const g = parseInt(hex[1] + hex[1], 16);
+      const b = parseInt(hex[2] + hex[2], 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 140;
+    }
+    if (hex.length === 6) {
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 140;
+    }
+    const lower = color.toLowerCase();
+    if (lower === 'white' || lower === '#ffffff' || lower === 'transparent' || lower === 'rgba(0,0,0,0)') {
+      return true;
+    }
+    return false;
+  };
+
+  const isLight = isLightColor(headerBgColor);
+
+  const textClass = isLight ? 'text-zinc-800 hover:text-zinc-950 hover:bg-black/5' : 'text-zinc-300 hover:text-white hover:bg-white/10';
+  const iconClass = isLight ? 'text-zinc-700 hover:text-black hover:bg-black/5' : 'text-zinc-300 hover:text-white hover:bg-white/10';
+  const logoSubtextClass = isLight ? 'text-amber-700 font-bold' : 'text-amber-400';
+  
+  const activeNavClass = isLight 
+    ? 'text-black border-b-2 border-amber-650 font-bold' 
+    : 'text-white border-b-2 border-amber-400 font-bold';
+    
+  const inactiveNavClass = isLight 
+    ? 'text-zinc-700 hover:text-black px-2 py-1 transition' 
+    : 'text-zinc-300 hover:text-white px-2 py-1 transition';
+
+  const langBtnClass = isLight
+    ? 'border border-zinc-300 text-zinc-700 hover:text-black hover:border-black rounded'
+    : 'border border-white/10 text-zinc-300 hover:text-white hover:border-white/50 rounded';
+
+  const searchInputClass = isLight
+    ? 'bg-black/5 border border-black/10 text-xs px-3 py-1.5 rounded-full focus:outline-none focus:border-amber-600 focus:bg-black/10 text-black mr-2 placeholder-zinc-500 font-sans'
+    : 'bg-white/10 border border-white/20 text-xs px-3 py-1.5 rounded-full focus:outline-none focus:border-amber-450 focus:bg-white/20 text-white mr-2 placeholder-zinc-300 font-sans';
+
   return (
     <header 
       id="app-header" 
-      className="sticky top-0 z-40 border-b text-white transition-opacity duration-300"
+      className={`sticky top-0 z-40 border-b transition-opacity duration-300 ${isLight ? 'text-zinc-900 border-zinc-200/80 shadow-sm' : 'text-white border-[#2d2e28]'}`}
       style={{
         backgroundColor: headerBgColor || '#353630',
-        borderColor: headerBgColor ? 'rgba(255, 255, 255, 0.08)' : '#2d2e28'
+        borderColor: headerBgColor ? (isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)') : undefined
       }}
     >
       {/* Premium Minimal Announcement Bar / Custom Banner */}
@@ -166,7 +218,7 @@ export default function Header({
           <div className="flex md:hidden items-center">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2 text-zinc-300 hover:text-white hover:bg-white/10 rounded-full transition cursor-pointer"
+              className={`p-2 rounded-full transition cursor-pointer ${iconClass}`}
               title={isArabic ? "القائمة" : "Menu"}
             >
               <Menu size={20} strokeWidth={1.8} />
@@ -181,7 +233,7 @@ export default function Header({
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className={`text-xs font-semibold uppercase tracking-[0.2em] transition cursor-pointer px-2 py-1 ${
-                activeView === 'home' ? 'text-white border-b-2 border-amber-400 font-bold' : 'text-zinc-300 hover:text-white'
+                activeView === 'home' ? activeNavClass : inactiveNavClass
               }`}
             >
               {isArabic ? "الرئيسية" : "HOME"}
@@ -199,7 +251,7 @@ export default function Header({
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 className={`flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.2em] transition cursor-pointer px-2 py-1 ${
-                  activeView === 'shop' ? 'text-white border-b-2 border-amber-400 font-bold' : 'text-zinc-300 hover:text-white'
+                  activeView === 'shop' ? activeNavClass : inactiveNavClass
                 }`}
               >
                 <span>{isArabic ? "المتجر" : "SHOP"}</span>
@@ -268,7 +320,7 @@ export default function Header({
                 const footer = document.querySelector('footer');
                 if (footer) footer.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="hidden sm:inline-block text-xs font-semibold uppercase tracking-[0.2em] hover:text-white transition cursor-pointer px-2 py-1 text-zinc-305"
+              className={`hidden sm:inline-block text-xs font-semibold uppercase tracking-[0.2em] transition cursor-pointer px-2 py-1 ${inactiveNavClass}`}
             >
               {isArabic ? "من نحن" : "ABOUT US"}
             </button>
@@ -301,20 +353,27 @@ export default function Header({
                 ) : (
                   <div className="flex flex-col items-center justify-center text-center transition duration-500 hover:scale-[1.05] group select-none py-1">
                     <span 
-                      className="font-serif tracking-[0.45em] font-extrabold uppercase leading-none pl-[0.45em]"
+                      className={`${
+                        logoTextFont && logoTextFont.toLowerCase().startsWith('font-') 
+                          ? logoTextFont.toLowerCase() 
+                          : logoTextFont 
+                            ? '' 
+                            : 'font-serif'
+                      } tracking-[0.45em] font-extrabold uppercase leading-none pl-[0.45em]`}
                       style={{ 
                         fontSize: logoSize ? `${logoSize * 0.7}px` : '58px',
-                        color: '#ffe299',
-                        textShadow: '0 2px 10px rgba(0,0,0,0.15)'
+                        color: logoTextColor || (isLight ? '#92400e' : '#ffe299'),
+                        textShadow: isLight ? '0 1px 3px rgba(0,0,0,0.05)' : '0 2px 10px rgba(0,0,0,0.15)',
+                        fontFamily: logoTextFont && !logoTextFont.toLowerCase().startsWith('font-') ? logoTextFont : undefined
                       }}
                     >
-                      RAAV
+                      {logoText || 'RAAV'}
                     </span>
                   </div>
                 )}
               </div>
               {activeView === 'shop' && selectedCategory !== 'all' && (
-                <div className="text-[9px] uppercase tracking-[0.15em] text-amber-400 mt-0.5 font-sans font-semibold">
+                <div className={`text-[9px] uppercase tracking-[0.15em] mt-0.5 font-sans font-semibold ${logoSubtextClass}`}>
                   {currentCategoryLabel()}
                 </div>
               )}
@@ -334,7 +393,7 @@ export default function Header({
                     exit={{ width: 0, opacity: 0 }}
                     type="text"
                     placeholder={isArabic ? "ابحث هنا..." : "Search..."}
-                    className="bg-white/10 border border-white/20 text-xs px-3 py-1.5 rounded-full focus:outline-none focus:border-amber-450 focus:bg-white/20 text-white mr-2 placeholder-zinc-300"
+                    className={searchInputClass}
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
@@ -349,7 +408,7 @@ export default function Header({
               </AnimatePresence>
               <button 
                 onClick={() => setShowSearchInput(!showSearchInput)}
-                className="p-2 text-zinc-300 hover:text-white hover:bg-white/10 rounded-full transition cursor-pointer"
+                className={`p-2 rounded-full transition cursor-pointer ${iconClass}`}
                 title={isArabic ? "بحث" : "Search"}
               >
                 <Search size={19} strokeWidth={1.8} />
@@ -359,7 +418,7 @@ export default function Header({
             {/* Language Switch (hidden on mobile, moved to drawer) */}
             <button
               onClick={() => setIsArabic(!isArabic)}
-              className="hidden md:inline-block text-xs font-semibold tracking-wider hover:text-white hover:border-white/50 px-2 py-1 cursor-pointer transition border border-white/10 text-zinc-300 rounded"
+              className={`hidden md:inline-block text-xs font-semibold tracking-wider px-2 py-1 cursor-pointer transition ${langBtnClass}`}
               title={isArabic ? "Switch to English" : "تغيير للعربية"}
             >
               {isArabic ? "EN" : "عربي"}
@@ -373,12 +432,13 @@ export default function Header({
               }}
               className={`p-2 rounded-full transition cursor-pointer relative ${
                 activeView === 'profile' || isUserLoggedIn
-                  ? "text-amber-400 bg-white/10 border border-white/20"
-                  : "text-zinc-300 hover:text-white hover:bg-white/10"
+                  ? (isLight ? "text-amber-800 bg-black/5 border border-black/10 shadow-sm" : "text-amber-400 bg-white/10 border border-white/20")
+                  : iconClass
               }`}
+              style={{ borderColor: '#000000', backgroundColor: '#ffffff' }}
               title={isArabic ? "حسابي الشخصي" : "My Account"}
             >
-              <User size={19} strokeWidth={1.8} />
+              <User size={19} strokeWidth={1.8} style={{ borderColor: '#000000', fontSize: '18px' }} />
               {isUserLoggedIn && (
                 <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400" />
               )}
@@ -390,12 +450,13 @@ export default function Header({
                 onClick={onOpenAdmin}
                 className={`hidden md:inline-block p-2 rounded-full transition cursor-pointer relative ${
                   isAdminLoggedIn
-                    ? "text-amber-400 bg-white/10 border border-white/20"
-                    : "text-zinc-305 hover:text-amber-400 hover:bg-white/10"
+                    ? (isLight ? "text-amber-800 bg-black/5 border border-black/10 shadow-sm" : "text-amber-400 bg-white/10 border border-white/20")
+                    : iconClass
                 }`}
+                style={{ backgroundColor: '#ffffff' }}
                 title={isArabic ? "لوحة الإدارة" : "Admin Dashboard"}
               >
-                <Lock size={15} strokeWidth={1.8} />
+                <Lock size={15} strokeWidth={1.8} style={{ borderColor: '#000000', fontSize: '20px' }} />
               </button>
             )}
 
@@ -403,17 +464,17 @@ export default function Header({
             {isAdminLoggedIn && (
               <button
                 onClick={onLogoutAdmin}
-                className="hidden md:inline-block p-1.5 text-red-400 hover:text-red-300 hover:bg-white/10 rounded-full transition cursor-pointer"
+                className={`hidden md:inline-block p-1.5 text-red-400 ${isLight ? 'hover:text-red-600 hover:bg-black/5' : 'hover:text-red-300 hover:bg-white/10'} rounded-full transition cursor-pointer`}
                 title={isArabic ? "خروج المسؤول" : "Admin Logout"}
               >
-                <ShieldAlert size={19} strokeWidth={1.8} />
+                <ShieldAlert size={19} strokeWidth={1.8} style={{ borderColor: '#000000' }} />
               </button>
             )}
 
             {/* Cart / Shopping Bag Icon */}
             <button
               onClick={onOpenCart}
-              className="relative p-2 text-zinc-300 hover:text-white hover:bg-white/10 rounded-full transition cursor-pointer"
+              className={`relative p-2 rounded-full transition cursor-pointer ${iconClass}`}
               title={isArabic ? "سلة المشتريات" : "Shopping Bag"}
             >
               <ShoppingBag size={19} strokeWidth={1.8} />

@@ -17,7 +17,15 @@ service cloud.firestore {
     // Orders
     match /orders/{orderId} {
       allow create: if true;
-      allow read: if isAdmin(request) || (request.auth != null && resource.data.customerId == request.auth.uid);
+      allow read: if isAdmin(request) || (
+        request.auth != null && (
+          resource.data.customerId == request.auth.uid || 
+          (
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.phone == resource.data.customerPhone
+          )
+        )
+      );
       allow update, delete: if isAdmin(request);
     }
 

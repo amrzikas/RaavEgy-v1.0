@@ -315,6 +315,15 @@ export default function ProductPage({
                   </span>
                 )}
               </div>
+
+              {/* Dynamic Stock Badge */}
+              <div className="flex items-center gap-2 pt-1 justify-start">
+                <span className={`text-xs font-mono px-3 py-1 rounded-full ${product.quantity && product.quantity > 0 ? (product.quantity <= 5 ? 'bg-rose-50 text-rose-600 font-bold' : 'bg-zinc-100 text-zinc-600') : 'bg-red-50 text-red-500 font-bold'}`}>
+                  {isArabic 
+                    ? `المخزون المتوفر بالقطعة: ${product.quantity !== undefined ? product.quantity : 100} قطع` 
+                    : `Available Inventory: ${product.quantity !== undefined ? product.quantity : 100} pieces`}
+                </span>
+              </div>
             </div>
 
             {/* Description Text */}
@@ -398,8 +407,16 @@ export default function ProductPage({
                 </span>
                 <button
                   type="button"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 text-zinc-750 font-bold rounded-lg flex items-center justify-center cursor-pointer text-sm font-mono"
+                  onClick={() => {
+                    const maxQty = product.quantity !== undefined ? product.quantity : 100;
+                    if (quantity < maxQty) {
+                      setQuantity(quantity + 1);
+                    }
+                  }}
+                  disabled={quantity >= (product.quantity !== undefined ? product.quantity : 100)}
+                  className={`w-10 h-10 bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 text-zinc-750 font-bold rounded-lg flex items-center justify-center cursor-pointer text-sm font-mono ${
+                    quantity >= (product.quantity !== undefined ? product.quantity : 100) ? 'opacity-40 cursor-not-allowed' : ''
+                  }`}
                 >
                   +
                 </button>
