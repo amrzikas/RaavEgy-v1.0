@@ -24,6 +24,11 @@ const DEFAULT_IMAGES = [
   "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=1200"
 ];
 
+const isCustomImage = (url: string) => {
+  if (!url) return false;
+  return !DEFAULT_IMAGES.includes(url);
+};
+
 export default function MainHeroSection({
   isArabic,
   enabled = true,
@@ -122,32 +127,32 @@ export default function MainHeroSection({
 
             {/* Collage Showcase */}
             <div className={`${showTexts ? 'lg:col-span-7' : 'lg:col-span-10 lg:col-start-2'} grid grid-cols-12 gap-4 relative`}>
-              <div className="col-span-8 aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white">
+              <div className="col-span-8 aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white bg-white flex items-center justify-center">
                 <img 
                   src={optimizeUnsplashUrl(activeImages[0], 800, 75)} 
                   alt="Primary Editorial" 
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full ${isCustomImage(activeImages[0]) ? 'object-contain p-2' : 'object-cover'}`}
                   referrerPolicy="no-referrer"
                 />
               </div>
               
               <div className="col-span-4 flex flex-col gap-4 justify-end pb-8">
                 {activeImages[1] && (
-                  <div className="aspect-square rounded-3xl overflow-hidden shadow-lg border-2 border-white hover:scale-[1.05] transition duration-500">
+                  <div className="aspect-square rounded-3xl overflow-hidden shadow-lg border-2 border-white hover:scale-[1.05] transition duration-500 bg-white flex items-center justify-center">
                     <img 
                       src={optimizeUnsplashUrl(activeImages[1], 400, 70)} 
                       alt="Secondary Editorial" 
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full ${isCustomImage(activeImages[1]) ? 'object-contain p-2' : 'object-cover'}`}
                       referrerPolicy="no-referrer"
                     />
                   </div>
                 )}
                 {activeImages[2] && (
-                  <div className="aspect-[3/4] rounded-3xl overflow-hidden shadow-lg border-2 border-white hover:scale-[1.05] transition duration-500">
+                  <div className="aspect-[3/4] rounded-3xl overflow-hidden shadow-lg border-2 border-white hover:scale-[1.05] transition duration-500 bg-white flex items-center justify-center">
                     <img 
                       src={optimizeUnsplashUrl(activeImages[2], 400, 70)} 
                       alt="Tertiary Editorial" 
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full ${isCustomImage(activeImages[2]) ? 'object-contain p-2' : 'object-cover'}`}
                       referrerPolicy="no-referrer"
                     />
                   </div>
@@ -178,13 +183,34 @@ export default function MainHeroSection({
               transition={{ duration: 1 }}
               className="absolute inset-0 w-full h-full"
             >
-              <img 
-                src={optimizeUnsplashUrl(activeImages[activeSlide % activeImages.length], 1600, 75)} 
-                alt="Background Hero" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/60" />
+              {isCustomImage(activeImages[activeSlide % activeImages.length]) ? (
+                <div className="absolute inset-0 bg-zinc-950 flex items-center justify-center overflow-hidden">
+                  {/* Blurred Backdrop */}
+                  <img 
+                    src={optimizeUnsplashUrl(activeImages[activeSlide % activeImages.length], 800, 30)} 
+                    alt="Backdrop Blur" 
+                    className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-45 scale-110 select-none pointer-events-none"
+                    referrerPolicy="no-referrer"
+                  />
+                  {/* Contained Front Image */}
+                  <img 
+                    src={optimizeUnsplashUrl(activeImages[activeSlide % activeImages.length], 1200, 75)} 
+                    alt="Bespoke Couture" 
+                    className="relative max-h-full max-w-full object-contain p-4 z-10 select-none"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              ) : (
+                <>
+                  <img 
+                    src={optimizeUnsplashUrl(activeImages[activeSlide % activeImages.length], 1600, 75)} 
+                    alt="Background Hero" 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/60" />
+                </>
+              )}
             </motion.div>
           </AnimatePresence>
 
@@ -257,24 +283,44 @@ export default function MainHeroSection({
             {/* Left bento visual block */}
             <div className={showTexts ? 'lg:col-span-7 grid grid-cols-2 gap-4' : 'lg:col-span-10 lg:col-start-2 grid grid-cols-2 gap-4'}>
               <div className="space-y-4">
-                <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-md">
-                  <img src={optimizeUnsplashUrl(activeImages[0], 600, 75)} alt="Bento 1" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-md bg-white flex items-center justify-center">
+                  <img 
+                    src={optimizeUnsplashUrl(activeImages[0], 600, 75)} 
+                    alt="Bento 1" 
+                    className={`w-full h-full ${isCustomImage(activeImages[0]) ? 'object-contain p-2' : 'object-cover'}`} 
+                    referrerPolicy="no-referrer" 
+                  />
                 </div>
                 {activeImages[2] && (
-                  <div className="aspect-[1/1] rounded-3xl overflow-hidden shadow-md">
-                    <img src={optimizeUnsplashUrl(activeImages[2], 500, 70)} alt="Bento 3" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <div className="aspect-[1/1] rounded-3xl overflow-hidden shadow-md bg-white flex items-center justify-center">
+                    <img 
+                      src={optimizeUnsplashUrl(activeImages[2], 500, 70)} 
+                      alt="Bento 3" 
+                      className={`w-full h-full ${isCustomImage(activeImages[2]) ? 'object-contain p-2' : 'object-cover'}`} 
+                      referrerPolicy="no-referrer" 
+                    />
                   </div>
                 )}
               </div>
               <div className="space-y-4 pt-8">
                 {activeImages[1] && (
-                  <div className="aspect-[1/1] rounded-3xl overflow-hidden shadow-md">
-                    <img src={optimizeUnsplashUrl(activeImages[1], 500, 70)} alt="Bento 2" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <div className="aspect-[1/1] rounded-3xl overflow-hidden shadow-md bg-white flex items-center justify-center">
+                    <img 
+                      src={optimizeUnsplashUrl(activeImages[1], 500, 70)} 
+                      alt="Bento 2" 
+                      className={`w-full h-full ${isCustomImage(activeImages[1]) ? 'object-contain p-2' : 'object-cover'}`} 
+                      referrerPolicy="no-referrer" 
+                    />
                   </div>
                 )}
                 {activeImages[3] || activeImages[0] ? (
-                  <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-md">
-                    <img src={optimizeUnsplashUrl(activeImages[3] || activeImages[0], 600, 75)} alt="Bento 4" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-md bg-white flex items-center justify-center">
+                    <img 
+                      src={optimizeUnsplashUrl(activeImages[3] || activeImages[0], 600, 75)} 
+                      alt="Bento 4" 
+                      className={`w-full h-full ${isCustomImage(activeImages[3] || activeImages[0]) ? 'object-contain p-2' : 'object-cover'}`} 
+                      referrerPolicy="no-referrer" 
+                    />
                   </div>
                 ) : null}
               </div>
@@ -312,15 +358,36 @@ export default function MainHeroSection({
 
       {/* 4. SINGLE FULL-BLEED LUXURY BANNER */}
       {layout === 'single' && (
-        <div className="relative w-full aspect-[21/9] min-h-[350px] flex items-center">
+        <div className="relative w-full aspect-[21/9] min-h-[350px] flex items-center overflow-hidden">
           <div className="absolute inset-0">
-            <img 
-              src={optimizeUnsplashUrl(activeImages[0], 1600, 75)} 
-              alt="Single Banner Hero" 
-              className="w-full h-full object-cover" 
-              referrerPolicy="no-referrer"
-            />
-            <div className={showTexts ? "absolute inset-0 bg-gradient-to-r from-zinc-950/70 via-zinc-900/40 to-transparent" : "absolute inset-0 bg-black/10"} />
+            {isCustomImage(activeImages[0]) ? (
+              <div className="absolute inset-0 bg-zinc-950 flex items-center justify-center overflow-hidden">
+                {/* Blurred Backdrop */}
+                <img 
+                  src={optimizeUnsplashUrl(activeImages[0], 800, 30)} 
+                  alt="Backdrop Blur" 
+                  className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-45 scale-110 select-none pointer-events-none"
+                  referrerPolicy="no-referrer"
+                />
+                {/* Contained Front Image */}
+                <img 
+                  src={optimizeUnsplashUrl(activeImages[0], 1200, 75)} 
+                  alt="Single Banner Hero" 
+                  className="relative max-h-full max-w-full object-contain p-4 z-10 select-none"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            ) : (
+              <>
+                <img 
+                  src={optimizeUnsplashUrl(activeImages[0], 1600, 75)} 
+                  alt="Single Banner Hero" 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer"
+                />
+                <div className={showTexts ? "absolute inset-0 bg-gradient-to-r from-zinc-950/70 via-zinc-900/40 to-transparent" : "absolute inset-0 bg-black/10"} />
+              </>
+            )}
           </div>
 
           {showTexts && (

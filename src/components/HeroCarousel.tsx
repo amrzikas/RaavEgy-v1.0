@@ -53,6 +53,17 @@ const HERO_SLIDES = [
   }
 ];
 
+const DEFAULT_CAROUSEL_IMAGES = [
+  "https://img.kwcdn.com/product/fancy/9c18cbce-997c-4405-8b84-482cb677dd72.jpg?imageView2/2/w/800/q/70/format/avif?auto=format&fit=crop&q=80&w=1200",
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=1200",
+  "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&q=80&w=1200"
+];
+
+const isCustomImage = (url?: string) => {
+  if (!url) return false;
+  return !DEFAULT_CAROUSEL_IMAGES.includes(url);
+};
+
 export default function HeroCarousel({
   onBrowseCategory,
   isArabic,
@@ -159,11 +170,11 @@ export default function HeroCarousel({
               style={{ direction: isArabic ? 'rtl' : 'ltr' }}
             >
               {/* Thumbnail left (or right based on RTL) */}
-              <div className="md:col-span-3 aspect-[16/10] md:aspect-[4/3] rounded-xl overflow-hidden shadow-sm relative">
+              <div className="md:col-span-3 aspect-[16/10] md:aspect-[4/3] rounded-xl overflow-hidden shadow-sm relative bg-white flex items-center justify-center">
                 <img
                   src={optimizeUnsplashUrl(currentSlide.image || '', 400, 75)}
                   alt={isArabic ? currentSlide.titleAr : currentSlide.titleEn}
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full ${isCustomImage(currentSlide.image) ? 'object-contain p-1.5' : 'object-cover'}`}
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -271,11 +282,11 @@ export default function HeroCarousel({
             <div className="md:col-span-7 relative flex justify-center items-center mt-6 md:mt-0">
               
               {/* Round Corner Frame precisely like the screenshot */}
-              <div className="relative w-full max-w-lg aspect-[5/4] sm:aspect-[4/3] rounded-[2.2rem] md:rounded-[3rem] overflow-hidden shadow-2xl">
+              <div className="relative w-full max-w-lg aspect-[5/4] sm:aspect-[4/3] rounded-[2.2rem] md:rounded-[3rem] overflow-hidden shadow-2xl bg-white flex items-center justify-center">
                 <img
                   src={optimizeUnsplashUrl(currentSlide.image, 1000, 75)}
                   alt={isArabic ? currentSlide.titleAr : currentSlide.titleEn}
-                  className="w-full h-full object-cover select-none pointer-events-none"
+                  className={`w-full h-full ${isCustomImage(currentSlide.image) ? 'object-contain p-3' : 'object-cover'} select-none`}
                   referrerPolicy="no-referrer"
                   fetchPriority="high"
                 />

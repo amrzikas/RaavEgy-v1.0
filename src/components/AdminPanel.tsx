@@ -3391,8 +3391,8 @@ export default function AdminPanel({
 
                                     {/* Thumbnail preview if exists */}
                                     {imageUrl && (
-                                      <div className="w-full h-24 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950">
-                                        <img src={imageUrl} alt={`Hero ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                                      <div className="w-full h-24 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950 flex items-center justify-center">
+                                        <img src={imageUrl} alt={`Hero ${imgIdx + 1}`} className="w-full h-full object-contain p-1" />
                                       </div>
                                     )}
 
