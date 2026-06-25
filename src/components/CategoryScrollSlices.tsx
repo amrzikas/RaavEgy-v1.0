@@ -262,16 +262,13 @@ export default function CategoryScrollSlices({
                           {/* Info Panel */}
                           <div className="p-3 sm:p-4 flex flex-col flex-1 justify-between gap-2.5 text-right sm:text-right bg-[#000000]" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                             <div>
-                              <h4 className="text-[17px] font-bold text-white hover:text-amber-400 transition leading-snug line-clamp-1">
+                              <h4 className="text-[13px] sm:text-[14px] font-bold text-white hover:text-amber-400 transition leading-snug break-words">
                                 {isArabic ? product.nameAr : product.nameEn}
                               </h4>
                               <div className="flex items-center justify-between gap-1.5 mt-0.5 flex-wrap">
                                 <p className="text-[8px] xs:text-[9.5px] text-zinc-455 font-mono tracking-wider uppercase">
                                   {isArabic ? (product.subcategoryAr || "تصميم راقٍ") : (product.subcategoryEn || "COUTURE")}
                                 </p>
-                                <span className={`text-[10.5px] font-mono px-1.5 py-0.2 rounded-full border border-[#ffffff] font-bold text-[#ffffff] ${product.quantity && product.quantity > 0 ? (product.quantity <= 5 ? 'bg-rose-500/20' : 'bg-zinc-900') : 'bg-red-500/20'}`}>
-                                  {isArabic ? `المخزون: ${product.quantity !== undefined ? product.quantity : 100}` : `Stock: ${product.quantity !== undefined ? product.quantity : 100}`}
-                                </span>
                               </div>
                             </div>
 

@@ -524,12 +524,9 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
                               {product.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
                               {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
                             </span>
-                            <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full ${product.quantity && product.quantity > 0 ? (product.quantity <= 5 ? 'bg-rose-50 text-rose-600 font-bold' : 'bg-zinc-100 text-zinc-600') : 'bg-red-50 text-red-500 font-bold'}`}>
-                              {isArabic ? `المخزون: ${product.quantity !== undefined ? product.quantity : 100}` : `Stock: ${product.quantity !== undefined ? product.quantity : 100}`}
-                            </span>
                           </div>
                           
-                          <h4 className="text-xs sm:text-sm font-medium text-zinc-900 leading-tight line-clamp-1 group-hover:text-black transition">
+                          <h4 className="text-[10px] sm:text-xs font-medium text-zinc-900 leading-tight group-hover:text-black transition break-words">
                             {isArabic ? product.nameAr : product.nameEn}
                           </h4>
                         </div>

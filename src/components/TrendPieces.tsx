@@ -162,14 +162,9 @@ export default function TrendPieces({
               {/* Text Content Overlay card (floating and stylish) */}
               <div className="relative z-10 p-2 xs:p-3 sm:p-8 lg:p-10 text-white flex flex-col items-start gap-1 sm:gap-4">
                 <div className="space-y-0.5 sm:space-y-2 text-left w-full" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                  <h3 className="text-[10px] xs:text-base sm:text-2xl md:text-3xl font-serif font-medium text-white tracking-tight leading-tight group-hover:text-amber-300 transition line-clamp-1">
+                  <h3 className="text-[9px] xs:text-sm sm:text-xl md:text-2xl font-serif font-medium text-white tracking-tight leading-tight group-hover:text-amber-300 transition break-words">
                     {isArabic ? hero.nameAr : hero.nameEn}
                   </h3>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <span className={`text-[8px] xs:text-[10px] font-mono px-2 py-0.5 rounded-full ${hero.quantity && hero.quantity > 0 ? (hero.quantity <= 5 ? 'bg-rose-500/30 text-rose-300 font-bold' : 'bg-white/10 text-zinc-300') : 'bg-red-500/30 text-red-300 font-bold'}`}>
-                      {isArabic ? `المخزون المتوفر: ${hero.quantity !== undefined ? hero.quantity : 100}` : `Stock Available: ${hero.quantity !== undefined ? hero.quantity : 100}`}
-                    </span>
-                  </div>
                   <p className="hidden sm:block text-zinc-350 text-xs sm:text-sm max-w-xl font-sans font-light leading-relaxed line-clamp-2 mt-1">
                     {isArabic ? hero.descriptionAr : hero.descriptionEn}
                   </p>
@@ -273,17 +268,10 @@ export default function TrendPieces({
                               }`}>
                                 {isArabic ? "تنسيق مذهل" : "TREND ELEMENT"}
                               </span>
-                              <span className={`text-[6px] xs:text-[8px] sm:text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                                product.quantity && product.quantity > 0 
-                                  ? (product.quantity <= 5 ? 'bg-rose-500/20 text-rose-300 font-bold' : (isEven ? 'bg-zinc-200 text-zinc-600' : 'bg-white/10 text-zinc-300')) 
-                                  : 'bg-red-500/20 text-red-300 font-bold'
-                              }`}>
-                                {isArabic ? `المخزون: ${product.quantity !== undefined ? product.quantity : 100}` : `Stock: ${product.quantity !== undefined ? product.quantity : 100}`}
-                              </span>
                             </div>
                             <h3 
                               onClick={() => onSelectProduct(product)}
-                              className={`text-[9px] xs:text-xs sm:text-base lg:text-lg font-serif font-semibold tracking-tight leading-snug cursor-pointer transition line-clamp-1 ${
+                              className={`text-[8px] xs:text-[10px] sm:text-sm lg:text-base font-serif font-semibold tracking-tight leading-snug cursor-pointer transition break-words ${
                                 isEven ? "text-zinc-950 hover:text-amber-805" : "text-white hover:text-amber-400"
                               }`}
                             >

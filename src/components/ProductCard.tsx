@@ -126,7 +126,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Info card body */}
       <div className="p-4 sm:p-5 flex flex-col flex-1" style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}>
-        <h3 className="text-zinc-950 font-serif font-bold text-base sm:text-lg tracking-tight mb-1.5 cursor-pointer line-clamp-1 hover:text-amber-800 transition" onClick={() => onOpenDetails(product)}>
+        <h3 className="text-zinc-950 font-serif font-bold text-xs sm:text-sm tracking-tight mb-1.5 cursor-pointer hover:text-amber-800 transition break-words" onClick={() => onOpenDetails(product)}>
           {isArabic ? product.nameAr : product.nameEn}
         </h3>
         
