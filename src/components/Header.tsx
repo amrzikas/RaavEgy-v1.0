@@ -152,11 +152,11 @@ export default function Header({
 
   const textClass = isLight ? 'text-zinc-800 hover:text-zinc-950 hover:bg-black/5' : 'text-zinc-300 hover:text-white hover:bg-white/10';
   const iconClass = isLight ? 'text-zinc-700 hover:text-black hover:bg-black/5' : 'text-zinc-300 hover:text-white hover:bg-white/10';
-  const logoSubtextClass = isLight ? 'text-amber-700 font-bold' : 'text-amber-400';
+  const logoSubtextClass = isLight ? 'text-zinc-650 font-bold' : 'text-zinc-400';
   
   const activeNavClass = isLight 
-    ? 'text-black border-b-2 border-amber-650 font-bold' 
-    : 'text-white border-b-2 border-amber-400 font-bold';
+    ? 'text-black border-b-2 border-zinc-800 font-bold' 
+    : 'text-white border-b-2 border-zinc-300 font-bold';
     
   const inactiveNavClass = isLight 
     ? 'text-zinc-700 hover:text-black px-2 py-1 transition' 
@@ -167,15 +167,15 @@ export default function Header({
     : 'border border-white/10 text-zinc-300 hover:text-white hover:border-white/50 rounded';
 
   const searchInputClass = isLight
-    ? 'bg-black/5 border border-black/10 text-xs px-3 py-1.5 rounded-full focus:outline-none focus:border-amber-600 focus:bg-black/10 text-black mr-2 placeholder-zinc-500 font-sans'
-    : 'bg-white/10 border border-white/20 text-xs px-3 py-1.5 rounded-full focus:outline-none focus:border-amber-450 focus:bg-white/20 text-white mr-2 placeholder-zinc-300 font-sans';
+    ? 'bg-black/5 border border-black/10 text-xs px-3 py-1.5 rounded-full focus:outline-none focus:border-zinc-800 focus:bg-black/10 text-black mr-2 placeholder-zinc-500 font-sans'
+    : 'bg-white/10 border border-white/20 text-xs px-3 py-1.5 rounded-full focus:outline-none focus:border-zinc-300 focus:bg-white/20 text-white mr-2 placeholder-zinc-300 font-sans';
 
   return (
     <header 
       id="app-header" 
-      className={`sticky top-0 z-40 border-b transition-opacity duration-300 ${isLight ? 'text-zinc-900 border-zinc-200/80 shadow-sm' : 'text-white border-[#2d2e28]'}`}
+      className={`sticky top-0 z-40 border-b transition-opacity duration-300 ${isLight ? 'text-zinc-900 border-zinc-200/80 shadow-sm' : 'text-white border-[#2D2E2F]'}`}
       style={{
-        backgroundColor: headerBgColor || '#353630',
+        backgroundColor: headerBgColor || '#1C1D1F',
         borderColor: headerBgColor ? (isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)') : undefined
       }}
     >
@@ -225,8 +225,57 @@ export default function Header({
             </button>
           </div>
 
+          {/* Logo on the Left */}
+          <div className="flex justify-center md:justify-start md:w-1/3 flex-1 md:flex-initial h-20 items-center overflow-hidden">
+            <div 
+              onClick={() => {
+                setActiveView('home');
+                setSelectedCategory('all');
+                setSearchQuery('');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="cursor-pointer text-center select-none flex flex-col justify-center items-center h-full"
+            >
+              <div className="flex items-center justify-center h-full">
+                {logoImage ? (
+                  <img 
+                    src={logoImage} 
+                    alt="RAAV Couture Logo" 
+                    className="object-contain transition duration-500 hover:scale-105 rounded-lg md:rounded-xl h-20 w-auto p-1"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center transition duration-500 hover:scale-[1.05] group select-none py-1">
+                    <span 
+                      className={`${
+                        logoTextFont && logoTextFont.toLowerCase().startsWith('font-') 
+                          ? logoTextFont.toLowerCase() 
+                          : logoTextFont 
+                            ? '' 
+                            : 'font-serif'
+                      } tracking-[0.45em] font-extrabold uppercase leading-none pl-[0.45em]`}
+                      style={{ 
+                        fontSize: logoSize ? `${logoSize * 0.7}px` : '58px',
+                        color: logoTextColor || (isLight ? '#000000' : '#E5E5E5'),
+                        textShadow: isLight ? '0 1px 3px rgba(0,0,0,0.05)' : '0 2px 10px rgba(0,0,0,0.15)',
+                        fontFamily: logoTextFont && !logoTextFont.toLowerCase().startsWith('font-') ? logoTextFont : undefined
+                      }}
+                    >
+                      {logoText || 'RAAV'}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {activeView === 'shop' && selectedCategory !== 'all' && (
+                <div className={`text-[9px] uppercase tracking-[0.15em] mt-0.5 font-sans font-semibold ${logoSubtextClass}`}>
+                  {currentCategoryLabel()}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Navigation links (Desktop only) */}
-          <div className="hidden md:flex items-center gap-4 sm:gap-8 md:w-1/3 justify-start" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+          <div className="hidden md:flex items-center gap-4 sm:gap-8 md:w-1/3 justify-center" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
             <button 
               onClick={() => {
                 setActiveView('home');
@@ -274,14 +323,14 @@ export default function Header({
                             onClick={() => handleCategorySelect(cat.id)}
                             className={`w-full text-left px-4 py-2 text-xs tracking-wider uppercase transition cursor-pointer flex justify-between items-center ${
                               selectedCategory === cat.id && activeView === 'shop'
-                                ? 'bg-amber-50/55 text-amber-900 font-bold' 
+                                ? 'bg-zinc-100 text-zinc-900 font-bold' 
                                 : 'text-zinc-650 hover:bg-zinc-50 hover:text-black font-semibold'
                             }`}
                             style={{ direction: isArabic ? 'rtl' : 'ltr' }}
                           >
                             <span>{isArabic ? cat.labelAr : cat.labelEn}</span>
                             {selectedCategory === cat.id && activeView === 'shop' && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-650" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
                             )}
                           </button>
 
@@ -296,7 +345,7 @@ export default function Header({
                                     onClick={() => handleSubcategorySelect(cat.id, sub.en)}
                                     className={`text-left w-full py-1 text-[10px] uppercase font-medium transition cursor-pointer ${
                                       isSelected 
-                                        ? 'text-amber-900 font-bold' 
+                                        ? 'text-zinc-950 font-bold' 
                                         : 'text-zinc-500 hover:text-black'
                                     }`}
                                     style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
@@ -324,60 +373,6 @@ export default function Header({
             >
               {isArabic ? "من نحن" : "ABOUT US"}
             </button>
-          </div>
-
-          {/* Logo in the Center */}
-          <div className="flex justify-center md:w-1/3 flex-1 md:flex-initial">
-            <div 
-              onClick={() => {
-                setActiveView('home');
-                setSelectedCategory('all');
-                setSearchQuery('');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="cursor-pointer text-center select-none flex flex-col justify-center items-center"
-            >
-              <div className="flex items-center justify-center">
-                {logoImage && !logoImage.includes('raav_brand_logo_1782163038345.jpg') ? (
-                  <img 
-                    src={logoImage} 
-                    alt="RAAV Couture Logo" 
-                    className="object-contain transition duration-500 hover:scale-105"
-                    style={{ 
-                      height: logoSize ? `${logoSize}px` : undefined,
-                      maxHeight: '130px',
-                      ...(!logoSize ? { height: '80px' } : {})
-                    }}
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center text-center transition duration-500 hover:scale-[1.05] group select-none py-1">
-                    <span 
-                      className={`${
-                        logoTextFont && logoTextFont.toLowerCase().startsWith('font-') 
-                          ? logoTextFont.toLowerCase() 
-                          : logoTextFont 
-                            ? '' 
-                            : 'font-serif'
-                      } tracking-[0.45em] font-extrabold uppercase leading-none pl-[0.45em]`}
-                      style={{ 
-                        fontSize: logoSize ? `${logoSize * 0.7}px` : '58px',
-                        color: logoTextColor || (isLight ? '#92400e' : '#ffe299'),
-                        textShadow: isLight ? '0 1px 3px rgba(0,0,0,0.05)' : '0 2px 10px rgba(0,0,0,0.15)',
-                        fontFamily: logoTextFont && !logoTextFont.toLowerCase().startsWith('font-') ? logoTextFont : undefined
-                      }}
-                    >
-                      {logoText || 'RAAV'}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {activeView === 'shop' && selectedCategory !== 'all' && (
-                <div className={`text-[9px] uppercase tracking-[0.15em] mt-0.5 font-sans font-semibold ${logoSubtextClass}`}>
-                  {currentCategoryLabel()}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Controls on the End */}
@@ -432,7 +427,7 @@ export default function Header({
               }}
               className={`p-2 rounded-full transition cursor-pointer relative ${
                 activeView === 'profile' || isUserLoggedIn
-                  ? (isLight ? "text-amber-800 bg-black/5 border border-black/10 shadow-sm" : "text-amber-400 bg-white/10 border border-white/20")
+                  ? (isLight ? "text-zinc-800 bg-black/5 border border-black/10 shadow-sm" : "text-zinc-200 bg-white/10 border border-white/20")
                   : iconClass
               }`}
               style={{ borderColor: '#000000', backgroundColor: '#ffffff' }}
@@ -450,7 +445,7 @@ export default function Header({
                 onClick={onOpenAdmin}
                 className={`hidden md:inline-block p-2 rounded-full transition cursor-pointer relative ${
                   isAdminLoggedIn
-                    ? (isLight ? "text-amber-800 bg-black/5 border border-black/10 shadow-sm" : "text-amber-400 bg-white/10 border border-white/20")
+                    ? (isLight ? "text-zinc-800 bg-black/5 border border-black/10 shadow-sm" : "text-zinc-200 bg-white/10 border border-white/20")
                     : iconClass
                 }`}
                 style={{ backgroundColor: '#ffffff' }}
@@ -478,7 +473,7 @@ export default function Header({
               title={isArabic ? "سلة المشتريات" : "Shopping Bag"}
             >
               <ShoppingBag size={19} strokeWidth={1.8} />
-              <span className="absolute -top-0.5 -right-0.5 bg-amber-400 text-zinc-950 rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-bold">
+              <span className="absolute -top-0.5 -right-0.5 bg-zinc-200 text-zinc-950 rounded-full text-[9px] w-4 h-4 flex items-center justify-center font-bold border border-zinc-400">
                 {cartCount}
               </span>
             </button>
@@ -491,10 +486,10 @@ export default function Header({
       {activeView === 'shop' && selectedCategory !== 'all' && (
         <div className="bg-zinc-50 py-2 border-t border-zinc-100 flex items-center justify-center gap-3 text-xs text-zinc-500 font-sans">
           <span>{isArabic ? "تصفية الفئة:" : "Browsing category:"} </span>
-          <span className="font-bold text-zinc-900 bg-amber-100/55 px-2.5 py-0.5 rounded-full text-[11px] uppercase tracking-wider">{currentCategoryLabel()}</span>
+          <span className="font-bold text-zinc-900 bg-zinc-200/70 px-2.5 py-0.5 rounded-full text-[11px] uppercase tracking-wider">{currentCategoryLabel()}</span>
           <button 
             onClick={() => setSelectedCategory('all')} 
-            className="text-amber-700 hover:underline font-semibold cursor-pointer"
+            className="text-zinc-700 hover:underline font-semibold cursor-pointer"
           >
             {isArabic ? "إزالة التصفية (" + categories.find(c => c.id === 'all')?.labelAr + ")" : "Clear Filter (" + categories.find(c => c.id === 'all')?.labelEn + ")"}
           </button>
@@ -557,11 +552,11 @@ export default function Header({
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     className={`w-full py-2 text-sm font-bold uppercase tracking-[0.15em] transition flex items-center justify-between ${
-                      activeView === 'home' ? 'text-amber-900 bg-amber-50/40 px-3 rounded-lg' : 'text-zinc-700 hover:text-black'
+                      activeView === 'home' ? 'text-zinc-900 bg-zinc-100/80 px-3 rounded-lg' : 'text-zinc-700 hover:text-black'
                     }`}
                   >
                     <span>{isArabic ? "الصفحة الرئيسية" : "HOME"}</span>
-                    <ChevronRight size={14} className={isArabic ? "rotate-180 text-amber-900" : "text-zinc-400"} />
+                    <ChevronRight size={14} className={isArabic ? "rotate-180 text-zinc-900" : "text-zinc-400"} />
                   </button>
 
                   {/* Shop Section / Accordion Header */}
@@ -585,14 +580,14 @@ export default function Header({
                                 }}
                                 className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center justify-between ${
                                   selectedCategory === cat.id && activeView === 'shop'
-                                    ? 'bg-amber-100/40 text-amber-950 font-extrabold'
+                                    ? 'bg-zinc-100 text-zinc-950 font-extrabold'
                                     : 'bg-zinc-50/50 hover:bg-zinc-50 text-zinc-650 hover:text-zinc-950'
                                 }`}
                                 style={{ textAlign: isArabic ? 'right' : 'left' }}
                               >
                                 <span>{isArabic ? cat.labelAr : cat.labelEn}</span>
                                 {selectedCategory === cat.id && activeView === 'shop' ? (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping" />
+                                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-800 animate-ping" />
                                 ) : null}
                               </button>
                               
@@ -601,14 +596,14 @@ export default function Header({
                                   onClick={() => setExpandedMobileCategory(isExpanded ? null : cat.id)}
                                   className="px-3 bg-zinc-50 hover:bg-zinc-100 rounded-xl text-zinc-650 transition cursor-pointer flex items-center justify-center border border-zinc-100/30"
                                 >
-                                  <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180 text-amber-800' : ''}`} />
+                                  <ChevronDown size={14} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180 text-zinc-800' : ''}`} />
                                 </button>
                               )}
                             </div>
 
                             {/* Nesting subcategories list inside mobile menu drawer */}
                             {subcats.length > 0 && isExpanded && (
-                              <div className="pl-4 pr-1 py-1 gap-1 flex flex-col border-l-2 border-amber-100 ml-3">
+                              <div className="pl-4 pr-1 py-1 gap-1 flex flex-col border-l-2 border-zinc-300 ml-3">
                                 {subcats.map((sub) => {
                                   const label = isArabic ? sub.ar : sub.en;
                                   const isSelected = selectedCategory === cat.id && (selectedSubcategory === sub.en || selectedSubcategory === sub.ar);
@@ -621,7 +616,7 @@ export default function Header({
                                       }}
                                       className={`text-left w-full py-2 px-3 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition flex items-center justify-between ${
                                         isSelected
-                                          ? 'text-amber-900 font-extrabold bg-amber-50/40'
+                                          ? 'text-zinc-950 font-extrabold bg-zinc-150'
                                           : 'text-zinc-500 hover:text-zinc-950 hover:bg-zinc-50'
                                       }`}
                                       style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
@@ -647,7 +642,7 @@ export default function Header({
                         if (footer) footer.scrollIntoView({ behavior: 'smooth' });
                       }, 250);
                     }}
-                    className="w-full py-3 border-t border-zinc-100/60 text-xs font-semibold uppercase tracking-[0.15em] text-zinc-650 hover:text-amber-750 flex items-center justify-between mt-4"
+                    className="w-full py-3 border-t border-zinc-100/60 text-xs font-semibold uppercase tracking-[0.15em] text-zinc-650 hover:text-zinc-950 flex items-center justify-between mt-4"
                   >
                     <span>{isArabic ? "من نحن وقصتنا" : "ABOUT US & HERITAGE"}</span>
                     <Globe size={13} className="text-zinc-400" />
@@ -698,7 +693,7 @@ export default function Header({
                         onOpenAdmin();
                         setMobileMenuOpen(false);
                       }}
-                      className="flex items-center gap-1.5 font-bold px-3 py-1.5 rounded-lg transition bg-amber-100 text-amber-950"
+                      className="flex items-center gap-1.5 font-bold px-3 py-1.5 rounded-lg transition bg-zinc-200 text-zinc-950"
                     >
                       <Lock size={12} />
                       <span>{isArabic ? "لوحة الأدمن" : "Admin Panel"}</span>

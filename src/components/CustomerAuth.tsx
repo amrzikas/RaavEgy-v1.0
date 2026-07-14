@@ -117,7 +117,7 @@ export default function CustomerAuth({ onSuccess, isArabic }: CustomerAuthProps)
           {/* Logo Brand Banner */}
           <div className="flex justify-center pt-2">
             <img 
-              src="/src/assets/images/raav_clean_circle_logo_1782164055293.jpg" 
+              src="https://ik.imagekit.io/uut0qzgwd/Raav/Gemini_Generated_Image_ewb4soewb4soewb4-removebg-preview.png" 
               alt="RAAV Couture" 
               className="w-28 h-28 object-cover rounded-full border border-zinc-150 shadow-md transform hover:scale-[1.02] transition duration-300"
               referrerPolicy="no-referrer"

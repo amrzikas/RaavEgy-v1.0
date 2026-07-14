@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { SectionBackdrop } from '../types';
 import { optimizeUnsplashUrl } from '../utils/imageOptimizer';
 
@@ -21,10 +22,52 @@ export default function TheCollections({
   onSelectCategory, 
   isArabic, 
   backdrop,
-  layout = 'split',
+  layout = 'slider',
   order,
   categoryImages
 }: TheCollectionsProps) {
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeftState, setScrollLeftState] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeftState(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeftState - walk;
+  };
+
+  const handleScrollLeftBtn = () => {
+    if (scrollRef.current) {
+      const scrollAmount = isArabic ? 320 : -320;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleScrollRightBtn = () => {
+    if (scrollRef.current) {
+      const scrollAmount = isArabic ? -320 : 320;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
   
   const handleCategoryClick = (cat: 'all' | 'men' | 'women' | 'kids' | 'accessories') => {
     onSelectCategory(cat);
@@ -300,44 +343,72 @@ export default function TheCollections({
         {/* Render Layout: COMPACT SLIDER (Luxurious item carousel) */}
         {/* ----------------------------------------------------- */}
         {layout === 'slider' && (
-          <div 
-            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth scrollbar-thin scrollbar-thumb-zinc-700/60"
-            style={{ WebkitOverflowScrolling: 'touch' }}
-          >
-            {finalizedCategories.map((key) => {
-              const cfg = cardsConfig[key];
-              const customImg = categoryImages?.[key];
-              return (
-                <div 
-                  key={cfg.id} 
-                  className="flex-none w-[70vw] xs:w-[50vw] sm:w-[40vw] md:w-[28vw] snap-start h-[190px] sm:h-[300px] md:h-[380px] lg:h-[440px]"
-                >
-                  <motion.div
-                    whileHover={{ y: -3 }}
-                    transition={{ duration: 0.3 }}
-                    onClick={() => handleCategoryClick(cfg.id)}
-                    className="relative w-full h-full rounded-2xl md:rounded-3xl overflow-hidden shadow-lg cursor-pointer group border border-zinc-800/10"
+          <div className="relative group/slider w-full select-none">
+            {/* Left navigation arrow */}
+            <button 
+              onClick={handleScrollLeftBtn}
+              className={`absolute top-1/2 -translate-y-1/2 left-2 sm:-left-4 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer bg-zinc-950/75 hover:bg-zinc-950 text-white hover:scale-105 border border-zinc-800 backdrop-blur-sm opacity-80 md:opacity-0 md:group-hover/slider:opacity-100`}
+              aria-label="Scroll Left"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {/* Right navigation arrow */}
+            <button 
+              onClick={handleScrollRightBtn}
+              className={`absolute top-1/2 -translate-y-1/2 right-2 sm:-right-4 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer bg-zinc-950/75 hover:bg-zinc-950 text-white hover:scale-105 border border-zinc-800 backdrop-blur-sm opacity-80 md:opacity-0 md:group-hover/slider:opacity-100`}
+              aria-label="Scroll Right"
+            >
+              <ChevronRight size={18} />
+            </button>
+
+            <div 
+              ref={scrollRef}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              className={`flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              } [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`}
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              {finalizedCategories.map((key) => {
+                const cfg = cardsConfig[key];
+                const customImg = categoryImages?.[key];
+                return (
+                  <div 
+                    key={cfg.id} 
+                    className="flex-none w-[70vw] xs:w-[50vw] sm:w-[40vw] md:w-[28vw] snap-start h-[190px] sm:h-[300px] md:h-[380px] lg:h-[440px]"
                   >
-                    <img
-                      src={optimizeUnsplashUrl(customImg || cfg.defaultImg, 350, 70)}
-                      alt={cfg.labelEn}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                    <div className="absolute bottom-3 left-3 sm:bottom-6 sm:left-6 text-white select-none text-left" style={{ textAlign: 'left' }}>
-                      <span className="text-[6px] sm:text-[8px] font-bold text-amber-400 tracking-wider block uppercase">
-                        {isArabic ? cfg.tagAr : cfg.tagEn}
-                      </span>
-                      <h3 className="text-xs sm:text-lg md:text-xl font-serif font-bold mt-0.5">
-                        {isArabic ? cfg.labelAr : cfg.labelEn}
-                      </h3>
-                    </div>
-                  </motion.div>
-                </div>
-              );
-            })}
+                    <motion.div
+                      whileHover={{ y: -3 }}
+                      transition={{ duration: 0.3 }}
+                      onClick={() => !isDragging && handleCategoryClick(cfg.id)}
+                      className="relative w-full h-full rounded-2xl md:rounded-3xl overflow-hidden shadow-lg cursor-pointer group border border-zinc-800/10"
+                    >
+                      <img
+                        src={optimizeUnsplashUrl(customImg || cfg.defaultImg, 350, 70)}
+                        alt={cfg.labelEn}
+                        loading="lazy"
+                        draggable={false}
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 select-none pointer-events-none"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+                      <div className="absolute bottom-3 left-3 sm:bottom-6 sm:left-6 text-white select-none text-left pointer-events-none" style={{ textAlign: 'left' }}>
+                        <span className="text-[6px] sm:text-[8px] font-bold text-amber-400 tracking-wider block uppercase">
+                          {isArabic ? cfg.tagAr : cfg.tagEn}
+                        </span>
+                        <h3 className="text-xs sm:text-lg md:text-xl font-serif font-bold mt-0.5">
+                          {isArabic ? cfg.labelAr : cfg.labelEn}
+                        </h3>
+                      </div>
+                    </motion.div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

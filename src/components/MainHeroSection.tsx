@@ -94,18 +94,18 @@ export default function MainHeroSection({
             {/* Copy & CTA */}
             {showTexts && (
               <div className="lg:col-span-5 space-y-6 md:space-y-8 text-center lg:text-start" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/55 text-[10px] font-bold text-amber-800 tracking-wider uppercase font-sans">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-[10px] font-bold text-zinc-800 tracking-wider uppercase font-sans">
                   ✦ {isArabic ? "دار الأزياء والطلب المخصص" : "BESPOKE COUTURE ATELIER"}
                 </div>
                 
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif text-zinc-900 leading-[1.1] font-light tracking-tight">
                   {isArabic ? (
                     <>
-                      {displayTitle.split(' ').slice(0, -1).join(' ')} <span className="italic font-normal text-amber-850 font-serif">{displayTitle.split(' ').slice(-1)}</span>
+                      {displayTitle.split(' ').slice(0, -1).join(' ')} <span className="italic font-normal text-zinc-900 font-serif">{displayTitle.split(' ').slice(-1)}</span>
                     </>
                   ) : (
                     <>
-                      {displayTitle.split(' ').slice(0, -2).join(' ')} <span className="italic font-normal text-amber-850 font-serif">{displayTitle.split(' ').slice(-2).join(' ')}</span>
+                      {displayTitle.split(' ').slice(0, -2).join(' ')} <span className="italic font-normal text-zinc-900 font-serif">{displayTitle.split(' ').slice(-2).join(' ')}</span>
                     </>
                   )}
                 </h1>
@@ -117,7 +117,7 @@ export default function MainHeroSection({
                 <div className="pt-2">
                   <button
                     onClick={handleBtnClick}
-                    className="px-10 py-4 bg-zinc-950 hover:bg-amber-900 hover:scale-[1.02] text-white rounded-full font-bold text-xs tracking-[0.2em] uppercase transition duration-300 shadow-xl cursor-pointer"
+                    className="px-10 py-4 bg-zinc-950 hover:bg-zinc-850 hover:scale-[1.02] text-white rounded-full font-bold text-xs tracking-[0.2em] uppercase transition duration-300 shadow-xl cursor-pointer"
                   >
                     {displayBtnText}
                   </button>
@@ -221,7 +221,7 @@ export default function MainHeroSection({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold tracking-[0.2em] text-amber-200 uppercase font-sans mx-auto"
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold tracking-[0.2em] text-zinc-300 uppercase font-sans mx-auto"
               >
                 ⚜️ {isArabic ? "تشكيلة النخبة الحصرية" : "ROYAL ELITE COLLECTION"}
               </motion.div>
@@ -252,7 +252,7 @@ export default function MainHeroSection({
               >
                 <button
                   onClick={handleBtnClick}
-                  className="px-12 py-4 bg-amber-400 hover:bg-amber-350 text-zinc-950 font-bold text-xs tracking-[0.2em] rounded-full uppercase transition duration-300 shadow-2xl hover:scale-105 cursor-pointer"
+                  className="px-12 py-4 bg-zinc-200 hover:bg-white text-zinc-950 font-bold text-xs tracking-[0.2em] rounded-full uppercase transition duration-300 shadow-2xl hover:scale-105 cursor-pointer"
                 >
                   {displayBtnText}
                 </button>
@@ -267,7 +267,7 @@ export default function MainHeroSection({
                 <button
                   key={idx}
                   onClick={() => setActiveSlide(idx)}
-                  className={`h-1 rounded-full transition-all duration-300 ${activeSlide === idx ? 'w-8 bg-amber-400' : 'w-2 bg-white/40'}`}
+                  className={`h-1 rounded-full transition-all duration-300 ${activeSlide === idx ? 'w-8 bg-zinc-300' : 'w-2 bg-white/40'}`}
                 />
               ))}
             </div>
@@ -329,7 +329,7 @@ export default function MainHeroSection({
             {/* Right text layout block */}
             {showTexts && (
               <div className="lg:col-span-5 space-y-6 md:space-y-8" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                <span className="text-[10px] tracking-[0.3em] font-extrabold text-amber-800 uppercase font-sans">
+                <span className="text-[10px] tracking-[0.3em] font-extrabold text-zinc-800 uppercase font-sans">
                   ✦ {isArabic ? "الأناقة العصرية بمفهوم جديد" : "MODERN ARCHITECTURAL SILHOUETTES"}
                 </span>
                 
@@ -344,7 +344,7 @@ export default function MainHeroSection({
                 <div className="pt-2">
                   <button
                     onClick={handleBtnClick}
-                    className="px-8 py-3.5 bg-zinc-900 hover:bg-amber-900 text-white rounded-full font-bold text-xs tracking-[0.2em] uppercase transition duration-300 shadow-md cursor-pointer"
+                    className="px-8 py-3.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-full font-bold text-xs tracking-[0.2em] uppercase transition duration-300 shadow-md cursor-pointer"
                   >
                     {displayBtnText}
                   </button>
@@ -393,7 +393,7 @@ export default function MainHeroSection({
           {showTexts && (
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 w-full">
               <div className="max-w-xl space-y-6 text-white" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                <span className="text-[10px] font-mono tracking-[0.2em] text-amber-300 uppercase">
+                <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-300 uppercase">
                   {isArabic ? "موديلات الكوتور المتميزة" : "COUTURE PREMIUM SIGNATURE"}
                 </span>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif leading-tight">
@@ -405,7 +405,7 @@ export default function MainHeroSection({
                 <div className="pt-2">
                   <button
                     onClick={handleBtnClick}
-                    className="px-8 py-3.5 bg-white hover:bg-amber-400 text-zinc-950 hover:text-zinc-950 font-bold text-xs tracking-[0.15em] rounded-full uppercase transition duration-300 shadow-lg cursor-pointer"
+                    className="px-8 py-3.5 bg-white hover:bg-zinc-200 text-zinc-950 hover:text-zinc-950 font-bold text-xs tracking-[0.15em] rounded-full uppercase transition duration-300 shadow-lg cursor-pointer"
                   >
                     {displayBtnText}
                   </button>

@@ -318,21 +318,21 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen text-zinc-800 selection:bg-zinc-900 selection:text-white antialiased font-sans transition-all duration-500 bg-gradient-to-b from-[#353630] via-[#21221e] to-[#121311] overflow-hidden">
+    <div className="relative min-h-screen text-zinc-800 selection:bg-zinc-900 selection:text-white antialiased font-sans transition-all duration-500 bg-gradient-to-b from-[#2E2F32] via-[#1C1D1F] to-[#0D0E0F] overflow-hidden">
       
       {/* High-fashion flowing mesh backdrop with intertwined dark and light soft gradients */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Rich dark olive top-left soft glow */}
-        <div className="absolute top-[-20%] left-[-20%] w-[65%] h-[65%] rounded-full bg-gradient-to-br from-[#1b1c19]/35 via-[#353630]/25 to-transparent blur-[110px] opacity-75" />
+        {/* Rich dark slate top-left soft glow */}
+        <div className="absolute top-[-20%] left-[-20%] w-[65%] h-[65%] rounded-full bg-gradient-to-br from-[#202123]/35 via-[#2E2F32]/25 to-transparent blur-[110px] opacity-75" />
         
-        {/* Soft Gold/Champagne warm light representing premium artisanal luxury */}
-        <div className="absolute top-[15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-gradient-to-tr from-amber-100/10 via-white/5 to-[#454640]/15 blur-[130px] opacity-70" />
+        {/* Soft Silver/Platinum warm light representing premium artisanal luxury */}
+        <div className="absolute top-[15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-gradient-to-tr from-zinc-100/10 via-white/5 to-[#3A3B3D]/15 blur-[130px] opacity-70" />
         
-        {/* Intertwined charcoal-stone glow in middle left */}
-        <div className="absolute top-[40%] left-[-25%] w-[55%] h-[55%] rounded-full bg-gradient-to-r from-[#20211d]/20 via-[#353630]/15 to-transparent blur-[140px]" />
+        {/* Intertwined steel-stone glow in middle left */}
+        <div className="absolute top-[40%] left-[-25%] w-[55%] h-[55%] rounded-full bg-gradient-to-r from-[#1A1B1C]/20 via-[#2E2F32]/15 to-transparent blur-[140px]" />
 
         {/* Deep Slate/Carbon bottom-right soft ambient depth */}
-        <div className="absolute bottom-[-15%] right-[-15%] w-[65%] h-[65%] rounded-full bg-gradient-to-tl from-[#10110f]/40 via-[#2d2e28]/25 to-transparent blur-[150px]" />
+        <div className="absolute bottom-[-15%] right-[-15%] w-[65%] h-[65%] rounded-full bg-gradient-to-tl from-[#0A0A0B]/40 via-[#222324]/25 to-transparent blur-[150px]" />
       </div>
 
       {/* Actual app content layout layer */}
@@ -361,7 +361,7 @@ export default function App() {
           announcementLink={homepageContent?.announcementLink}
           headerBgColor={homepageContent?.headerBgColor}
           logoSize={homepageContent?.logoSize}
-          logoImage={homepageContent?.logoImage}
+          logoImage={homepageContent?.logoImage || 'https://ik.imagekit.io/uut0qzgwd/Raav/Gemini_Generated_Image_ewb4soewb4soewb4-removebg-preview.png'}
           logoText={homepageContent?.logoText}
           logoTextColor={homepageContent?.logoTextColor}
           logoTextFont={homepageContent?.logoTextFont}
@@ -430,7 +430,7 @@ export default function App() {
                   }}
                   isArabic={isArabic}
                   backdrop={homepageContent?.sectionBackgrounds?.theCollections}
-                  layout={homepageContent?.collectionsLayout}
+                  layout={homepageContent?.collectionsLayout || 'slider'}
                   order={homepageContent?.collectionsOrder}
                   categoryImages={homepageContent?.categoryImages}
                 />
