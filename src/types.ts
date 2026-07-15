@@ -4,6 +4,10 @@ export interface Product {
   nameEn: string;
   descriptionAr: string;
   descriptionEn: string;
+  detailsAr?: string;
+  detailsEn?: string;
+  careAr?: string;
+  careEn?: string;
   price: number;
   discountPrice?: number;
   discountStart?: string; // YYYY-MM-DD format

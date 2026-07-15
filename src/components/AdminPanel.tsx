@@ -126,6 +126,10 @@ export default function AdminPanel({
     nameEn: '',
     descriptionAr: '',
     descriptionEn: '',
+    detailsAr: '',
+    detailsEn: '',
+    careAr: '',
+    careEn: '',
     price: 350,
     discountPrice: '' as string | number,
     discountStart: '',
@@ -136,7 +140,7 @@ export default function AdminPanel({
     image: SAMPLE_CLOTHES_IMAGES[0].url,
     images: [SAMPLE_CLOTHES_IMAGES[0].url, '', '', '', ''] as string[],
     sizesStr: 'M, L, XL', // Comma separated sizes
-    colorsStr: '#111111, #E5D3B3, #2B5B84', // Comma separated colors hex
+    colorsStr: '', // Empty by default to avoid showing unselected colors
     inStock: true,
     isActive: true,
     isTrend: false,
@@ -461,6 +465,10 @@ export default function AdminPanel({
       nameEn: '',
       descriptionAr: '',
       descriptionEn: '',
+      detailsAr: '',
+      detailsEn: '',
+      careAr: '',
+      careEn: '',
       price: 650,
       discountPrice: '',
       discountStart: '',
@@ -471,7 +479,7 @@ export default function AdminPanel({
       image: SAMPLE_CLOTHES_IMAGES[0].url,
       images: [SAMPLE_CLOTHES_IMAGES[0].url, '', '', '', ''],
       sizesStr: 'M, L, XL',
-      colorsStr: '#111111, #4A5D4E, #8C2222',
+      colorsStr: '', // Empty by default to avoid showing unselected colors
       inStock: true,
       isActive: true,
       isTrend: false,
@@ -499,6 +507,10 @@ export default function AdminPanel({
       nameEn: prod.nameEn,
       descriptionAr: prod.descriptionAr,
       descriptionEn: prod.descriptionEn,
+      detailsAr: prod.detailsAr || '',
+      detailsEn: prod.detailsEn || '',
+      careAr: prod.careAr || '',
+      careEn: prod.careEn || '',
       price: prod.price,
       discountPrice: prod.discountPrice !== undefined ? prod.discountPrice : '',
       discountStart: prod.discountStart || '',
@@ -535,6 +547,10 @@ export default function AdminPanel({
       nameEn: formData.nameEn.trim(),
       descriptionAr: formData.descriptionAr.trim(),
       descriptionEn: formData.descriptionEn.trim(),
+      detailsAr: formData.detailsAr.trim(),
+      detailsEn: formData.detailsEn.trim(),
+      careAr: formData.careAr.trim(),
+      careEn: formData.careEn.trim(),
       price: Number(formData.price),
       category: formData.category,
       subcategoryAr: formData.subcategoryAr.trim(),
@@ -5093,9 +5109,9 @@ export default function AdminPanel({
 
                       {/* Description Ar */}
                       <div className="sm:col-span-2">
-                        <label className="block text-xs font-semibold text-zinc-400 mb-1">الوصف بالتفصيل (عربي) *</label>
+                        <label className="block text-xs font-semibold text-zinc-400 mb-1">الوصف البسيط للمنتج (عربي) *</label>
                         <textarea
-                          rows={2.5} required placeholder="الخامات الفاخرة، جودة التطريز، فصول الاستخدام..."
+                          rows={2} required placeholder="وصف بسيط للمنتج جذاب ومختصر..."
                           className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
                           value={formData.descriptionAr}
                           onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
@@ -5104,12 +5120,57 @@ export default function AdminPanel({
 
                       {/* Description En */}
                       <div className="sm:col-span-2">
-                        <label className="block text-xs font-semibold text-zinc-400 mb-1">Detailed Description (English) *</label>
+                        <label className="block text-xs font-semibold text-zinc-400 mb-1">Simple Description (English) *</label>
                         <textarea
-                          rows={2.5} required placeholder="Material composition details, fit profile, wash notes..."
+                          rows={2} required placeholder="A brief, attractive summary of the product..."
                           className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
                           value={formData.descriptionEn}
                           onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })}
+                        />
+                      </div>
+
+                      {/* Details Ar (Bullet points, one per line) */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-zinc-400 mb-1">تفاصيل المنتج الإضافية (كل سطر يمثل نقطة/رصاصة) *</label>
+                        <textarea
+                          rows={3} placeholder="خامة قطنية 100%&#10;تصميم فخم مناسب للسهرات&#10;تطريز يدوي على الصدر"
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                          value={formData.detailsAr}
+                          onChange={(e) => setFormData({ ...formData, detailsAr: e.target.value })}
+                        />
+                        <p className="text-[10px] text-zinc-500 mt-1">{isArabic ? "اكتب كل ميزة أو تفصيل في سطر جديد لتظهر على شكل نقاط منسقة للعميل" : "Write each spec or detail on a new line to display as bullet points"}</p>
+                      </div>
+
+                      {/* Details En (Bullet points, one per line) */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-zinc-400 mb-1">Additional Product Details (Each line represents a bullet point) *</label>
+                        <textarea
+                          rows={3} placeholder="100% premium cotton&#10;Luxury evening wear design&#10;Handmade embroidery details"
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                          value={formData.detailsEn}
+                          onChange={(e) => setFormData({ ...formData, detailsEn: e.target.value })}
+                        />
+                      </div>
+
+                      {/* Care Instructions Ar */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-zinc-400 mb-1">تعليمات العناية والاهتمام بالغسيل والكي (عربي) *</label>
+                        <textarea
+                          rows={2} placeholder="يُغسل يدويًا بماء بارد، لا يُستخدم المبيض، الكي على درجة حرارة منخفضة..."
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                          value={formData.careAr}
+                          onChange={(e) => setFormData({ ...formData, careAr: e.target.value })}
+                        />
+                      </div>
+
+                      {/* Care Instructions En */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-zinc-400 mb-1">Care & Washing Instructions (English) *</label>
+                        <textarea
+                          rows={2} placeholder="Hand wash cold, do not bleach, iron on low temperature..."
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                          value={formData.careEn}
+                          onChange={(e) => setFormData({ ...formData, careEn: e.target.value })}
                         />
                       </div>
 
@@ -5127,7 +5188,16 @@ export default function AdminPanel({
 
                       {/* Colors inputs comma-separated hex codes */}
                       <div>
-                        <label className="block text-xs font-semibold text-zinc-400 mb-1">أكواد الوان الموديل (HEX) *</label>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="block text-xs font-semibold text-zinc-400">أكواد الوان الموديل (HEX) *</label>
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, colorsStr: '' })}
+                            className="text-[10px] font-bold text-rose-400 hover:text-rose-350 cursor-pointer"
+                          >
+                            {isArabic ? "مسح كل الألوان 🗑️" : "Clear All Colors 🗑️"}
+                          </button>
+                        </div>
                         <input
                           type="text" required placeholder="#111111, #8C2222, #ffffff"
                           className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-left text-white"

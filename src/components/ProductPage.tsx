@@ -327,10 +327,52 @@ export default function ProductPage({
             </div>
 
             {/* Description Text */}
-            <div className="border-t border-zinc-100 pt-4">
-              <p className="text-sm leading-relaxed text-zinc-600 font-light text-justify">
-                {isArabic ? product.descriptionAr : product.descriptionEn}
-              </p>
+            <div className="border-t border-zinc-100 pt-4 space-y-4">
+              <div>
+                <h4 className="text-xs font-extrabold text-zinc-900 uppercase tracking-wider mb-1.5 flex items-center gap-1.5 justify-start">
+                  <span>{isArabic ? "وصف المنتج" : "About Product"}</span>
+                </h4>
+                <p className="text-sm leading-relaxed text-zinc-650 font-light text-justify">
+                  {isArabic ? product.descriptionAr : product.descriptionEn}
+                </p>
+              </div>
+
+              {/* Bullet details (additional specs) */}
+              {((isArabic ? product.detailsAr : product.detailsEn)) ? (
+                <div className="border-t border-zinc-100 pt-4">
+                  <h4 className="text-xs font-extrabold text-zinc-900 uppercase tracking-wider mb-2 flex items-center gap-1.5 justify-start">
+                    <span>{isArabic ? "تفاصيل ومواصفات المنتج" : "Product Specifications"}</span>
+                  </h4>
+                  <ul className="space-y-1 text-zinc-650 text-xs sm:text-sm text-justify font-sans list-none pr-0 pl-0">
+                    {(isArabic ? product.detailsAr : product.detailsEn)
+                      ?.split('\n')
+                      .map(line => line.trim())
+                      .filter(Boolean)
+                      .map((bullet, bIdx) => (
+                        <li key={bIdx} className="flex items-start gap-1.5 leading-relaxed">
+                          <span className="text-amber-500 mt-1 select-none">✦</span>
+                          <span className="font-light">{bullet}</span>
+                        </li>
+                      ))
+                    }
+                  </ul>
+                </div>
+              ) : null}
+
+              {/* Care instructions */}
+              {((isArabic ? product.careAr : product.careEn)) ? (
+                <div className="border-t border-zinc-100 pt-4">
+                  <h4 className="text-xs font-extrabold text-zinc-900 uppercase tracking-wider mb-2 flex items-center gap-1.5 justify-start">
+                    <span>{isArabic ? "إرشادات العناية والاهتمام" : "Care Instructions"}</span>
+                  </h4>
+                  <div className="flex gap-2 items-start text-zinc-650 text-xs sm:text-sm bg-amber-50/30 p-3 rounded-xl border border-amber-100/30 text-justify">
+                    <span className="text-sm">✨</span>
+                    <p className="font-light leading-relaxed">
+                      {isArabic ? product.careAr : product.careEn}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             {/* Size Selector */}

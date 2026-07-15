@@ -192,8 +192,8 @@ export default function Header({
     <header 
       id="app-header" 
       className={`transition-all duration-300 ${
-        isMergedTransparent 
-          ? 'absolute top-0 left-0 right-0 z-40 border-b-0 bg-transparent text-white' 
+        isHeroMerged
+          ? `fixed top-0 left-0 right-0 z-40 ${isMergedTransparent ? 'border-b-0 bg-transparent text-white' : `border-b shadow-md ${isLight ? 'text-zinc-900 border-zinc-200/80 shadow-sm' : 'text-white border-[#2D2E2F]'}`}`
           : `sticky top-0 z-40 border-b ${isLight ? 'text-zinc-900 border-zinc-200/80 shadow-sm' : 'text-white border-[#2D2E2F]'}`
       }`}
       style={{
@@ -265,7 +265,9 @@ export default function Header({
                   <img 
                     src={logoImage} 
                     alt="RAAV Couture Logo" 
-                    className="object-contain transition duration-500 hover:scale-105 rounded-lg md:rounded-xl h-20 w-auto p-1"
+                    className={`object-contain transition duration-500 hover:scale-105 rounded-lg md:rounded-xl h-20 w-auto p-1.5 ${
+                      !isLight ? 'bg-white shadow-sm' : ''
+                    }`}
                     referrerPolicy="no-referrer"
                   />
                 ) : (
