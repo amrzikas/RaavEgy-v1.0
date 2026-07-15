@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Lock, ShieldAlert, Sparkles, ChevronDown, Search, User, Menu, X, ChevronRight, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product } from '../types';
@@ -30,6 +30,8 @@ interface HeaderProps {
   logoText?: string;
   logoTextColor?: string;
   logoTextFont?: string;
+  isHeroMerged?: boolean;
+  heroLayout?: 'single' | 'split' | 'grid' | 'slider';
 }
 
 export default function Header({
@@ -58,11 +60,23 @@ export default function Header({
   logoImage,
   logoText,
   logoTextColor,
-  logoTextFont
+  logoTextFont,
+  isHeroMerged = false,
+  heroLayout = 'split'
 }: HeaderProps) {
   const [shopDropdownOpen, setShopDropdownOpen] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Expanded category inside mobile viewport
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
@@ -148,7 +162,11 @@ export default function Header({
     return false;
   };
 
-  const isLight = isLightColor(headerBgColor);
+  const isMergedTransparent = isHeroMerged && !isScrolled;
+  const isHeroDark = heroLayout === 'slider' || heroLayout === 'single';
+  const isLight = isMergedTransparent 
+    ? !isHeroDark 
+    : isLightColor(headerBgColor);
 
   const textClass = isLight ? 'text-zinc-800 hover:text-zinc-950 hover:bg-black/5' : 'text-zinc-300 hover:text-white hover:bg-white/10';
   const iconClass = isLight ? 'text-zinc-700 hover:text-black hover:bg-black/5' : 'text-zinc-300 hover:text-white hover:bg-white/10';
@@ -173,10 +191,14 @@ export default function Header({
   return (
     <header 
       id="app-header" 
-      className={`sticky top-0 z-40 border-b transition-opacity duration-300 ${isLight ? 'text-zinc-900 border-zinc-200/80 shadow-sm' : 'text-white border-[#2D2E2F]'}`}
+      className={`transition-all duration-300 ${
+        isMergedTransparent 
+          ? 'absolute top-0 left-0 right-0 z-40 border-b-0 bg-transparent text-white' 
+          : `sticky top-0 z-40 border-b ${isLight ? 'text-zinc-900 border-zinc-200/80 shadow-sm' : 'text-white border-[#2D2E2F]'}`
+      }`}
       style={{
-        backgroundColor: headerBgColor || '#1C1D1F',
-        borderColor: headerBgColor ? (isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)') : undefined
+        backgroundColor: isMergedTransparent ? 'transparent' : (headerBgColor || '#1C1D1F'),
+        borderColor: isMergedTransparent ? 'transparent' : (headerBgColor ? (isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)') : undefined)
       }}
     >
       {/* Premium Minimal Announcement Bar / Custom Banner */}
@@ -202,7 +224,9 @@ export default function Header({
           )}
         </a>
       ) : (
-        <div className="bg-zinc-950 font-sans text-[11px] tracking-[0.15em] text-white py-2 px-4 text-center uppercase flex items-center justify-center gap-2">
+        <div className={`font-sans text-[11px] tracking-[0.15em] text-white py-2 px-4 text-center uppercase flex items-center justify-center gap-2 transition-all duration-300 ${
+          isMergedTransparent ? 'bg-black/25 backdrop-blur-xs' : 'bg-zinc-950'
+        }`}>
           <span className="font-semibold text-zinc-300">
             {customAnnouncement || (isArabic 
               ? "توصيل سريع مجاني في مصر للطلبات الأكثر من ١٢٠٠ ج.م • كود الخصم: RAAV2026" 
@@ -334,7 +358,7 @@ export default function Header({
                             )}
                           </button>
 
-                          {subcats.length > 0 && (
+                          {cat.id !== 'all' && subcats.length > 0 && (
                             <div className="pl-6 pr-3 py-1 flex flex-col gap-1 bg-zinc-50/50">
                               {subcats.map((sub) => {
                                 const label = isArabic ? sub.ar : sub.en;
@@ -430,10 +454,10 @@ export default function Header({
                   ? (isLight ? "text-zinc-800 bg-black/5 border border-black/10 shadow-sm" : "text-zinc-200 bg-white/10 border border-white/20")
                   : iconClass
               }`}
-              style={{ borderColor: '#000000', backgroundColor: '#ffffff' }}
+              style={isMergedTransparent ? undefined : { borderColor: '#000000', backgroundColor: '#ffffff' }}
               title={isArabic ? "حسابي الشخصي" : "My Account"}
             >
-              <User size={19} strokeWidth={1.8} style={{ borderColor: '#000000', fontSize: '18px' }} />
+              <User size={19} strokeWidth={1.8} style={isMergedTransparent ? undefined : { borderColor: '#000000', fontSize: '18px' }} />
               {isUserLoggedIn && (
                 <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400" />
               )}
@@ -448,10 +472,10 @@ export default function Header({
                     ? (isLight ? "text-zinc-800 bg-black/5 border border-black/10 shadow-sm" : "text-zinc-200 bg-white/10 border border-white/20")
                     : iconClass
                 }`}
-                style={{ backgroundColor: '#ffffff' }}
+                style={isMergedTransparent ? undefined : { backgroundColor: '#ffffff' }}
                 title={isArabic ? "لوحة الإدارة" : "Admin Dashboard"}
               >
-                <Lock size={15} strokeWidth={1.8} style={{ borderColor: '#000000', fontSize: '20px' }} />
+                <Lock size={15} strokeWidth={1.8} style={isMergedTransparent ? undefined : { borderColor: '#000000', fontSize: '20px' }} />
               </button>
             )}
 
@@ -462,7 +486,7 @@ export default function Header({
                 className={`hidden md:inline-block p-1.5 text-red-400 ${isLight ? 'hover:text-red-600 hover:bg-black/5' : 'hover:text-red-300 hover:bg-white/10'} rounded-full transition cursor-pointer`}
                 title={isArabic ? "خروج المسؤول" : "Admin Logout"}
               >
-                <ShieldAlert size={19} strokeWidth={1.8} style={{ borderColor: '#000000' }} />
+                <ShieldAlert size={19} strokeWidth={1.8} style={isMergedTransparent ? undefined : { borderColor: '#000000' }} />
               </button>
             )}
 
@@ -591,7 +615,7 @@ export default function Header({
                                 ) : null}
                               </button>
                               
-                              {subcats.length > 0 && (
+                              {cat.id !== 'all' && subcats.length > 0 && (
                                 <button
                                   onClick={() => setExpandedMobileCategory(isExpanded ? null : cat.id)}
                                   className="px-3 bg-zinc-50 hover:bg-zinc-100 rounded-xl text-zinc-650 transition cursor-pointer flex items-center justify-center border border-zinc-100/30"
@@ -602,7 +626,7 @@ export default function Header({
                             </div>
 
                             {/* Nesting subcategories list inside mobile menu drawer */}
-                            {subcats.length > 0 && isExpanded && (
+                            {cat.id !== 'all' && subcats.length > 0 && isExpanded && (
                               <div className="pl-4 pr-1 py-1 gap-1 flex flex-col border-l-2 border-zinc-300 ml-3">
                                 {subcats.map((sub) => {
                                   const label = isArabic ? sub.ar : sub.en;

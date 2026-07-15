@@ -3,7 +3,7 @@ import {
   X, Lock, ShieldAlert, Sparkles, Plus, Edit, Trash2, CheckCircle, Clock, Truck, 
   FileText, Activity, ArrowLeft, Check, PlusCircle, ShoppingBag, Landmark, Database,
   Gift, Wallet, Award, CreditCard, ChevronRight, CheckSquare, PlusSquare, ArrowUpDown,
-  Send, Layers, Menu, PieChart, Sliders
+  Send, Layers, Menu, PieChart, Sliders, ChevronDown, Megaphone, Image, Tag, Grid, Eye, Paintbrush
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -259,6 +259,7 @@ export default function AdminPanel({
   const [supportContent, setSupportContent] = useState<SupportPagesContent | null>(null);
   const [isSavingContent, setIsSavingContent] = useState(false);
   const [contentEditorSubTab, setContentEditorSubTab] = useState<'homepage' | 'contact_us' | 'shipping_returns' | 'size_guide' | 'faq' | 'privacy_policy' | 'terms_of_service'>('homepage');
+  const [expandedHomepageSection, setExpandedHomepageSection] = useState<string>('announcement');
 
   // Payment Verification States
   const [rejectingOrderId, setRejectingOrderId] = useState<string | null>(null);
@@ -2344,7 +2345,83 @@ export default function AdminPanel({
                       setIsSavingContent(false);
                     }
                   }} className="space-y-6 bg-zinc-900/40 border border-zinc-800 p-6 rounded-2xl">
-                    <h4 className="text-zinc-200 font-bold border-b border-zinc-800 pb-2 text-sm">{isArabic ? "شريط الإعلانات اللولبي بقمة المتجر (أو بانر إعلاني مرئي)" : "Hero Announcement / Commercial Ad Banner"}</h4>
+                    {/* Master Selector Panel */}
+                    <div className="bg-zinc-950 p-5 rounded-2xl border border-zinc-850 space-y-4 font-sans">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-900 pb-3 gap-2">
+                        <div>
+                          <h5 className="text-zinc-100 font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                            <Sliders size={14} className="text-amber-400" />
+                            <span>{isArabic ? "اختر القطاع الذي ترغب في تعديله" : "Select Homepage Sector to Modify"}</span>
+                          </h5>
+                          <p className="text-[10px] text-zinc-500 mt-0.5">
+                            {isArabic 
+                              ? "اضغط على أي قسم أدناه لتعديله بشكل منفصل وتجنب التشتت" 
+                              : "Click any block below to focus on its fields and streamline your updates"}
+                          </p>
+                        </div>
+                        {expandedHomepageSection !== 'all' && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedHomepageSection('all')}
+                            className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 text-[10px] font-bold rounded-lg transition cursor-pointer self-start md:self-auto border border-zinc-800"
+                          >
+                            {isArabic ? "📂 عرض كافة الأقسام معاً" : "📂 Show All Sections"}
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {[
+                          { id: 'announcement', labelAr: "البانر الإعلاني العلوي", labelEn: "Top Banner", icon: Megaphone, descAr: "شريط الإعلانات والخصم الأعلى", descEn: "Top alert banner & photo" },
+                          { id: 'new_hero', labelAr: "واجهة الهيرو الرئيسية", labelEn: "Hero Main Section", icon: Image, descAr: "العناوين وأزرار التوجيه والـ 4 صور", descEn: "Hero texts, buttons & 4 images" },
+                          { id: 'promotional_banners', labelAr: "البنرات والخصومات الترويجية", labelEn: "Promo Ad Banners", icon: Tag, descAr: "البانر الإعلاني الأول والثاني الملون", descEn: "Promo cards #1 and #2 setup" },
+                          { id: 'carousel_slides', labelAr: "شرائح الكاروسيل الدوارة", labelEn: "Carousel Slides", icon: Layers, descAr: "الشرائح العريضة المتناوبة", descEn: "Carousel landscape slides" },
+                          { id: 'boutique_collections', labelAr: "مجموعات البوتيك الأربعة", labelEn: "Boutique Collections", icon: Grid, descAr: "صور وعناوين التشكيلات الأربعة", descEn: "Grid segments & custom titles" },
+                          { id: 'visibility_control', labelAr: "تفعيل وتعطيل الأقسام", labelEn: "Sections Visibility", icon: Eye, descAr: "التحكم في إظهار الأقسام بالكامل", descEn: "Show/hide homepage blocks" },
+                          { id: 'backdrop_colors', labelAr: "ألوان وخلفيات الأقسام", labelEn: "Backdrop Aesthetics", icon: Paintbrush, descAr: "تخصيص ألوان وتدرجات خلفيات الموقع", descEn: "Set solid color or gradient screens" },
+                          { id: 'all', labelAr: "عرض كل الأقسام معاً", labelEn: "View All Sections", icon: Sliders, descAr: "عرض الصفحة بالكامل دفعة واحدة", descEn: "Full page editor view" }
+                        ].map((sect) => {
+                          const IconComp = sect.icon;
+                          const isSelected = expandedHomepageSection === sect.id;
+                          return (
+                            <button
+                              key={sect.id}
+                              type="button"
+                              onClick={() => setExpandedHomepageSection(sect.id)}
+                              className={`p-3 rounded-xl border text-right sm:text-left transition duration-250 cursor-pointer flex flex-col justify-between gap-2 h-24 ${
+                                isSelected 
+                                  ? 'bg-amber-400 border-amber-400 text-black shadow-lg shadow-amber-400/10 font-bold' 
+                                  : 'bg-zinc-950 border-zinc-850 hover:border-zinc-750 text-zinc-300'
+                              }`}
+                            >
+                              <div className="flex w-full items-center justify-between">
+                                <IconComp size={16} className={isSelected ? 'text-black' : 'text-amber-400'} />
+                                {isSelected && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
+                                )}
+                              </div>
+                              <div className="space-y-0.5">
+                                <span className={`block text-xs font-bold leading-tight ${isSelected ? 'text-black font-extrabold' : 'text-zinc-100'}`}>
+                                  {isArabic ? sect.labelAr : sect.labelEn}
+                                </span>
+                                <span className={`block text-[9px] line-clamp-1 leading-snug font-light ${isSelected ? 'text-black/80 font-medium' : 'text-zinc-500'}`}>
+                                  {isArabic ? sect.descAr : sect.descEn}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {(expandedHomepageSection === 'announcement' || expandedHomepageSection === 'all') && (
+                      <div className="space-y-6 bg-zinc-950/80 border border-zinc-850 p-6 rounded-2xl">
+                        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+                          <Megaphone size={16} className="text-amber-400" />
+                          <h4 className="text-zinc-100 font-bold text-sm">
+                            {isArabic ? "شريط الإعلانات اللولبي بقمة المتجر (أو بانر إعلاني مرئي)" : "Hero Announcement / Commercial Ad Banner"}
+                          </h4>
+                        </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "نص الإعلان بالعربية" : "Announcement Text (AR)"}</label>
@@ -2429,14 +2506,19 @@ export default function AdminPanel({
                         </div>
                       )}
                     </div>
+                    </div>
+                    )}
 
                     {/* DYNAMIC PROMOTIONAL BANNERS SECTOR */}
-                    <div className="border-t border-zinc-800 pt-6 mt-6">
-                      <h4 className="text-zinc-150 font-extrabold pb-1.5 text-sm flex items-center gap-2">
-                        <span className="p-1 rounded bg-amber-500/10 text-amber-400">✦</span>
-                        <span>{isArabic ? "محرر بنرات الإعلانات والخصومات المتقدمة" : "Dynamic Promotional/Ad Banners Manager"}</span>
-                      </h4>
-                      <p className="text-[11px] text-zinc-500 mb-6 font-sans">
+                    {(expandedHomepageSection === 'promotional_banners' || expandedHomepageSection === 'all') && (
+                      <div className="border-t border-zinc-800 pt-6 mt-6 bg-zinc-950/40 border border-zinc-850 p-6 rounded-2xl">
+                        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3 mb-4">
+                          <Tag size={16} className="text-amber-400" />
+                          <h4 className="text-zinc-100 font-extrabold text-sm flex items-center gap-2">
+                            <span>{isArabic ? "محرر بنرات الإعلانات والخصومات المتقدمة" : "Dynamic Promotional/Ad Banners Manager"}</span>
+                          </h4>
+                        </div>
+                        <p className="text-[11px] text-zinc-500 mb-6 font-sans">
                         {isArabic 
                           ? "تحكم بشكل كامل في البنرات الإعلانية التفاعلية المنتشرة بصفحتك الرئيسية: عدل شاراتها، نصوصها باللغتين، الأزرار، روابط التوصيل، الصور، وألوان الخلفيات والخطوط بدقة فائقة."
                           : "Fully configure interactive card display banners scattered across the homepage layout. Personalize colors, buttons, target actions, imagery and titles perfectly."}
@@ -3102,19 +3184,24 @@ export default function AdminPanel({
                         </div>
                       </div>
                     </div>
+                    )}
 
                     {/* HOMEPAGE SECTIONS VISIBILITY CONTROLLER */}
-                    <div className="bg-zinc-950/80 border border-zinc-850 p-6 rounded-2xl space-y-4 mt-6">
-                      <div className="border-b border-zinc-800 pb-3">
-                        <h4 className="text-zinc-100 font-bold text-sm">
-                          {isArabic ? "⚙️ التحكم بظهور أقسام الصفحة الرئيسية" : "⚙️ Homepage Sections Visibility Control"}
-                        </h4>
-                        <p className="text-[10px] text-zinc-500">
-                          {isArabic 
-                            ? "قم بتفعيل أو إلغاء تفعيل أي قسم من أقسام المتجر في الصفحة الرئيسية حسب رغبتك" 
-                            : "Easily show or hide any of your store's homepage sections as you prefer"}
-                        </p>
-                      </div>
+                    {(expandedHomepageSection === 'visibility_control' || expandedHomepageSection === 'all') && (
+                      <div className="bg-zinc-950/80 border border-zinc-850 p-6 rounded-2xl space-y-4 mt-6">
+                        <div className="border-b border-zinc-800 pb-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Eye size={16} className="text-amber-400" />
+                            <h4 className="text-zinc-100 font-bold text-sm">
+                              {isArabic ? "⚙️ التحكم بظهور أقسام الصفحة الرئيسية" : "⚙️ Homepage Sections Visibility Control"}
+                            </h4>
+                          </div>
+                          <p className="text-[10px] text-zinc-500">
+                            {isArabic 
+                              ? "قم بتفعيل أو إلغاء تفعيل أي قسم من أقسام المتجر في الصفحة الرئيسية حسب رغبتك" 
+                              : "Easily show or hide any of your store's homepage sections as you prefer"}
+                          </p>
+                        </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {/* 1. Hero Carousel Ticker */}
@@ -3198,14 +3285,17 @@ export default function AdminPanel({
                         </div>
                       </div>
                     </div>
+                    )}
 
                     {/* NEW MAIN HERO SECTION SETUP */}
-                    <div className="bg-zinc-950/80 border border-zinc-850 p-6 rounded-2xl space-y-6 mt-6">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-3 gap-3">
-                        <div className="space-y-1">
-                          <h4 className="text-zinc-100 font-bold text-sm">
-                            {isArabic ? "✦ إعدادات قسم الهيرو الرئيسي الجديد" : "✦ New Main Hero Section Setup"}
-                          </h4>
+                    {(expandedHomepageSection === 'new_hero' || expandedHomepageSection === 'all') && (
+                      <div className="bg-zinc-950/80 border border-zinc-850 p-6 rounded-2xl space-y-6 mt-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 pb-3 gap-3">
+                          <div className="space-y-1">
+                            <h4 className="text-zinc-100 font-bold text-sm flex items-center gap-2">
+                              <Image size={16} className="text-amber-400" />
+                              <span>{isArabic ? "✦ إعدادات قسم الهيرو الرئيسي الجديد" : "✦ New Main Hero Section Setup"}</span>
+                            </h4>
                           <p className="text-[10px] text-zinc-500">
                             {isArabic 
                               ? "هذا القسم يظهر في مقدمة الصفحة الرئيسية قبل شريط التشكيلات المصغر" 
@@ -3445,9 +3535,18 @@ export default function AdminPanel({
                         </div>
                       )}
                     </div>
+                    )}
 
-                    <h4 className="text-zinc-200 font-bold border-b border-zinc-800 pb-2 pt-8 text-sm">{isArabic ? "سلايد صور وخلفيات الكاروسيل بمقدمة المتجر" : "Frontpage Landscape Carousel Slides"}</h4>
-                    <div className="space-y-6">
+                    {/* FRONTPAGE LANDSCAPE CAROUSEL SLIDES */}
+                    {(expandedHomepageSection === 'carousel_slides' || expandedHomepageSection === 'all') && (
+                      <div className="bg-zinc-950/85 border border-zinc-850 p-6 rounded-2xl space-y-6 mt-6">
+                        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+                          <Layers size={16} className="text-amber-400" />
+                          <h4 className="text-zinc-100 font-bold text-sm">
+                            {isArabic ? "سلايد صور وخلفيات الكاروسيل بمقدمة المتجر" : "Frontpage Landscape Carousel Slides"}
+                          </h4>
+                        </div>
+                        <div className="space-y-6">
                       {homepageContent.heroSlides.map((slide, idx) => (
                         <div key={slide.id} className="p-4 bg-zinc-950 border border-zinc-850 rounded-xl space-y-4">
                           <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
@@ -3551,11 +3650,21 @@ export default function AdminPanel({
                         </div>
                       ))}
                     </div>
+                      </div>
+                    )}
 
-                    <h4 className="text-zinc-200 font-bold border-b border-zinc-800 pb-2 pt-6 text-sm">{isArabic ? "تخصيص مجموعات المتجر وتصاميمها (The Boutique Collections)" : "Customize Boutique Collections Settings"}</h4>
-                    <div className="space-y-6">
-                      {[
-                        { id: 'women', labelAr: "مجموعة السيدات الفاخرة", labelEn: "Women's Collection" },
+                    {/* CUSTOMIZE BOUTIQUE COLLECTIONS SETTINGS */}
+                    {(expandedHomepageSection === 'boutique_collections' || expandedHomepageSection === 'all') && (
+                      <div className="bg-zinc-950/85 border border-zinc-850 p-6 rounded-2xl space-y-6 mt-6">
+                        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+                          <Grid size={16} className="text-amber-400" />
+                          <h4 className="text-zinc-100 font-bold text-sm">
+                            {isArabic ? "تخصيص مجموعات المتجر وتصاميمها (The Boutique Collections)" : "Customize Boutique Collections Settings"}
+                          </h4>
+                        </div>
+                        <div className="space-y-6">
+                          {[
+                            { id: 'women', labelAr: "مجموعة السيدات الفاخرة", labelEn: "Women's Collection" },
                         { id: 'men', labelAr: "المجموعات الرجالية العصرية", labelEn: "Men's Collection" },
                         { id: 'kids', labelAr: "قصص الأطفال القطنية العضوية", labelEn: "Kids & Baby Collection" },
                         { id: 'accessories', labelAr: "الإكسسوارات الفاخرة المنسقة", labelEn: "Accessories & Leather" }
@@ -3681,9 +3790,19 @@ export default function AdminPanel({
                         );
                       })}
                     </div>
+                    </div>
+                    )}
 
                     {/* DYNAMIC BACKDROP CUSTOMIZER MODULE */}
-                    {(() => {
+                    {(expandedHomepageSection === 'backdrop_colors' || expandedHomepageSection === 'all') && (
+                      <div className="bg-zinc-950/85 border border-zinc-850 p-6 rounded-2xl space-y-6 mt-6">
+                        <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+                          <Paintbrush size={16} className="text-amber-400" />
+                          <h4 className="text-zinc-100 font-bold text-sm">
+                            {isArabic ? "خصائص وتلوين الخلفيات السحابية للأقسام والخطوط" : "Dynamic Backdrop Customizer Module"}
+                          </h4>
+                        </div>
+                        {(() => {
                       const getSectionBg = (key: 'theCollections' | 'trendPieces' | 'categoryScrollSlices' | 'customCoutureForm') => {
                         return homepageContent.sectionBackgrounds?.[key] || {
                           type: 'gradient',
@@ -4431,6 +4550,8 @@ export default function AdminPanel({
                         })()}
                       </div>
                     </div>
+                    </div>
+                    )}
 
                     <div className="pt-6 border-t border-zinc-850 text-left">
                       <button

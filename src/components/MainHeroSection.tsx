@@ -16,6 +16,7 @@ interface MainHeroSectionProps {
   images?: string[];
   layout?: 'single' | 'split' | 'grid' | 'slider';
   onActionClick?: (link: string) => void;
+  isMergedHeader?: boolean;
 }
 
 const DEFAULT_IMAGES = [
@@ -27,6 +28,12 @@ const DEFAULT_IMAGES = [
 const isCustomImage = (url: string) => {
   if (!url) return false;
   return !DEFAULT_IMAGES.includes(url);
+};
+
+const isLogoImage = (url: string) => {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return lower.includes('logo') || lower.includes('removebg') || lower.includes('50136550237');
 };
 
 export default function MainHeroSection({
@@ -42,7 +49,8 @@ export default function MainHeroSection({
   btnLink = 'all',
   images = [],
   layout = 'split',
-  onActionClick
+  onActionClick,
+  isMergedHeader = false
 }: MainHeroSectionProps) {
   if (!enabled) return null;
 
@@ -88,7 +96,11 @@ export default function MainHeroSection({
       
       {/* 1. SPLIT ATELIER LAYOUT (Default & extremely popular) */}
       {layout === 'split' && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${
+          isMergedHeader 
+            ? 'pt-36 pb-12 md:pt-44 md:pb-20 lg:pt-48' 
+            : 'py-12 md:py-20'
+        }`}>
           <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-center ${isArabic ? 'lg:rtl' : ''}`} style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
             
             {/* Copy & CTA */}
@@ -126,12 +138,12 @@ export default function MainHeroSection({
             )}
 
             {/* Collage Showcase */}
-            <div className={`${showTexts ? 'lg:col-span-7' : 'lg:col-span-10 lg:col-start-2'} grid grid-cols-12 gap-4 relative`}>
-              <div className="col-span-8 aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white bg-white flex items-center justify-center">
+            <div className={`${showTexts ? 'lg:col-span-7' : 'lg:col-span-10 lg:col-start-2'} grid grid-cols-12 gap-4 relative items-center justify-center`}>
+              <div className={`col-span-8 flex items-center justify-center ${isLogoImage(activeImages[0]) ? 'aspect-square' : 'aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white bg-white'}`}>
                 <img 
                   src={optimizeUnsplashUrl(activeImages[0], 800, 75)} 
                   alt="Primary Editorial" 
-                  className={`w-full h-full ${isCustomImage(activeImages[0]) ? 'object-contain p-2' : 'object-cover'}`}
+                  className={`w-full h-full ${isLogoImage(activeImages[0]) ? 'object-contain max-h-[300px]' : isCustomImage(activeImages[0]) ? 'object-contain p-2' : 'object-cover'}`}
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -173,7 +185,9 @@ export default function MainHeroSection({
 
       {/* 2. FULL LUXURY SLIDER LAYOUT */}
       {layout === 'slider' && (
-        <div className="relative w-full h-[50vh] sm:h-[65vh] md:h-[75vh] min-h-[400px] flex items-center justify-center">
+        <div className={`relative w-full h-[50vh] sm:h-[65vh] md:h-[75vh] min-h-[400px] flex items-center justify-center ${
+          isMergedHeader ? 'pt-20 md:pt-28' : ''
+        }`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={activeSlide}
@@ -277,17 +291,21 @@ export default function MainHeroSection({
 
       {/* 3. BENTO GRID COLLAGE LAYOUT */}
       {layout === 'grid' && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-24">
+        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${
+          isMergedHeader 
+            ? 'pt-36 pb-12 md:pt-44 md:pb-24' 
+            : 'py-12 md:py-24'
+        }`}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-center">
             
             {/* Left bento visual block */}
-            <div className={showTexts ? 'lg:col-span-7 grid grid-cols-2 gap-4' : 'lg:col-span-10 lg:col-start-2 grid grid-cols-2 gap-4'}>
+            <div className={showTexts ? 'lg:col-span-7 grid grid-cols-2 gap-4 items-center' : 'lg:col-span-10 lg:col-start-2 grid grid-cols-2 gap-4 items-center'}>
               <div className="space-y-4">
-                <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-md bg-white flex items-center justify-center">
+                <div className={`${isLogoImage(activeImages[0]) ? 'aspect-square' : 'aspect-[4/5] rounded-3xl overflow-hidden shadow-md bg-white'} flex items-center justify-center`}>
                   <img 
                     src={optimizeUnsplashUrl(activeImages[0], 600, 75)} 
                     alt="Bento 1" 
-                    className={`w-full h-full ${isCustomImage(activeImages[0]) ? 'object-contain p-2' : 'object-cover'}`} 
+                    className={`w-full h-full ${isLogoImage(activeImages[0]) ? 'object-contain max-h-[220px]' : isCustomImage(activeImages[0]) ? 'object-contain p-2' : 'object-cover'}`} 
                     referrerPolicy="no-referrer" 
                   />
                 </div>
@@ -314,11 +332,11 @@ export default function MainHeroSection({
                   </div>
                 )}
                 {activeImages[3] || activeImages[0] ? (
-                  <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-md bg-white flex items-center justify-center">
+                  <div className={`${isLogoImage(activeImages[3] || activeImages[0]) ? 'aspect-square' : 'aspect-[4/5] rounded-3xl overflow-hidden shadow-md bg-white'} flex items-center justify-center`}>
                     <img 
                       src={optimizeUnsplashUrl(activeImages[3] || activeImages[0], 600, 75)} 
                       alt="Bento 4" 
-                      className={`w-full h-full ${isCustomImage(activeImages[3] || activeImages[0]) ? 'object-contain p-2' : 'object-cover'}`} 
+                      className={`w-full h-full ${isLogoImage(activeImages[3] || activeImages[0]) ? 'object-contain max-h-[220px]' : isCustomImage(activeImages[3] || activeImages[0]) ? 'object-contain p-2' : 'object-cover'}`} 
                       referrerPolicy="no-referrer" 
                     />
                   </div>
@@ -358,10 +376,16 @@ export default function MainHeroSection({
 
       {/* 4. SINGLE FULL-BLEED LUXURY BANNER */}
       {layout === 'single' && (
-        <div className="relative w-full aspect-[21/9] min-h-[350px] flex items-center overflow-hidden">
-          <div className="absolute inset-0">
+        <div className={`relative w-full aspect-[21/9] flex items-center overflow-hidden bg-zinc-950 ${
+          isMergedHeader 
+            ? 'min-h-[460px] md:min-h-[580px] lg:min-h-[640px]' 
+            : 'min-h-[400px] md:min-h-[520px] lg:min-h-[580px]'
+        }`}>
+          <div className="absolute inset-0 w-full h-full">
             {isCustomImage(activeImages[0]) ? (
-              <div className="absolute inset-0 bg-zinc-950 flex items-center justify-center overflow-hidden">
+              <div className={`absolute inset-0 bg-zinc-950 flex items-center justify-center overflow-hidden ${
+                isArabic ? 'md:justify-start md:pl-12' : 'md:justify-end md:pr-12'
+              }`}>
                 {/* Blurred Backdrop */}
                 <img 
                   src={optimizeUnsplashUrl(activeImages[0], 800, 30)} 
@@ -369,11 +393,11 @@ export default function MainHeroSection({
                   className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-45 scale-110 select-none pointer-events-none"
                   referrerPolicy="no-referrer"
                 />
-                {/* Contained Front Image */}
+                {/* Contained Front Image - Larger and clearer sizing */}
                 <img 
                   src={optimizeUnsplashUrl(activeImages[0], 1200, 75)} 
                   alt="Single Banner Hero" 
-                  className="relative max-h-full max-w-full object-contain p-4 z-10 select-none"
+                  className="relative max-h-[95%] max-w-[95%] md:max-h-[98%] md:max-w-[52%] lg:max-h-[100%] lg:max-w-[58%] object-contain z-10 select-none transition-all duration-700"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -382,17 +406,28 @@ export default function MainHeroSection({
                 <img 
                   src={optimizeUnsplashUrl(activeImages[0], 1600, 75)} 
                   alt="Single Banner Hero" 
-                  className="w-full h-full object-cover" 
+                  className={`w-full h-full object-cover object-center scale-[1.08] md:scale-[1.12] transition-all duration-700 ${isArabic ? 'md:object-left' : 'md:object-right'}`} 
                   referrerPolicy="no-referrer"
                 />
-                <div className={showTexts ? "absolute inset-0 bg-gradient-to-r from-zinc-950/70 via-zinc-900/40 to-transparent" : "absolute inset-0 bg-black/10"} />
               </>
             )}
           </div>
 
+          {/* Seamless gradient overlay to blend text container and image */}
+          <div className={`absolute inset-0 pointer-events-none z-10 ${
+            isArabic 
+              ? 'bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent md:bg-gradient-to-l md:from-zinc-950 md:via-zinc-950/70 md:to-transparent' 
+              : 'bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent md:bg-gradient-to-r md:from-zinc-950 md:via-zinc-950/70 md:to-transparent'
+          }`} />
+
           {showTexts && (
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 w-full">
-              <div className="max-w-xl space-y-6 text-white" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+            <div className={`relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full ${
+              isMergedHeader ? 'pt-32 pb-12 md:pt-40 md:pb-20' : 'py-12 md:py-20'
+            }`}>
+              <div 
+                className={`max-w-xl space-y-6 text-white md:w-1/2 ${isArabic ? 'md:ml-auto md:mr-0' : 'md:mr-auto md:ml-0'}`} 
+                style={{ textAlign: isArabic ? 'right' : 'left' }}
+              >
                 <span className="text-[10px] font-mono tracking-[0.2em] text-zinc-300 uppercase">
                   {isArabic ? "موديلات الكوتور المتميزة" : "COUTURE PREMIUM SIGNATURE"}
                 </span>

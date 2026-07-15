@@ -19,7 +19,7 @@ export default function CustomCoutureForm({
   onGoToProfileCustom,
   backdrop
 }: CustomCoutureFormProps) {
-  const [customType, setCustomType] = useState<'couture' | 'accessories'>('couture');
+  const [customType, setCustomType] = useState<'couture' | 'accessories'>('accessories');
   
   // Custom interactive features for a luxury gift experience
   const [isGift, setIsGift] = useState(true);
@@ -36,7 +36,7 @@ export default function CustomCoutureForm({
     description: '',
     material: '',
     color: '',
-    budget: 3000,
+    budget: 1500,
     notes: ''
   });
 
@@ -180,37 +180,18 @@ export default function CustomCoutureForm({
             <div className="text-right sm:text-left space-y-1">
               <h3 className="text-base font-serif font-semibold text-[#2C2A29] flex items-center gap-2">
                 <Sparkles size={16} className="text-[#C9D9BC] fill-[#C9D9BC]" />
-                <span>{isArabic ? "نوع الطلب المخصص" : "Design Specification"}</span>
+                <span>{isArabic ? "طلب إكسسوار هاند ميد مخصص" : "Handmade Accessory Specification"}</span>
               </h3>
               <p className="text-[11px] text-[#7F7F7F] font-light">
-                {isArabic ? "سواء كان فستاناً ملكياً، عادياً، أو إكسسوار رأس مطرزاً بالكامل باليد." : "Select category to match your creative thoughts with our atelier artisans."}
+                {isArabic ? "تصميم وتطريز قطعة إكسسوار رأس أو حقيبة فاخرة بالكامل يدوياً بمواصفاتكِ الخاصة." : "Design and hand-bead your custom headpiece or luxury accessory to your precise specifications."}
               </p>
             </div>
             
             <div className="flex gap-2 p-1 bg-[#EEEDE9] border border-[#DFDDD8] rounded-2xl self-center sm:self-auto">
-              <button
-                type="button"
-                onClick={() => handleCustomTypeChange('couture')}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                  customType === 'couture'
-                    ? 'bg-zinc-900 text-white shadow-md'
-                    : 'text-zinc-600 hover:text-zinc-900'
-                }`}
-              >
-                <span>{isArabic ? "تفصيل ملابس وفساتين" : "Bespoke Couture"}</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => handleCustomTypeChange('accessories')}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                  customType === 'accessories'
-                    ? 'bg-zinc-900 text-white shadow-md'
-                    : 'text-zinc-600 hover:text-zinc-900'
-                }`}
-              >
+              <div className="px-5 py-2.5 rounded-xl text-xs font-bold bg-zinc-900 text-white shadow-md flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C9D9BC] animate-pulse" />
                 <span>{isArabic ? "إكسسوارات هاند ميد" : "Handmade Accessories"}</span>
-              </button>
+              </div>
             </div>
           </div>
 

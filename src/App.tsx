@@ -365,6 +365,8 @@ export default function App() {
           logoText={homepageContent?.logoText}
           logoTextColor={homepageContent?.logoTextColor}
           logoTextFont={homepageContent?.logoTextFont}
+          isHeroMerged={activeView === 'home' && !searchQuery && homepageContent?.heroSectionEnabled !== false}
+          heroLayout={homepageContent?.heroSectionLayout || 'split'}
         />
 
         {/* Main Page Layout */}
@@ -388,6 +390,7 @@ export default function App() {
                       btnLink={homepageContent?.heroSectionBtnLink}
                       images={homepageContent?.heroSectionImages}
                       layout={homepageContent?.heroSectionLayout || 'split'}
+                      isMergedHeader={activeView === 'home' && !searchQuery && homepageContent?.heroSectionEnabled !== false}
                       onActionClick={(link) => {
                         if (link === 'custom' || link?.includes('custom')) {
                           const formEl = document.getElementById('custom-couture-form-section');
