@@ -100,20 +100,8 @@ export default function App() {
 
     // 1. Subscribe to real-time Products catalog (available to anyone)
     const unsubscribeProducts = subscribeToProducts((prodList) => {
-      // Merge database items with any missing seed initial products
-      const mergedList = [...prodList];
-      initialProducts.forEach((initProd) => {
-        const alreadyExists = prodList.some(p => p.nameEn.toLowerCase() === initProd.nameEn.toLowerCase());
-        if (!alreadyExists) {
-          mergedList.push({
-            id: `seed-${initProd.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-            createdAt: Date.now(),
-            ...initProd
-          } as Product);
-        }
-      });
-      // Sort so that newer items or custom added ones still maintain a premium layout
-      setProducts(mergedList);
+      // Rely 100% on database products
+      setProducts(prodList);
     });
 
     // 2. Listen to Auth State

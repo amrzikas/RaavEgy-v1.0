@@ -201,56 +201,23 @@ export default function Header({
         borderColor: isMergedTransparent ? 'transparent' : (headerBgColor ? (isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)') : undefined)
       }}
     >
-      {/* Premium Minimal Announcement Bar / Custom Banner */}
-      {announcementImage ? (
-        <a 
-          href={announcementLink || "#"} 
-          target={announcementLink ? "_blank" : undefined}
-          rel="noopener noreferrer"
-          className="block w-full h-[40px] xs:h-[48px] md:h-[56px] overflow-hidden relative group"
-        >
-          <img 
-            src={announcementImage} 
-            alt="Ad Banner" 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            referrerPolicy="no-referrer"
-          />
-          {customAnnouncement && (
-            <div className="absolute inset-0 bg-black/35 flex items-center justify-center px-4">
-              <span className="font-semibold text-white tracking-[0.15em] text-[10px] xs:text-[11.5px] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                {customAnnouncement}
-              </span>
-            </div>
-          )}
-        </a>
-      ) : (
-        <div className={`font-sans text-[11px] tracking-[0.15em] text-white py-2 px-4 text-center uppercase flex items-center justify-center gap-2 transition-all duration-300 ${
-          isMergedTransparent ? 'bg-black/25 backdrop-blur-xs' : 'bg-zinc-950'
-        }`}>
-          <span className="font-semibold text-zinc-300">
-            {customAnnouncement || (isArabic 
-              ? "توصيل سريع مجاني في مصر للطلبات الأكثر من ١٢٠٠ ج.م • كود الخصم: RAAV2026" 
-              : "FREE EXPEDITED SHIPPING IN EGYPT ON ORDERS OVER 1200 EGP • CODE: RAAV2026")}
-          </span>
-        </div>
-      )}
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 md:h-20">
           
-          {/* Hamburger Menu on the Left (Mobile only) */}
-          <div className="flex md:hidden items-center">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className={`p-2 rounded-full transition cursor-pointer ${iconClass}`}
-              title={isArabic ? "القائمة" : "Menu"}
-            >
-              <Menu size={20} strokeWidth={1.8} />
-            </button>
-          </div>
+          {/* Logo & Hamburger menu combined on the left */}
+          <div className="flex items-center gap-1 sm:gap-2 md:w-1/3 flex-initial h-16 md:h-20">
+            {/* Hamburger Menu on the Left (Mobile only) */}
+            <div className="flex md:hidden items-center">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className={`p-2 rounded-full transition cursor-pointer ${iconClass}`}
+                title={isArabic ? "القائمة" : "Menu"}
+              >
+                <Menu size={20} strokeWidth={1.8} />
+              </button>
+            </div>
 
-          {/* Logo on the Left */}
-          <div className="flex justify-center md:justify-start md:w-1/3 flex-1 md:flex-initial h-20 items-center overflow-hidden">
+            {/* Logo container */}
             <div 
               onClick={() => {
                 setActiveView('home');
@@ -265,7 +232,7 @@ export default function Header({
                   <img 
                     src={logoImage} 
                     alt="RAAV Couture Logo" 
-                    className={`object-contain transition duration-500 hover:scale-105 rounded-lg md:rounded-xl h-20 w-auto p-1.5 ${
+                    className={`object-contain transition duration-500 hover:scale-105 rounded-lg md:rounded-xl h-11 md:h-16 lg:h-18 w-auto p-1.5 ${
                       !isLight ? 'bg-white shadow-sm' : ''
                     }`}
                     referrerPolicy="no-referrer"

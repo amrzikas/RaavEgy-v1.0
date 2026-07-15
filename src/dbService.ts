@@ -69,42 +69,39 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 }
 
 /**
- * Checks if products exist. If not, seeds the database with initial clothes.
- * If populated, inserts any individual missing seed items.
+ * Checks if there are any initial mock/seeded products in the database and removes them.
+ * This runs when the authorized admin logs in to ensure a pristine database.
  */
 export async function seedProductsIfNeeded(): Promise<void> {
   const pathForWrite = PRODUCTS_COLL;
   try {
+    console.log('Checking for and cleaning up any initial mock products in the database...');
     const querySnapshot = await getDocs(collection(db, PRODUCTS_COLL));
-    if (querySnapshot.empty) {
-      console.log('No clothes found in database. Seeding standard items...');
-      for (const productData of initialProducts) {
-        await addDoc(collection(db, PRODUCTS_COLL), {
-          ...productData,
-          createdAt: Date.now()
-        });
-      }
-      console.log('Seeding clothes complete!');
-    } else {
-      const dbProducts: string[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.nameEn) {
-          dbProducts.push(data.nameEn.toLowerCase());
-        }
-      });
-
-      for (const productData of initialProducts) {
-        if (!dbProducts.includes(productData.nameEn.toLowerCase())) {
-          console.log(`Inserting custom added seed product: ${productData.nameEn}`);
-          await addDoc(collection(db, PRODUCTS_COLL), {
-            ...productData,
-            createdAt: Date.now()
-          });
-        }
+    
+    // Get list of mock English names to identify fake products
+    const fakeNames = initialProducts.map(p => p.nameEn.toLowerCase());
+    
+    let deleteCount = 0;
+    for (const docSnap of querySnapshot.docs) {
+      const data = docSnap.data();
+      const docId = docSnap.id;
+      
+      // If it matches a name in initialProducts, delete it
+      if (data.nameEn && fakeNames.includes(data.nameEn.toLowerCase())) {
+        console.log(`Deleting fake product from database: ${data.nameEn}`);
+        const docRef = doc(db, PRODUCTS_COLL, docId);
+        await deleteDoc(docRef);
+        deleteCount++;
       }
     }
+    
+    if (deleteCount > 0) {
+      console.log(`Successfully deleted ${deleteCount} fake products from the database.`);
+    } else {
+      console.log('No fake products found in the database. Ready for custom products.');
+    }
   } catch (error) {
+    console.error('Error cleaning up fake products from Firestore:', error);
     handleFirestoreError(error, OperationType.WRITE, pathForWrite);
   }
 }

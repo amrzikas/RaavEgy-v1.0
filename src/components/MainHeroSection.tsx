@@ -185,8 +185,8 @@ export default function MainHeroSection({
 
       {/* 2. FULL LUXURY SLIDER LAYOUT */}
       {layout === 'slider' && (
-        <div className={`relative w-full h-[50vh] sm:h-[65vh] md:h-[75vh] min-h-[400px] flex items-center justify-center ${
-          isMergedHeader ? 'pt-20 md:pt-28' : ''
+        <div className={`relative w-full h-[44vh] sm:h-[60vh] md:h-[75vh] min-h-[340px] sm:min-h-[450px] flex items-center justify-center ${
+          isMergedHeader ? 'pt-16 md:pt-28' : ''
         }`}>
           <AnimatePresence mode="wait">
             <motion.div
@@ -230,12 +230,12 @@ export default function MainHeroSection({
 
           {/* Floating Content */}
           {showTexts && (
-            <div className="relative z-10 max-w-4xl mx-auto text-center px-4 space-y-6 md:space-y-8 text-white">
+            <div className="relative z-10 max-w-4xl mx-auto text-center px-4 space-y-4 sm:space-y-6 md:space-y-8 text-white">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[10px] font-bold tracking-[0.2em] text-zinc-300 uppercase font-sans mx-auto"
+                className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[9px] sm:text-[10px] font-bold tracking-[0.2em] text-zinc-300 uppercase font-sans mx-auto"
               >
                 ⚜️ {isArabic ? "تشكيلة النخبة الحصرية" : "ROYAL ELITE COLLECTION"}
               </motion.div>
@@ -244,7 +244,7 @@ export default function MainHeroSection({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif tracking-tight font-extralight text-white leading-tight"
+                className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-serif tracking-tight font-extralight text-white leading-snug sm:leading-tight"
               >
                 {displayTitle}
               </motion.h1>
@@ -253,7 +253,7 @@ export default function MainHeroSection({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="text-zinc-200 text-xs sm:text-sm md:text-lg font-sans max-w-2xl mx-auto font-light leading-relaxed drop-shadow-md"
+                className="text-zinc-200 text-[11px] xs:text-xs sm:text-sm md:text-lg font-sans max-w-2xl mx-auto font-light leading-relaxed drop-shadow-md px-2"
               >
                 {displaySub}
               </motion.p>
@@ -262,11 +262,11 @@ export default function MainHeroSection({
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.8 }}
-                className="pt-4"
+                className="pt-2 sm:pt-4"
               >
                 <button
                   onClick={handleBtnClick}
-                  className="px-12 py-4 bg-zinc-200 hover:bg-white text-zinc-950 font-bold text-xs tracking-[0.2em] rounded-full uppercase transition duration-300 shadow-2xl hover:scale-105 cursor-pointer"
+                  className="px-8 py-3 sm:px-12 sm:py-4 bg-zinc-200 hover:bg-white text-zinc-950 font-bold text-[10px] sm:text-xs tracking-[0.2em] rounded-full uppercase transition duration-300 shadow-2xl hover:scale-105 cursor-pointer"
                 >
                   {displayBtnText}
                 </button>

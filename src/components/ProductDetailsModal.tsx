@@ -17,11 +17,9 @@ export default function ProductDetailsModal({
   onAddToCart,
   isArabic
 }: ProductDetailsModalProps) {
-  if (!product) return null;
-
-  const [activeImgUrl, setActiveImgUrl] = useState<string>(product.image);
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'M');
-  const [selectedColor, setSelectedColor] = useState<string>(product.colors[0] || '#ffffff');
+  const [activeImgUrl, setActiveImgUrl] = useState<string>(product?.image || '');
+  const [selectedSize, setSelectedSize] = useState<string>(product?.sizes?.[0] || 'M');
+  const [selectedColor, setSelectedColor] = useState<string>(product?.colors?.[0] || '#ffffff');
   const [quantity, setQuantity] = useState<number>(1);
   const [addedToCartNotify, setAddedToCartNotify] = useState(false);
 
@@ -33,6 +31,8 @@ export default function ProductDetailsModal({
       setQuantity(1);
     }
   }, [product]);
+
+  if (!product) return null;
 
   const { current, original, hasDiscount } = getProductPrice(product);
 
