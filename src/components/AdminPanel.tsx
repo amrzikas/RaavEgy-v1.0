@@ -2713,6 +2713,9 @@ export default function AdminPanel({
                           }}
                           className="w-full text-xs text-zinc-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-amber-400 hover:file:bg-zinc-750 cursor-pointer"
                         />
+                        <span className="text-[10px] text-amber-500 font-medium mt-1 block">
+                          {isArabic ? "المقاس المقترح: 1920x80 بكسل (نسبة 24:1 فائقة العرض)" : "Recommended size: 1920x80 px (ultra-wide 24:1 ratio)"}
+                        </span>
                       </div>
 
                       <div className="md:col-span-2">
@@ -2972,6 +2975,9 @@ export default function AdminPanel({
                                 {isArabic ? "رفع" : "Upload"}
                               </label>
                             </div>
+                            <span className="text-[10px] text-amber-500 font-medium block mt-1">
+                              {isArabic ? "المقاس المقترح: 1200x500 بكسل (أو نسبة 12:5)" : "Recommended size: 1200x500 px (or 12:5 ratio)"}
+                            </span>
                           </div>
 
                           {/* Visual overrides segment (background, text, badge, button colors) */}
@@ -3301,6 +3307,9 @@ export default function AdminPanel({
                                 {isArabic ? "رفع" : "Upload"}
                               </label>
                             </div>
+                            <span className="text-[10px] text-amber-500 font-medium block mt-1">
+                              {isArabic ? "المقاس المقترح: 1200x500 بكسل (أو نسبة 12:5)" : "Recommended size: 1200x500 px (or 12:5 ratio)"}
+                            </span>
                           </div>
 
                           {/* Visual overrides segment (background, text, badge, button colors) */}
@@ -3631,6 +3640,9 @@ export default function AdminPanel({
                                       placeholder="https://images.unsplash.com/..."
                                       className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
                                     />
+                                    <span className="text-[9px] text-amber-500 font-medium mt-1 block">
+                                      {isArabic ? "المقاس المقترح: 960x1200 بكسل (أبعاد 4:5 رأسية)" : "Recommended size: 960x1200 px (4:5 portrait ratio)"}
+                                    </span>
                                   </div>
                                 </div>
 
@@ -3664,6 +3676,9 @@ export default function AdminPanel({
                                       placeholder="https://images.unsplash.com/..."
                                       className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
                                     />
+                                    <span className="text-[9px] text-amber-500 font-medium mt-1 block">
+                                      {isArabic ? "المقاس المقترح: 960x1200 بكسل (أبعاد 4:5 رأسية)" : "Recommended size: 960x1200 px (4:5 portrait ratio)"}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -4208,6 +4223,9 @@ export default function AdminPanel({
                                 }}
                                 className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-xl outline-none font-mono"
                               />
+                              <span className="text-[9px] text-amber-500 font-medium mt-1 block">
+                                {isArabic ? "المقاس المقترح للغلاف: 1920x1080 بكسل (أو نسبة 16:9)" : "Recommended slide size: 1920x1080 px (or 16:9 ratio)"}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -4335,6 +4353,9 @@ export default function AdminPanel({
                                   }}
                                   className="w-full text-xs text-zinc-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-amber-400 hover:file:bg-zinc-750 cursor-pointer"
                                 />
+                                <span className="text-[10px] text-amber-500 font-medium mt-1 block">
+                                  {isArabic ? "المقاس المقترح لبطاقة المجموعة: 600x800 بكسل (أو نسبة 3:4 رأسية)" : "Recommended category card size: 600x800 px (or 3:4 portrait ratio)"}
+                                </span>
                               </div>
                             </div>
 
@@ -4913,6 +4934,9 @@ export default function AdminPanel({
                             }}
                             className="w-full text-xs text-zinc-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-amber-400 hover:file:bg-zinc-700 cursor-pointer"
                           />
+                          <span className="text-[10px] text-amber-500 font-medium mt-1 block">
+                            {isArabic ? "المقاس المقترح للشعار: 300x80 بكسل (بخلفية شفافة PNG)" : "Recommended logo size: 300x80 px (transparent background PNG)"}
+                          </span>
                         </div>
                       </div>
 
@@ -5793,9 +5817,14 @@ export default function AdminPanel({
                           <h5 className="text-xs font-extrabold text-zinc-350">
                             {isArabic ? "صور الموديل (الحد الأقصى ٥ صور)" : "Product Media (Up to 5 images)"}
                           </h5>
-                          <span className="text-[10px] text-zinc-500">
-                            {isArabic ? "أول صورة ستكون الصورة الأساسية للمنتج" : "Slot 1 will represent primary thumbnail image"}
-                          </span>
+                          <div className="flex flex-col text-right">
+                            <span className="text-[10px] text-zinc-500">
+                              {isArabic ? "أول صورة ستكون الصورة الأساسية للمنتج" : "Slot 1 will represent primary thumbnail image"}
+                            </span>
+                            <span className="text-[9.5px] text-amber-500 font-medium">
+                              {isArabic ? "المقاس المقترح: 800x1000 بكسل (أبعاد 4:5)" : "Recommended size: 800x1000 px (4:5 ratio)"}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
@@ -7302,10 +7331,17 @@ export default function AdminPanel({
                               instaPay: { ...paymentConfig.instaPay, qrCode: e.target.value }
                             })}
                           />
-                          <p className="text-[10px] text-zinc-500 mt-1">
-                            {isArabic 
-                              ? "ضع رابط صورة الـ QR لعلامتك التجارية لتبسيط عملية الدفع للعميل أثناء تأكيد الطلب سلكياً من الهاتف." 
-                              : "Input URL of your InstaPay QR Code image for clean, immediate user verification."}
+                          <p className="text-[10px] text-zinc-500 mt-1 flex flex-col gap-0.5">
+                            <span>
+                              {isArabic 
+                                ? "ضع رابط صورة الـ QR لعلامتك التجارية لتبسيط عملية الدفع للعميل أثناء تأكيد الطلب سلكياً من الهاتف." 
+                                : "Input URL of your InstaPay QR Code image for clean, immediate user verification."}
+                            </span>
+                            <span className="text-amber-500 font-medium">
+                              {isArabic 
+                                ? "المقاس المقترح: 500x500 بكسل (أبعاد 1:1 مربعة)" 
+                                : "Recommended size: 500x500 px (1:1 square ratio)"}
+                            </span>
                           </p>
                         </div>
                       </div>
@@ -7384,6 +7420,9 @@ export default function AdminPanel({
                                     value={w.qrCode || ''}
                                     onChange={(e) => handleUpdateWalletOption(w.id, 'qrCode', e.target.value)}
                                   />
+                                  <span className="text-[9px] text-amber-500 font-medium mt-1 block">
+                                    {isArabic ? "المقاس المقترح: 500x500 بكسل (أبعاد 1:1 مربعة)" : "Recommended size: 500x500 px (1:1 square ratio)"}
+                                  </span>
                                 </div>
                               </div>
                             </div>
