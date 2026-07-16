@@ -373,10 +373,20 @@ export default function ProductPage({
                     <span>{isArabic ? "إرشادات العناية والاهتمام" : "Care Instructions"}</span>
                   </h4>
                   <div className="flex gap-2 items-start text-zinc-650 text-xs sm:text-sm bg-amber-50/30 p-3 rounded-xl border border-amber-100/30 text-justify">
-                    <span className="text-sm">✨</span>
-                    <p className="font-light leading-relaxed">
-                      {isArabic ? product.careAr : product.careEn}
-                    </p>
+                    <span className="text-sm shrink-0">✨</span>
+                    <ul className="space-y-1 pr-0 pl-0 list-none w-full">
+                      {(isArabic ? product.careAr : product.careEn)
+                        ?.split('\n')
+                        .map(line => line.trim())
+                        .filter(Boolean)
+                        .map((bullet, bIdx) => (
+                          <li key={bIdx} className="flex items-start gap-1.5 leading-relaxed">
+                            <span className="text-amber-500 select-none mt-1 text-xs">✦</span>
+                            <span className="font-light">{bullet}</span>
+                          </li>
+                        ))
+                      }
+                    </ul>
                   </div>
                 </div>
               ) : null}

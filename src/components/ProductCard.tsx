@@ -24,6 +24,33 @@ const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { current, original, hasDiscount } = getProductPrice(product);
 
+  const allImages = React.useMemo(() => {
+    const list: string[] = [];
+    if (product.image) list.push(product.image);
+    if (product.images && Array.isArray(product.images)) {
+      product.images.forEach(img => {
+        if (img && img !== product.image) {
+          list.push(img);
+        }
+      });
+    }
+    return list;
+  }, [product.image, product.images]);
+
+  const [hoverIndex, setHoverIndex] = React.useState(0);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isHovered || allImages.length <= 1) {
+      setHoverIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setHoverIndex((prev) => (prev + 1) % allImages.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [isHovered, allImages]);
+
   const getCategoryLabel = (cat: string) => {
     switch (cat) {
       case 'men': return isArabic ? 'رجال' : 'Men';
@@ -43,21 +70,38 @@ const ProductCard: React.FC<ProductCardProps> = ({
       exit={{ opacity: 0 }}
       whileHover={{ y: -6 }}
       transition={{ duration: 0.3 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className="bg-white border border-zinc-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:border-zinc-200 transition flex flex-col group h-full"
     >
       {/* Product Image Stage */}
       <div className="relative aspect-[4/5] bg-zinc-50 overflow-hidden cursor-pointer" onClick={() => onOpenDetails(product)}>
         <img
-          src={optimizeUnsplashUrl(product.image, 450, 70)}
+          src={optimizeUnsplashUrl(allImages[hoverIndex] || product.image, 450, 70)}
           alt={isArabic ? product.nameAr : product.nameEn}
+          key={hoverIndex}
           referrerPolicy="no-referrer"
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
           onError={(e) => {
             // Fallback image in case the remote picture fails
             e.currentTarget.src = "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&q=70&w=450";
           }}
         />
+
+        {/* Hover image pagination indicators */}
+        {allImages.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-10 bg-black/40 backdrop-blur-md py-1 px-2.5 rounded-full transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+            {allImages.map((_, idx) => (
+              <span
+                key={idx}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  hoverIndex === idx ? 'w-3 bg-white' : 'w-1.5 bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Favorite toggle button */}
         {onToggleFavorite && (
