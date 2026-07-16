@@ -48,9 +48,10 @@ import {
   getHomepageContent,
   saveHomepageContent,
   getExpenses,
-  saveExpenses
+  saveExpenses,
+  saveCategories
 } from '../dbService';
-import { Product, Order, OrderStatus, ShippingPlan, LoyaltyConfig, PaymentConfig, WalletDetail, InstaPayDetail, SettlementPeriod, SupportPagesContent, HomepageContent, FaqItem, HeroSlideInput, BusinessExpense } from '../types';
+import { Product, Order, OrderStatus, ShippingPlan, LoyaltyConfig, PaymentConfig, WalletDetail, InstaPayDetail, SettlementPeriod, SupportPagesContent, HomepageContent, FaqItem, HeroSlideInput, BusinessExpense, Category, Subcategory } from '../types';
 import { PRESET_COLORS } from '../utils';
 
 interface AdminPanelProps {
@@ -60,6 +61,7 @@ interface AdminPanelProps {
   orders: Order[];
   isArabic: boolean;
   onContentUpdate?: () => void;
+  categories?: Category[];
 }
 
 const SAMPLE_CLOTHES_IMAGES = [
@@ -77,7 +79,8 @@ export default function AdminPanel({
   products,
   orders,
   isArabic,
-  onContentUpdate
+  onContentUpdate,
+  categories = []
 }: AdminPanelProps) {
   // Authentication states
   const [adminUser, setAdminUser] = useState<User | null>(null);
@@ -87,8 +90,8 @@ export default function AdminPanel({
   const [authLoading, setAuthLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Sub-navigation tabs: 'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content' | 'reports'
-  const [activeTab, setActiveTab] = useState<'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content' | 'reports'>('stats');
+  // Sub-navigation tabs: 'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content' | 'reports' | 'categories'
+  const [activeTab, setActiveTab] = useState<'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content' | 'reports' | 'categories'>('stats');
   const [reportFromDate, setReportFromDate] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -148,42 +151,64 @@ export default function AdminPanel({
     shippingPlanId: ''
   });
 
+  // Dynamic categories combined with static fallbacks
+  const categoriesToRender = useMemo(() => {
+    return categories && categories.length > 0 ? categories : [
+      {
+        id: 'men',
+        nameAr: 'ملابس رجالي',
+        nameEn: "Men's Clothing",
+        subcategories: [
+          { ar: 'قمصان', en: 'Shirts' },
+          { ar: 'بناطيل', en: 'Pants' },
+          { ar: 'بدل', en: 'Suits' },
+          { ar: 'تيشرتات', en: 'T-Shirts' },
+          { ar: 'جاكيت ومعاطف', en: 'Jackets & Coats' }
+        ]
+      },
+      {
+        id: 'women',
+        nameAr: 'ملابس حريمي',
+        nameEn: "Women's Clothing",
+        subcategories: [
+          { ar: 'فساتين', en: 'Dresses' },
+          { ar: 'عبايات', en: 'Abayas' },
+          { ar: 'بناطيل', en: 'Pants' },
+          { ar: 'تنانير', en: 'Skirts' },
+          { ar: 'بلوزات', en: 'Blouses' }
+        ]
+      },
+      {
+        id: 'kids',
+        nameAr: 'ملابس أطفالي',
+        nameEn: "Kids' Wear",
+        subcategories: [
+          { ar: 'ملابس أولاد', en: 'Boys Wear' },
+          { ar: 'ملابس بنات', en: 'Girls Wear' },
+          { ar: 'أطقم أطفال', en: 'Kids Sets' }
+        ]
+      },
+      {
+        id: 'accessories',
+        nameAr: 'إكسسوارات',
+        nameEn: 'Accessories',
+        subcategories: [
+          { ar: 'حقائب', en: 'Bags' },
+          { ar: 'أحزمة', en: 'Belts' },
+          { ar: 'أحذية', en: 'Shoes' },
+          { ar: 'مجوهرات', en: 'Jewelry' }
+        ]
+      }
+    ];
+  }, [categories]);
+
   // Unique linked subcategories by category
   const subcategoriesByCategory = useMemo(() => {
-    const mapping: Record<string, { ar: string; en: string }[]> = {
-      men: [
-        { ar: 'قمصان', en: 'Shirts' },
-        { ar: 'بناطيل', en: 'Pants' },
-        { ar: 'بدل', en: 'Suits' },
-        { ar: 'تيشرتات', en: 'T-Shirts' },
-        { ar: 'جاكيت ومعاطف', en: 'Jackets & Coats' },
-      ],
-      women: [
-        { ar: 'فساتين', en: 'Dresses' },
-        { ar: 'عبايات', en: 'Abayas' },
-        { ar: 'بناطيل', en: 'Pants' },
-        { ar: 'تنانير', en: 'Skirts' },
-        { ar: 'بلوزات', en: 'Blouses' },
-      ],
-      kids: [
-        { ar: 'ملابس أولاد', en: 'Boys Wear' },
-        { ar: 'ملابس بنات', en: 'Girls Wear' },
-        { ar: 'أطقم أطفال', en: 'Kids Sets' },
-      ],
-      accessories: [
-        { ar: 'حقائب', en: 'Bags' },
-        { ar: 'أحزمة', en: 'Belts' },
-        { ar: 'أحذية', en: 'Shoes' },
-        { ar: 'مجوهرات', en: 'Jewelry' },
-      ]
-    };
+    const mapping: Record<string, { ar: string; en: string }[]> = {};
 
-    const seenByCat: Record<string, Set<string>> = {
-      men: new Set(mapping.men.map(i => i.en.toLowerCase())),
-      women: new Set(mapping.women.map(i => i.en.toLowerCase())),
-      kids: new Set(mapping.kids.map(i => i.en.toLowerCase())),
-      accessories: new Set(mapping.accessories.map(i => i.en.toLowerCase()))
-    };
+    categoriesToRender.forEach((cat) => {
+      mapping[cat.id] = [...cat.subcategories];
+    });
 
     // Extract dynamic ones from existing products list
     products.forEach((prod) => {
@@ -194,9 +219,11 @@ export default function AdminPanel({
         if (subAr || subEn) {
           const arName = subAr || subEn || '';
           const enName = subEn || subAr || '';
-          const key = enName.toLowerCase();
-          if (mapping[cat] && !seenByCat[cat].has(key)) {
-            seenByCat[cat].add(key);
+          if (!mapping[cat]) {
+            mapping[cat] = [];
+          }
+          const alreadyExists = mapping[cat].some(sub => sub.en.toLowerCase() === enName.toLowerCase());
+          if (!alreadyExists) {
             mapping[cat].push({ ar: arName, en: enName });
           }
         }
@@ -204,7 +231,7 @@ export default function AdminPanel({
     });
 
     return mapping;
-  }, [products]);
+  }, [products, categoriesToRender]);
 
   // Shipping, Loyalty, and Payments master states
   const [shippingPlans, setShippingPlans] = useState<ShippingPlan[]>([]);
@@ -257,6 +284,237 @@ export default function AdminPanel({
   const [newInstallmentNotes, setNewInstallmentNotes] = useState<string>('');
   const [customMaterialCost, setCustomMaterialCost] = useState<number | ''>('');
   const [customTailorCost, setCustomTailorCost] = useState<number | ''>('');
+
+  // Category & Subcategory Management states
+  const [selectedCatId, setSelectedCatId] = useState<string>('men');
+  const [catEditing, setCatEditing] = useState<Category | null>(null);
+  const [catNameArInput, setCatNameArInput] = useState('');
+  const [catNameEnInput, setCatNameEnInput] = useState('');
+  const [catIdInput, setCatIdInput] = useState('');
+  const [isAddingNewCat, setIsAddingNewCat] = useState(false);
+  const [subEditingIndex, setSubEditingIndex] = useState<number | null>(null);
+  const [subNameArInput, setSubNameArInput] = useState('');
+  const [subNameEnInput, setSubNameEnInput] = useState('');
+  const [isSavingCategories, setIsSavingCategories] = useState(false);
+  const [categoriesFeedback, setCategoriesFeedback] = useState<string | null>(null);
+
+  const handleSaveCategoriesToDb = async (updatedCats: Category[]) => {
+    setIsSavingCategories(true);
+    setCategoriesFeedback(null);
+    try {
+      await saveCategories(updatedCats);
+      setCategoriesFeedback(isArabic ? "تم حفظ التغييرات بنجاح!" : "Changes saved successfully!");
+      setTimeout(() => setCategoriesFeedback(null), 3000);
+    } catch (e) {
+      console.error(e);
+      setCategoriesFeedback(isArabic ? "فشل حفظ التغييرات. حاول مرة أخرى." : "Failed to save changes. Try again.");
+    } finally {
+      setIsSavingCategories(false);
+    }
+  };
+
+  const handleStartAddCategory = () => {
+    setCatEditing(null);
+    setCatIdInput('');
+    setCatNameArInput('');
+    setCatNameEnInput('');
+    setIsAddingNewCat(true);
+  };
+
+  const handleStartEditCategory = (cat: Category) => {
+    setIsAddingNewCat(false);
+    setCatEditing(cat);
+    setCatIdInput(cat.id);
+    setCatNameArInput(cat.nameAr);
+    setCatNameEnInput(cat.nameEn);
+  };
+
+  const handleAddCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanId = catIdInput.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!cleanId || !catNameArInput.trim() || !catNameEnInput.trim()) {
+      alert(isArabic ? "برجاء ملء جميع حقول الفئة" : "Please fill in all category fields");
+      return;
+    }
+
+    const exists = categoriesToRender.some(c => c.id === cleanId);
+    if (exists) {
+      alert(isArabic ? "معرف الفئة هذا موجود بالفعل!" : "Category ID already exists!");
+      return;
+    }
+
+    const newCategory: Category = {
+      id: cleanId,
+      nameAr: catNameArInput.trim(),
+      nameEn: catNameEnInput.trim(),
+      subcategories: []
+    };
+
+    const updated = [...categoriesToRender, newCategory];
+    await handleSaveCategoriesToDb(updated);
+
+    setCatIdInput('');
+    setCatNameArInput('');
+    setCatNameEnInput('');
+    setIsAddingNewCat(false);
+    setSelectedCatId(cleanId);
+  };
+
+  const handleEditCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!catEditing || !catNameArInput.trim() || !catNameEnInput.trim()) return;
+
+    const updated = categoriesToRender.map(cat => {
+      if (cat.id === catEditing.id) {
+        return {
+          ...cat,
+          nameAr: catNameArInput.trim(),
+          nameEn: catNameEnInput.trim()
+        };
+      }
+      return cat;
+    });
+
+    await handleSaveCategoriesToDb(updated);
+    setCatEditing(null);
+    setCatNameArInput('');
+    setCatNameEnInput('');
+  };
+
+  const handleDeleteCategoryClick = async (catId: string) => {
+    const hasProducts = products.some(p => p.category === catId);
+    if (hasProducts) {
+      const confirmForce = window.confirm(
+        isArabic
+          ? "تنبيه: هناك منتجات مسجلة بالفعل تحت هذه الفئة. هل أنت متأكد من الحذف؟ قد تفقد المنتجات فئتها الحالية."
+          : "Warning: There are products under this category. Deleting it will leave them uncategorized. Are you sure?"
+      );
+      if (!confirmForce) return;
+    } else {
+      const confirmDelete = window.confirm(
+        isArabic ? "هل أنت متأكد من رغبتك في حذف هذه الفئة؟" : "Are you sure you want to delete this category?"
+      );
+      if (!confirmDelete) return;
+    }
+
+    const updated = categoriesToRender.filter(cat => cat.id !== catId);
+    await handleSaveCategoriesToDb(updated);
+    if (selectedCatId === catId) {
+      setSelectedCatId(updated[0]?.id || '');
+    }
+  };
+
+  const handleAddSubcategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subNameArInput.trim() || !subNameEnInput.trim() || !selectedCatId) {
+      alert(isArabic ? "برجاء ملء اسما الفئة الفرعية بالعربية والانجليزية" : "Please fill in both subcategory names");
+      return;
+    }
+
+    const activeCat = categoriesToRender.find(c => c.id === selectedCatId);
+    if (!activeCat) return;
+
+    const subAr = subNameArInput.trim();
+    const subEn = subNameEnInput.trim();
+    const exists = activeCat.subcategories.some(
+      sub => sub.en.toLowerCase() === subEn.toLowerCase() || sub.ar === subAr
+    );
+    if (exists) {
+      alert(isArabic ? "الفئة الفرعية هذه موجودة بالفعل!" : "Subcategory already exists!");
+      return;
+    }
+
+    const newSub: Subcategory = {
+      ar: subAr,
+      en: subEn
+    };
+
+    const updated = categoriesToRender.map(cat => {
+      if (cat.id === selectedCatId) {
+        return {
+          ...cat,
+          subcategories: [...cat.subcategories, newSub]
+        };
+      }
+      return cat;
+    });
+
+    await handleSaveCategoriesToDb(updated);
+    setSubNameArInput('');
+    setSubNameEnInput('');
+  };
+
+  const handleStartEditSubcategory = (index: number, sub: Subcategory) => {
+    setSubEditingIndex(index);
+    setSubNameArInput(sub.ar);
+    setSubNameEnInput(sub.en);
+  };
+
+  const handleEditSubcategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (subEditingIndex === null || !subNameArInput.trim() || !subNameEnInput.trim() || !selectedCatId) return;
+
+    const activeCat = categoriesToRender.find(c => c.id === selectedCatId);
+    if (!activeCat) return;
+
+    const updatedSubs = [...activeCat.subcategories];
+    updatedSubs[subEditingIndex] = {
+      ar: subNameArInput.trim(),
+      en: subNameEnInput.trim()
+    };
+
+    const updated = categoriesToRender.map(cat => {
+      if (cat.id === selectedCatId) {
+        return {
+          ...cat,
+          subcategories: updatedSubs
+        };
+      }
+      return cat;
+    });
+
+    await handleSaveCategoriesToDb(updated);
+    setSubEditingIndex(null);
+    setSubNameArInput('');
+    setSubNameEnInput('');
+  };
+
+  const handleDeleteSubcategoryClick = async (subIndex: number) => {
+    const activeCat = categoriesToRender.find(c => c.id === selectedCatId);
+    if (!activeCat) return;
+
+    const sub = activeCat.subcategories[subIndex];
+    const hasProducts = products.some(
+      p => p.category === selectedCatId && (p.subcategoryEn === sub.en || p.subcategoryAr === sub.ar)
+    );
+
+    if (hasProducts) {
+      const confirmForce = window.confirm(
+        isArabic
+          ? "تنبيه: هناك منتجات مرتبطة بالفئة الفرعية هذه. هل تريد الحذف على أي حال؟"
+          : "Warning: There are products linked to this subcategory. Do you want to delete it anyway?"
+      );
+      if (!confirmForce) return;
+    } else {
+      const confirmDelete = window.confirm(
+        isArabic ? "هل أنت متأكد من رغبتك في حذف هذه الفئة الفرعية؟" : "Are you sure you want to delete this subcategory?"
+      );
+      if (!confirmDelete) return;
+    }
+
+    const updatedSubs = activeCat.subcategories.filter((_, idx) => idx !== subIndex);
+    const updated = categoriesToRender.map(cat => {
+      if (cat.id === selectedCatId) {
+        return {
+          ...cat,
+          subcategories: updatedSubs
+        };
+      }
+      return cat;
+    });
+
+    await handleSaveCategoriesToDb(updated);
+  };
 
   // Dynamic Content Editor States
   const [homepageContent, setHomepageContent] = useState<HomepageContent | null>(null);
@@ -1362,7 +1620,8 @@ export default function AdminPanel({
                 activeTab === 'conversations' ? (isArabic ? "طلبات مخصصة ورسائل" : "Special Orders & Chat") :
                 activeTab === 'accounts' ? (isArabic ? "الحسابات والتسويات" : "Financial Accounts") :
                 activeTab === 'reports' ? (isArabic ? "التقارير وتنزيل المستندات" : "Exportable Reports") :
-                activeTab === 'content' ? (isArabic ? "تحرير محتوى الصفحات" : "Page Content Editor") : ""
+                activeTab === 'content' ? (isArabic ? "تحرير محتوى الصفحات" : "Page Content Editor") : 
+                activeTab === 'categories' ? (isArabic ? "إدارة الفئات والأقسام" : "Categories & Subcategories") : ""
               }</span>
             </div>
           </div>
@@ -1524,6 +1783,18 @@ export default function AdminPanel({
             >
               <PieChart size={14} />
               <span>{isArabic ? "التقارير المفصلة" : "Detailed Reports"}</span>
+            </button>
+
+            <button
+              onClick={() => { setActiveTab('categories'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                activeTab === 'categories'
+                  ? "bg-amber-400 text-black shadow-md font-extrabold"
+                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+              }`}
+            >
+              <Grid size={14} />
+              <span>{isArabic ? "إدارة الفئات والأقسام" : "Categories & Divisions"}</span>
             </button>
 
             {/* Daytime Lighting switcher toggle */}
@@ -3456,10 +3727,11 @@ export default function AdminPanel({
                                 className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 cursor-pointer"
                               >
                                 <option value="all">{isArabic ? "كل المنتجات (All Products)" : "All Products"}</option>
-                                <option value="women">{isArabic ? "ملابس نسائية (Women)" : "Women Category"}</option>
-                                <option value="men">{isArabic ? "ملابس رجالية (Men)" : "Men Category"}</option>
-                                <option value="kids">{isArabic ? "ملابس أطفال (Kids)" : "Kids Category"}</option>
-                                <option value="accessories">{isArabic ? "إكسسوارات وحقائب (Accessories)" : "Accessories Category"}</option>
+                                {categoriesToRender.map((cat) => (
+                                  <option key={cat.id} value={cat.id}>
+                                    {isArabic ? `${cat.nameAr} (${cat.id})` : `${cat.nameEn} Category`}
+                                  </option>
+                                ))}
                                 <option value="custom">{isArabic ? "فورم التفصيل والطلب المخصص (Couture Request)" : "Couture Design Request"}</option>
                               </select>
                             </div>
@@ -4963,16 +5235,17 @@ export default function AdminPanel({
                           className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
                           value={formData.category}
                           onChange={(e) => {
-                            const newCat = e.target.value as any;
+                            const newCat = e.target.value;
                             // Clear subcategory when category matches, to avoid cross-category leaks
                             setIsCustomSubcategory(false);
                             setFormData({ ...formData, category: newCat, subcategoryAr: '', subcategoryEn: '' });
                           }}
                         >
-                          <option value="men">{isArabic ? "ملابس رجالي" : "Men's Clothing"}</option>
-                          <option value="women">{isArabic ? "ملابس حريمي" : "Women's Clothing"}</option>
-                          <option value="kids">{isArabic ? "ملابس أطفالي" : "Kids' Wear"}</option>
-                          <option value="accessories">{isArabic ? "إكسسوارات" : "Bag/Jewelry Accs"}</option>
+                          {categoriesToRender.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {isArabic ? cat.nameAr : cat.nameEn}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
@@ -5487,6 +5760,418 @@ export default function AdminPanel({
                   </div>
                 )}
 
+              </div>
+            )}
+
+
+            {/* CATEGORIES & SUBCATEGORIES MANAGEMENT TAB */}
+            {activeTab === 'categories' && (
+              <div className="space-y-6" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="text-right w-full">
+                    <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                      <Grid className="text-amber-400 animate-pulse" size={22} />
+                      <span>{isArabic ? "إدارة الفئات والفئات الفرعية" : "Categories & Subcategories Panel"}</span>
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-1">
+                      {isArabic
+                        ? "تحكم كامل بالفئات الرئيسية والفرعية التي تظهر في المتجر وتصنيف الملابس والمنتجات."
+                        : "Configure parent categories and nested subcategories for inventory classification."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Feedback Notification Banner */}
+                {categoriesFeedback && (
+                  <div className="p-3 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-400 text-xs font-bold animate-pulse">
+                    {categoriesFeedback}
+                  </div>
+                )}
+
+                {/* Main Content Split View */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 font-sans">
+                  
+                  {/* Left Column: Parent Categories (lg:col-span-5) */}
+                  <div className="lg:col-span-5 space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-extrabold text-zinc-300">
+                        {isArabic ? "الفئات الرئيسية" : "Parent Categories"}
+                      </h4>
+                      {!isAddingNewCat && !catEditing && (
+                        <button
+                          type="button"
+                          onClick={handleStartAddCategory}
+                          className="px-3 py-1.5 bg-amber-400 text-black rounded-lg text-xs font-black hover:bg-amber-500 flex items-center gap-1 transition duration-200 cursor-pointer"
+                        >
+                          <Plus size={14} />
+                          <span>{isArabic ? "فئة جديدة" : "New Category"}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Add Category Form */}
+                    {isAddingNewCat && (
+                      <form onSubmit={handleAddCategorySubmit} className="bg-zinc-950 border border-amber-400/20 p-4 rounded-xl space-y-3">
+                        <h5 className="text-xs font-bold text-amber-400">{isArabic ? "إضافة فئة رئيسية جديدة" : "Add New Parent Category"}</h5>
+                        <div className="space-y-2">
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">
+                              {isArabic ? "المعرف الفريد (ID - إنجليزي فقط وبدون مسافات)" : "Unique Identifier (ID - lowercase, no spaces)"}
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="e.g. winter-coats"
+                              value={catIdInput}
+                              onChange={(e) => setCatIdInput(e.target.value)}
+                              className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono text-left"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الاسم بالعربية" : "Arabic Name"}</label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="مثال: معاطف شتوية"
+                              value={catNameArInput}
+                              onChange={(e) => setCatNameArInput(e.target.value)}
+                              className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 text-right"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الاسم بالإنجليزية" : "English Name"}</label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="e.g. Winter Coats"
+                              value={catNameEnInput}
+                              onChange={(e) => setCatNameEnInput(e.target.value)}
+                              className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 text-left"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setIsAddingNewCat(false)}
+                            className="px-3 py-1.5 bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                          >
+                            {isArabic ? "إلغاء" : "Cancel"}
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isSavingCategories}
+                            className="px-4 py-1.5 bg-amber-400 text-black hover:bg-amber-500 rounded-lg text-xs font-black transition disabled:opacity-50 cursor-pointer"
+                          >
+                            {isSavingCategories ? (isArabic ? "جاري الحفظ..." : "Saving...") : (isArabic ? "إضافة الفئة" : "Add Category")}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+
+                    {/* Edit Category Form */}
+                    {catEditing && (
+                      <form onSubmit={handleEditCategorySubmit} className="bg-zinc-950 border border-amber-400/20 p-4 rounded-xl space-y-3">
+                        <h5 className="text-xs font-bold text-amber-400">
+                          {isArabic ? `تعديل الفئة: ${catEditing.nameAr}` : `Edit Category: ${catEditing.nameEn}`}
+                        </h5>
+                        <div className="space-y-2">
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">ID (غير قابل للتعديل)</label>
+                            <input
+                              type="text"
+                              disabled
+                              value={catIdInput}
+                              className="w-full bg-zinc-900/40 border border-zinc-800/40 text-xs text-zinc-500 p-2.5 rounded-xl outline-none font-mono text-left"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الاسم بالعربية" : "Arabic Name"}</label>
+                            <input
+                              type="text"
+                              required
+                              value={catNameArInput}
+                              onChange={(e) => setCatNameArInput(e.target.value)}
+                              className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 text-right"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الاسم بالإنجليزية" : "English Name"}</label>
+                            <input
+                              type="text"
+                              required
+                              value={catNameEnInput}
+                              onChange={(e) => setCatNameEnInput(e.target.value)}
+                              className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 text-left"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setCatEditing(null)}
+                            className="px-3 py-1.5 bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                          >
+                            {isArabic ? "إلغاء" : "Cancel"}
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isSavingCategories}
+                            className="px-4 py-1.5 bg-amber-400 text-black hover:bg-amber-500 rounded-lg text-xs font-black transition disabled:opacity-50 cursor-pointer"
+                          >
+                            {isSavingCategories ? (isArabic ? "جاري التحديث..." : "Updating...") : (isArabic ? "حفظ التغييرات" : "Save Changes")}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+
+                    {/* Categories List Cards */}
+                    <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+                      {categoriesToRender.map((cat) => {
+                        const isSelected = selectedCatId === cat.id;
+                        const productCount = products.filter(p => p.category === cat.id).length;
+                        return (
+                          <div
+                            key={cat.id}
+                            onClick={() => setSelectedCatId(cat.id)}
+                            className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer flex justify-between items-center ${
+                              isSelected
+                                ? 'bg-amber-400/5 border-amber-400 shadow-md'
+                                : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/20'
+                            }`}
+                          >
+                            <div className="space-y-1 text-right">
+                              <h5 className="text-xs font-extrabold text-white">
+                                {isArabic ? cat.nameAr : cat.nameEn}
+                              </h5>
+                              <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+                                <span className="font-mono">{cat.id}</span>
+                                <span>•</span>
+                                <span>
+                                  {isArabic ? cat.nameEn : cat.nameAr}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[9.5px] font-bold text-amber-500/80">
+                                <span>{cat.subcategories.length} {isArabic ? "فئات فرعية" : "subcategories"}</span>
+                                <span>•</span>
+                                <span>{productCount} {isArabic ? "منتجات" : "products"}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditCategory(cat)}
+                                className="p-1.5 bg-zinc-950 hover:bg-zinc-850 text-zinc-400 hover:text-white rounded border border-zinc-800 cursor-pointer transition"
+                                title={isArabic ? "تعديل الفئة" : "Edit Category"}
+                              >
+                                <Edit size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCategoryClick(cat.id)}
+                                className="p-1.5 bg-red-950/20 hover:bg-red-950/50 text-red-400 rounded border border-red-900/40 cursor-pointer transition"
+                                title={isArabic ? "حذف الفئة" : "Delete Category"}
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Subcategories Management (lg:col-span-7) */}
+                  <div className="lg:col-span-7 space-y-4">
+                    {(() => {
+                      const activeCat = categoriesToRender.find(c => c.id === selectedCatId);
+                      if (!activeCat) {
+                        return (
+                          <div className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-8 text-center text-zinc-500 space-y-2">
+                            <Tag size={32} className="mx-auto text-zinc-600 mb-1" />
+                            <p className="text-xs font-bold">
+                              {isArabic ? "اختر فئة رئيسية من اليسار لإدارة فئاتها الفرعية" : "Select a parent category from the left to manage its subcategories"}
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      const subCount = activeCat.subcategories.length;
+
+                      return (
+                        <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl space-y-5">
+                          <div className="border-b border-zinc-800 pb-3">
+                            <h4 className="text-sm font-extrabold text-white flex items-center gap-1.5">
+                              <Tag className="text-amber-400" size={16} />
+                              <span>
+                                {isArabic 
+                                  ? `الفئات الفرعية لـ: ${activeCat.nameAr}` 
+                                  : `Subcategories for: ${activeCat.nameEn}`}
+                              </span>
+                            </h4>
+                            <p className="text-[11px] text-zinc-500 mt-0.5">
+                              {isArabic
+                                ? `تحتوي هذه الفئة على ${subCount} فئات فرعية مسجلة حالياً.`
+                                : `This category has ${subCount} active nested subcategories.`}
+                            </p>
+                          </div>
+
+                          {/* Subcategory List */}
+                          {subCount === 0 ? (
+                            <div className="text-center py-6 text-zinc-600 italic text-xs">
+                              {isArabic ? "لا توجد فئات فرعية مضافة بعد لهذه الفئة." : "No subcategories added to this category yet."}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              {activeCat.subcategories.map((sub, idx) => {
+                                const isEditingThisSub = subEditingIndex === idx;
+                                const productsLinked = products.filter(
+                                  p => p.category === selectedCatId && (p.subcategoryEn === sub.en || p.subcategoryAr === sub.ar)
+                                ).length;
+
+                                if (isEditingThisSub) {
+                                  return (
+                                    <form
+                                      key={idx}
+                                      onSubmit={handleEditSubcategorySubmit}
+                                      className="bg-zinc-950 border border-amber-400/40 p-3 rounded-xl space-y-2 sm:col-span-2"
+                                    >
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "الاسم بالعربية" : "Ar Name"}</label>
+                                          <input
+                                            type="text"
+                                            required
+                                            value={subNameArInput}
+                                            onChange={(e) => setSubNameArInput(e.target.value)}
+                                            className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none focus:border-amber-400 text-right"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-[9px] font-bold text-zinc-500 mb-0.5">{isArabic ? "الاسم بالإنجليزية" : "En Name"}</label>
+                                          <input
+                                            type="text"
+                                            required
+                                            value={subNameEnInput}
+                                            onChange={(e) => setSubNameEnInput(e.target.value)}
+                                            className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2 rounded-lg outline-none focus:border-amber-400 text-left"
+                                          />
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-1.5 justify-end">
+                                        <button
+                                          type="button"
+                                          onClick={() => setSubEditingIndex(null)}
+                                          className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-850 text-[10px] font-bold text-zinc-400 rounded cursor-pointer"
+                                        >
+                                          {isArabic ? "إلغاء" : "Cancel"}
+                                        </button>
+                                        <button
+                                          type="submit"
+                                          disabled={isSavingCategories}
+                                          className="px-3 py-1 bg-amber-400 text-black hover:bg-amber-500 text-[10px] font-black rounded cursor-pointer disabled:opacity-50"
+                                        >
+                                          {isSavingCategories ? "..." : (isArabic ? "حفظ" : "Save")}
+                                        </button>
+                                      </div>
+                                    </form>
+                                  );
+                                }
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="bg-zinc-950 border border-zinc-850 p-3 rounded-xl flex justify-between items-center hover:border-zinc-800 transition"
+                                  >
+                                    <div className="space-y-0.5 text-right">
+                                      <p className="text-xs font-extrabold text-white">
+                                        {isArabic ? sub.ar : sub.en}
+                                      </p>
+                                      <p className="text-[10px] text-zinc-500">
+                                        {isArabic ? sub.en : sub.ar}
+                                      </p>
+                                      <p className="text-[9px] font-semibold text-zinc-600">
+                                        {productsLinked} {isArabic ? "منتجات مرتبطة" : "linked products"}
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleStartEditSubcategory(idx, sub)}
+                                        className="p-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded border border-zinc-800 cursor-pointer transition"
+                                        title={isArabic ? "تعديل الفئة الفرعية" : "Edit Subcategory"}
+                                      >
+                                        <Edit size={11} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteSubcategoryClick(idx)}
+                                        className="p-1 bg-red-950/10 hover:bg-red-950/30 text-red-400 rounded border border-red-900/30 cursor-pointer transition"
+                                        title={isArabic ? "حذف الفئة الفرعية" : "Delete Subcategory"}
+                                      >
+                                        <Trash2 size={11} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Add Subcategory Inline Form */}
+                          {subEditingIndex === null && (
+                            <form onSubmit={handleAddSubcategorySubmit} className="bg-zinc-950/40 border border-zinc-850 p-4 rounded-xl space-y-3 pt-3.5">
+                              <h5 className="text-[11px] font-bold text-amber-500 uppercase tracking-wider">
+                                ➕ {isArabic ? "إضافة فئة فرعية جديدة" : "Add New Nested Subcategory"}
+                              </h5>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-[9.5px] font-bold text-zinc-500 mb-1">
+                                    {isArabic ? "الاسم بالعربية *" : "Arabic Name *"}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="مثال: كاجوال"
+                                    value={subNameArInput}
+                                    onChange={(e) => setSubNameArInput(e.target.value)}
+                                    className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-lg outline-none focus:border-amber-400 text-right"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[9.5px] font-bold text-zinc-500 mb-1">
+                                    {isArabic ? "الاسم بالإنجليزية *" : "English Name *"}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Casual"
+                                    value={subNameEnInput}
+                                    onChange={(e) => setSubNameEnInput(e.target.value)}
+                                    className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-lg outline-none focus:border-amber-400 text-left"
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-end pt-1">
+                                <button
+                                  type="submit"
+                                  disabled={isSavingCategories}
+                                  className="px-4 py-2 bg-amber-400 text-black hover:bg-amber-500 rounded-lg text-xs font-black flex items-center gap-1 transition disabled:opacity-50 cursor-pointer"
+                                >
+                                  <Plus size={13} />
+                                  <span>{isSavingCategories ? (isArabic ? "جاري الإضافة..." : "Adding...") : (isArabic ? "إضافة الفرعية" : "Add Subcategory")}</span>
+                                </button>
+                              </div>
+                            </form>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                </div>
               </div>
             )}
 

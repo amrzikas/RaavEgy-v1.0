@@ -27,7 +27,7 @@ import {
   PrivacyPolicyPage, 
   TermsOfServicePage 
 } from './components/SupportPages.tsx';
-import { Product, OrderItem, Order, SupportPagesContent, HomepageContent } from './types';
+import { Product, OrderItem, Order, SupportPagesContent, HomepageContent, Category } from './types';
 import { getProductPrice } from './utils';
 import { 
   seedProductsIfNeeded, 
@@ -35,7 +35,8 @@ import {
   subscribeToOrders,
   getAdminSetupStatus,
   getHomepageContent,
-  getSupportPagesContent
+  getSupportPagesContent,
+  subscribeToCategories
 } from './dbService';
 import { initialProducts } from './initialProducts';
 import { auth } from './firebase';
@@ -45,6 +46,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [cart, setCart] = useState<OrderItem[]>(() => {
     const saved = localStorage.getItem('raav_egy_cart');
@@ -104,6 +106,11 @@ export default function App() {
       setProducts(prodList);
     });
 
+    // 1b. Subscribe to real-time Categories
+    const unsubscribeCategories = subscribeToCategories((cats) => {
+      setCategoriesList(cats);
+    });
+
     // 2. Listen to Auth State
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
@@ -129,6 +136,7 @@ export default function App() {
 
     return () => {
       unsubscribeProducts();
+      unsubscribeCategories();
       unsubscribeAuth();
     };
   }, []);

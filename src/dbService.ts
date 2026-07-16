@@ -13,7 +13,7 @@ import {
   where
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import { Product, Order, OrderStatus, Review, ShippingPlan, LoyaltyConfig, PaymentConfig, SavedAddress, FavoriteItem, Notification, Conversation, ConversationMessage, SettlementPeriod, SupportPagesContent, HomepageContent, BusinessExpense } from './types';
+import { Product, Order, OrderStatus, Review, ShippingPlan, LoyaltyConfig, PaymentConfig, SavedAddress, FavoriteItem, Notification, Conversation, ConversationMessage, SettlementPeriod, SupportPagesContent, HomepageContent, BusinessExpense, Category, Subcategory } from './types';
 import { initialProducts } from './initialProducts';
 
 // Collection references
@@ -1690,4 +1690,93 @@ export async function saveExpenses(expenses: BusinessExpense[]): Promise<void> {
     handleFirestoreError(error, OperationType.WRITE, pathForWrite);
   }
 }
+
+export const DEFAULT_CATEGORIES: Category[] = [
+  {
+    id: 'men',
+    nameAr: 'ملابس رجالي',
+    nameEn: "Men's Clothing",
+    subcategories: [
+      { ar: 'قمصان', en: 'Shirts' },
+      { ar: 'بناطيل', en: 'Pants' },
+      { ar: 'بدل', en: 'Suits' },
+      { ar: 'تيشرتات', en: 'T-Shirts' },
+      { ar: 'جاكيت ومعاطف', en: 'Jackets & Coats' }
+    ]
+  },
+  {
+    id: 'women',
+    nameAr: 'ملابس حريمي',
+    nameEn: "Women's Clothing",
+    subcategories: [
+      { ar: 'فساتين', en: 'Dresses' },
+      { ar: 'عبايات', en: 'Abayas' },
+      { ar: 'بناطيل', en: 'Pants' },
+      { ar: 'تنانير', en: 'Skirts' },
+      { ar: 'بلوزات', en: 'Blouses' }
+    ]
+  },
+  {
+    id: 'kids',
+    nameAr: 'ملابس أطفالي',
+    nameEn: "Kids' Wear",
+    subcategories: [
+      { ar: 'ملابس أولاد', en: 'Boys Wear' },
+      { ar: 'ملابس بنات', en: 'Girls Wear' },
+      { ar: 'أطقم أطفال', en: 'Kids Sets' }
+    ]
+  },
+  {
+    id: 'accessories',
+    nameAr: 'إكسسوارات',
+    nameEn: 'Accessories',
+    subcategories: [
+      { ar: 'حقائب', en: 'Bags' },
+      { ar: 'أحزمة', en: 'Belts' },
+      { ar: 'أحذية', en: 'Shoes' },
+      { ar: 'مجوهرات', en: 'Jewelry' }
+    ]
+  }
+];
+
+export async function getCategories(): Promise<Category[]> {
+  const pathForGet = 'settings/categories';
+  try {
+    const docRef = doc(db, 'settings', 'categories');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return (docSnap.data().categories || []) as Category[];
+    }
+  } catch (error) {
+    console.error('Error getting categories from Firestore:', error);
+  }
+  return DEFAULT_CATEGORIES;
+}
+
+export async function saveCategories(categories: Category[]): Promise<void> {
+  const pathForWrite = 'settings/categories';
+  try {
+    const docRef = doc(db, 'settings', 'categories');
+    await setDoc(docRef, { categories });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, pathForWrite);
+  }
+}
+
+export function subscribeToCategories(callback: (categories: Category[]) => void) {
+  return onSnapshot(
+    doc(db, 'settings', 'categories'),
+    (docSnap) => {
+      if (docSnap.exists()) {
+        callback((docSnap.data().categories || []) as Category[]);
+      } else {
+        callback(DEFAULT_CATEGORIES);
+      }
+    },
+    (error) => {
+      console.error('Error subscribing to categories:', error);
+    }
+  );
+}
+
 

@@ -12,7 +12,7 @@ export interface Product {
   discountPrice?: number;
   discountStart?: string; // YYYY-MM-DD format
   discountEnd?: string;   // YYYY-MM-DD format
-  category: 'men' | 'women' | 'kids' | 'accessories';
+  category: string;
   image: string; // fallback or main image
   images?: string[]; // up to 5 images
   sizes: string[];
@@ -351,4 +351,16 @@ export interface HomepageContent {
   trendSectionEnabled?: boolean;
   categorySlicesSectionEnabled?: boolean;
   customCoutureSectionEnabled?: boolean;
+}
+
+export interface Subcategory {
+  ar: string;
+  en: string;
+}
+
+export interface Category {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  subcategories: Subcategory[];
 }
