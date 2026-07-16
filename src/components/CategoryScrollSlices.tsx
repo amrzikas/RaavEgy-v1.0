@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, Eye, ShoppingCart, ArrowLeft, ArrowRight } from 'lucide-react';
-import { Product, SectionBackdrop } from '../types';
+import { Product, SectionBackdrop, Category } from '../types';
 import { getProductPrice } from '../utils';
 import { optimizeUnsplashUrl } from '../utils/imageOptimizer';
 
@@ -9,26 +9,18 @@ interface CategoryScrollSlicesProps {
   products: Product[];
   onSelectProduct: (product: Product) => void;
   isArabic: boolean;
-  onSelectCategory: (category: 'all' | 'men' | 'women' | 'kids' | 'accessories') => void;
+  onSelectCategory: (category: string) => void;
   onQuickAddToCart: (product: Product) => void;
+  categoriesList?: Category[];
   categoryImages?: {
-    women?: string;
-    men?: string;
-    kids?: string;
-    accessories?: string;
+    [key: string]: string | undefined;
   };
   categoryTexts?: {
-    women?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
-    men?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
-    kids?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
-    accessories?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+    [key: string]: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; } | undefined;
   };
   backdrop?: SectionBackdrop;
   categoryBackdrops?: {
-    women?: SectionBackdrop;
-    men?: SectionBackdrop;
-    kids?: SectionBackdrop;
-    accessories?: SectionBackdrop;
+    [key: string]: SectionBackdrop | undefined;
   };
 }
 
@@ -38,20 +30,36 @@ export default function CategoryScrollSlices({
   isArabic,
   onSelectCategory,
   onQuickAddToCart,
+  categoriesList,
   categoryImages,
   categoryTexts,
   backdrop,
   categoryBackdrops
 }: CategoryScrollSlicesProps) {
 
-  const categories = [
-    { id: 'women' as const, fallbackTitleAr: 'حريمي', fallbackTitleEn: 'Women Collection', fallbackDescAr: 'قطع أنيقة وحصرية مصممة لتناسب المرأة الواثقة والعصرية.', fallbackDescEn: 'Exclusive elegant statements designed for the confident modern woman.' },
-    { id: 'men' as const, fallbackTitleAr: 'رجالي', fallbackTitleEn: 'Men Collection', fallbackDescAr: 'تصاميم رسمية وغير رسمية توفر الراحة والأناقة لكل يوم.', fallbackDescEn: 'Sharp lines and effortless styles optimized for casual and formal wear.' },
-    { id: 'kids' as const, fallbackTitleAr: 'أطفالي', fallbackTitleEn: 'Kids Collection', fallbackDescAr: 'ملابس صغار ناعمة ومحاكة بحرفية عالية لتوفر أجمل طلّة وأكبر راحة.', fallbackDescEn: 'Premium fabrics tailored meticulously to provide safety, longevity, and absolute style.' },
-    { id: 'accessories' as const, fallbackTitleAr: 'إكسسوارات', fallbackTitleEn: 'Luxe Accessories', fallbackDescAr: 'لمسات نهائية تكمل مظهرك الفخم وتجعله متكاملاً.', fallbackDescEn: 'Impeccable accents and leather elements meant to elevate your daily style statement.' }
-  ];
+  const fallbackDescs: Record<string, { ar: string; en: string }> = {
+    women: { ar: 'قطع أنيقة وحصرية مصممة لتناسب المرأة الواثقة والعصرية.', en: 'Exclusive elegant statements designed for the confident modern woman.' },
+    men: { ar: 'تصاميم رسمية وغير رسمية توفر الراحة والأناقة لكل يوم.', en: 'Sharp lines and effortless styles optimized for casual and formal wear.' },
+    kids: { ar: 'ملابس صغار ناعمة ومحاكة بحرفية عالية لتوفر أجمل طلّة وأكبر راحة.', en: 'Premium fabrics tailored meticulously to provide safety, longevity, and absolute style.' },
+    accessories: { ar: 'لمسات نهائية تكمل مظهرك الفخم وتجعله متكاملاً.', en: 'Impeccable accents and leather elements meant to elevate your daily style statement.' }
+  };
 
-  const handleCategoryHeaderClick = (catId: 'all' | 'men' | 'women' | 'kids' | 'accessories') => {
+  const categories = (categoriesList && categoriesList.length > 0)
+    ? categoriesList.map(c => ({
+        id: c.id,
+        fallbackTitleAr: c.nameAr,
+        fallbackTitleEn: c.nameEn,
+        fallbackDescAr: fallbackDescs[c.id]?.ar || (isArabic ? 'تصميم مذهل بجودة وخامات فاخرة استثنائية.' : 'Fabulous designs with exceptional quality fabrics.'),
+        fallbackDescEn: fallbackDescs[c.id]?.en || (isArabic ? 'تصميم مذهل بجودة وخامات فاخرة استثنائية.' : 'Fabulous designs with exceptional quality fabrics.')
+      }))
+    : [
+        { id: 'women', fallbackTitleAr: 'حريمي', fallbackTitleEn: 'Women Collection', fallbackDescAr: 'قطع أنيقة وحصرية مصممة لتناسب المرأة الواثقة والعصرية.', fallbackDescEn: 'Exclusive elegant statements designed for the confident modern woman.' },
+        { id: 'men', fallbackTitleAr: 'رجالي', fallbackTitleEn: 'Men Collection', fallbackDescAr: 'تصاميم رسمية وغير رسمية توفر الراحة والأناقة لكل يوم.', fallbackDescEn: 'Sharp lines and effortless styles optimized for casual and formal wear.' },
+        { id: 'kids', fallbackTitleAr: 'أطفالي', fallbackTitleEn: 'Kids Collection', fallbackDescAr: 'ملابس صغار ناعمة ومحاكة بحرفية عالية لتوفر أجمل طلّة وأكبر راحة.', fallbackDescEn: 'Premium fabrics tailored meticulously to provide safety, longevity, and absolute style.' },
+        { id: 'accessories', fallbackTitleAr: 'إكسسوارات', fallbackTitleEn: 'Luxe Accessories', fallbackDescAr: 'لمسات نهائية تكمل مظهرك الفخم وتجعله متكاملاً.', fallbackDescEn: 'Impeccable accents and leather elements meant to elevate your daily style statement.' }
+      ];
+
+  const handleCategoryHeaderClick = (catId: string) => {
     onSelectCategory(catId);
     const catalog = document.getElementById('catalog-shelf');
     if (catalog) {

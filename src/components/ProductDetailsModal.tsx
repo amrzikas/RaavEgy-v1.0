@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Check, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Product } from '../types';
+import { Product, Category } from '../types';
 import { getProductPrice } from '../utils';
 
 interface ProductDetailsModalProps {
@@ -9,14 +9,27 @@ interface ProductDetailsModalProps {
   onClose: () => void;
   onAddToCart: (product: Product, size: string, color: string, quantity: number) => void;
   isArabic: boolean;
+  categoriesList?: Category[];
 }
 
 export default function ProductDetailsModal({
   product,
   onClose,
   onAddToCart,
-  isArabic
+  isArabic,
+  categoriesList = []
 }: ProductDetailsModalProps) {
+  const getCategoryName = (catId: string) => {
+    const cat = categoriesList.find(c => c.id === catId);
+    if (cat) {
+      return isArabic ? cat.nameAr : cat.nameEn;
+    }
+    if (catId === 'men') return isArabic ? 'رجالي' : 'Men';
+    if (catId === 'women') return isArabic ? 'حريمي' : 'Women';
+    if (catId === 'kids') return isArabic ? 'أطفالي' : 'Kids';
+    if (catId === 'accessories') return isArabic ? 'إكسسوارات' : 'Accessories';
+    return catId;
+  };
   const [activeImgUrl, setActiveImgUrl] = useState<string>(product?.image || '');
   const [selectedSize, setSelectedSize] = useState<string>(product?.sizes?.[0] || 'M');
   const [selectedColor, setSelectedColor] = useState<string>(product?.colors?.[0] || '#ffffff');
@@ -86,10 +99,7 @@ export default function ProductDetailsModal({
               
               {/* Tag Overlay */}
               <span className="absolute top-4 right-4 bg-white/95 backdrop-blur-md text-zinc-900 border border-zinc-100 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest font-sans shadow-sm">
-                {product.category === 'men' && (isArabic ? 'رجالي' : 'Men')}
-                {product.category === 'women' && (isArabic ? 'حريمي' : 'Women')}
-                {product.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
-                {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
+                {getCategoryName(product.category)}
               </span>
             </div>
 

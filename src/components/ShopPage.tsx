@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Product } from '../types';
+import { Product, Category } from '../types';
 import { getProductPrice } from '../utils';
 import { SlidersHorizontal, Search, ArrowUpDown, Eye, ArrowLeft, Check, Sparkles, AlertCircle, X } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -8,8 +8,9 @@ interface ShopPageProps {
   products: Product[];
   onSelectProduct: (product: Product) => void;
   isArabic: boolean;
-  initialCategory?: 'all' | 'men' | 'women' | 'kids' | 'accessories';
+  initialCategory?: string;
   initialSubcategory?: string | null;
+  categoriesList?: Category[];
 }
 
 const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', 'XXL', '38', '40', '42', '44'];
@@ -23,8 +24,45 @@ const PREMIUM_COLORS = [
   { hex: '#dc2626', labelEn: 'Royal Red', labelAr: 'أحمر ملكي' }
 ];
 
-export default function ShopPage({ products, onSelectProduct, isArabic, initialCategory = 'all', initialSubcategory = null }: ShopPageProps) {
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'men' | 'women' | 'kids' | 'accessories'>(initialCategory);
+export default function ShopPage({ 
+  products, 
+  onSelectProduct, 
+  isArabic, 
+  initialCategory = 'all', 
+  initialSubcategory = null,
+  categoriesList = []
+}: ShopPageProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
+
+  const getCategoryName = (catId: string) => {
+    const cat = categoriesList.find(c => c.id === catId);
+    if (cat) {
+      return isArabic ? cat.nameAr : cat.nameEn;
+    }
+    if (catId === 'men') return isArabic ? 'رجالي' : 'Men';
+    if (catId === 'women') return isArabic ? 'حريمي' : 'Women';
+    if (catId === 'kids') return isArabic ? 'أطفالي' : 'Kids';
+    if (catId === 'accessories') return isArabic ? 'إكسسوارات' : 'Accessories';
+    return catId;
+  };
+
+  const categoriesToRender = useMemo(() => {
+    const list = [{ id: 'all', nameAr: 'كل الموديلات المعروضة', nameEn: 'Global Wardrobe' }];
+    const rawCats = categoriesList && categoriesList.length > 0 ? categoriesList : [
+      { id: 'men', nameAr: 'ملابس وأزياء رجالي', nameEn: 'Men\'s Wear', subcategories: [] },
+      { id: 'women', nameAr: 'أزياء نسائية فاخرة', nameEn: 'Women\'s Apparel', subcategories: [] },
+      { id: 'kids', nameAr: 'ملابس أطفال مريحة', nameEn: 'Organic Kids', subcategories: [] },
+      { id: 'accessories', nameAr: 'ساعات وإكسسوارات مميزة', nameEn: 'Curated Accessories', subcategories: [] }
+    ];
+    rawCats.forEach(c => {
+      list.push({
+        id: c.id,
+        nameAr: c.nameAr,
+        nameEn: c.nameEn
+      });
+    });
+    return list;
+  }, [categoriesList]);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(initialSubcategory);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -257,26 +295,22 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
                 {isArabic ? "التصنيف الرئيسي" : "Categories"}
               </h3>
               <div className="space-y-1.5">
-                {(['all', 'men', 'women', 'kids', 'accessories'] as const).map((cat) => (
+                {categoriesToRender.map((cat) => (
                   <button
-                    key={cat}
+                    key={cat.id}
                     onClick={() => {
-                      setSelectedCategory(cat);
+                      setSelectedCategory(cat.id);
                     }}
                     className={`w-full text-right px-3 py-2 rounded-lg text-xs font-medium transition cursor-pointer flex justify-between items-center ${
-                      selectedCategory === cat
+                      selectedCategory === cat.id
                         ? "bg-black text-white"
                         : "bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
                     }`}
                   >
                     <span>
-                      {cat === 'all' && (isArabic ? 'كل الموديلات المعروضة' : 'Global Wardrobe')}
-                      {cat === 'men' && (isArabic ? 'ملابس وأزياء رجالي' : 'Men\'s Wear')}
-                      {cat === 'women' && (isArabic ? 'أزياء نسائية فاخرة' : 'Women\'s Apparel')}
-                      {cat === 'kids' && (isArabic ? 'ملابس أطفال مريحة' : 'Organic Kids')}
-                      {cat === 'accessories' && (isArabic ? 'ساعات وإكسسوارات مميزة' : 'Curated Accessories')}
+                      {isArabic ? cat.nameAr : cat.nameEn}
                     </span>
-                    {selectedCategory === cat && <Check size={12} strokeWidth={3} />}
+                    {selectedCategory === cat.id && <Check size={12} strokeWidth={3} />}
                   </button>
                 ))}
               </div>
@@ -519,10 +553,7 @@ export default function ShopPage({ products, onSelectProduct, isArabic, initialC
                           {/* Category meta label & Stock Indicator */}
                           <div className="flex items-center justify-between gap-2 mb-1">
                             <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest font-sans block">
-                              {product.category === 'men' && (isArabic ? 'رجالي' : 'Men')}
-                              {product.category === 'women' && (isArabic ? 'حريمي' : 'Women')}
-                              {product.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
-                              {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
+                              {getCategoryName(product.category)}
                             </span>
                           </div>
                           

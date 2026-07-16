@@ -432,6 +432,7 @@ export default function App() {
                   layout={homepageContent?.collectionsLayout || 'slider'}
                   order={homepageContent?.collectionsOrder}
                   categoryImages={homepageContent?.categoryImages}
+                  categoriesList={categoriesList}
                 />
               )}
 
@@ -470,6 +471,7 @@ export default function App() {
                   categoryTexts={homepageContent?.categoryTexts}
                   backdrop={homepageContent?.sectionBackgrounds?.categoryScrollSlices}
                   categoryBackdrops={homepageContent?.categoryBackdrops}
+                  categoriesList={categoriesList}
                 />
               )}
 
@@ -505,6 +507,7 @@ export default function App() {
             isArabic={isArabic}
             initialCategory={selectedCategory as any}
             initialSubcategory={selectedSubcategory}
+            categoriesList={categoriesList}
           />
         )}
 
@@ -538,6 +541,7 @@ export default function App() {
                   window.scrollTo({ top: 400, behavior: 'smooth' });
                 }
               }}
+              categoriesList={categoriesList}
             />
           ) : (
             <div className="py-20 text-center font-serif text-lg">
@@ -874,6 +878,7 @@ export default function App() {
           onClose={() => setActiveProductDetail(null)}
           onAddToCart={handleAddToCart}
           isArabic={isArabic}
+          categoriesList={categoriesList}
         />
       )}
 
@@ -885,6 +890,7 @@ export default function App() {
         orders={orders}
         isArabic={isArabic}
         onContentUpdate={refreshContentData}
+        categories={categoriesList}
       />
 
       </div>

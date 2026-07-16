@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Product, Review } from '../types';
+import { Product, Review, Category } from '../types';
 import { getProductPrice } from '../utils';
 import { 
   ChevronLeft, 
@@ -29,6 +29,7 @@ interface ProductPageProps {
   currentUser?: any;
   onGoToAuth?: () => void;
   onSelectCategory?: (category: string) => void;
+  categoriesList?: Category[];
 }
 
 export default function ProductPage({ 
@@ -40,8 +41,20 @@ export default function ProductPage({
   isArabic, 
   currentUser, 
   onGoToAuth,
-  onSelectCategory
+  onSelectCategory,
+  categoriesList = []
 }: ProductPageProps) {
+  const getCategoryName = (catId: string) => {
+    const cat = categoriesList.find(c => c.id === catId);
+    if (cat) {
+      return isArabic ? cat.nameAr : cat.nameEn;
+    }
+    if (catId === 'men') return isArabic ? 'رجالي' : 'Men';
+    if (catId === 'women') return isArabic ? 'حريمي' : 'Women';
+    if (catId === 'kids') return isArabic ? 'أطفالي' : 'Kids';
+    if (catId === 'accessories') return isArabic ? 'إكسسوارات' : 'Accessories';
+    return catId;
+  };
   const [activeImgUrl, setActiveImgUrl] = useState<string>(product.image);
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'M');
   const [selectedColor, setSelectedColor] = useState<string>(product.colors[0] || '#ffffff');
@@ -205,10 +218,7 @@ export default function ProductPage({
               }}
               className="hover:text-amber-500 hover:underline transition duration-200 cursor-pointer"
             >
-              {product.category === 'men' && (isArabic ? 'رجالي' : 'MEN')}
-              {product.category === 'women' && (isArabic ? 'حريمي' : 'WOMEN')}
-              {product.category === 'kids' && (isArabic ? 'أطفالي' : 'KIDS')}
-              {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'ACCESSORIES')}
+              {getCategoryName(product.category).toUpperCase()}
             </button>
             <span>/</span>
             <span className="text-zinc-650 truncate max-w-[150px]">
@@ -254,10 +264,7 @@ export default function ProductPage({
               )}
               {/* Category water label */}
               <span className="absolute top-6 right-6 bg-white/95 backdrop-blur-md rounded-full px-4 py-1.5 text-[9px] font-bold tracking-[0.2em] text-zinc-950 uppercase border border-zinc-150 shadow-sm">
-                {product.category === 'men' && (isArabic ? 'رجالي' : 'Men')}
-                {product.category === 'women' && (isArabic ? 'حريمي' : 'Women')}
-                {product.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
-                {product.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
+                {getCategoryName(product.category)}
               </span>
             </div>
 
@@ -841,10 +848,7 @@ export default function ProductPage({
                   <div className="p-3.5 flex-1 flex flex-col justify-between">
                     <div>
                       <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-wider block mb-0.5">
-                        {relProduct.category === 'men' && (isArabic ? 'رجالي' : 'Men')}
-                        {relProduct.category === 'women' && (isArabic ? 'حريمي' : 'Women')}
-                        {relProduct.category === 'kids' && (isArabic ? 'أطفالي' : 'Kids')}
-                        {relProduct.category === 'accessories' && (isArabic ? 'إكسسوارات' : 'Accessories')}
+                        {getCategoryName(relProduct.category)}
                       </span>
                       <h4 className="text-xs font-medium text-zinc-900 leading-snug line-clamp-1 group-hover:text-black transition">
                         {isArabic ? relProduct.nameAr : relProduct.nameEn}

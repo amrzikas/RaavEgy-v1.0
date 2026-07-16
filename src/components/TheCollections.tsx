@@ -1,21 +1,19 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { SectionBackdrop } from '../types';
+import { SectionBackdrop, Category } from '../types';
 import { optimizeUnsplashUrl } from '../utils/imageOptimizer';
 
 interface TheCollectionsProps {
-  onSelectCategory: (cat: 'all' | 'men' | 'women' | 'kids' | 'accessories') => void;
+  onSelectCategory: (cat: string) => void;
   isArabic: boolean;
   backdrop?: SectionBackdrop;
   layout?: 'split' | 'bento' | 'symmetric' | 'slider';
-  order?: ('women' | 'men' | 'kids' | 'accessories')[];
+  order?: string[];
   categoryImages?: {
-    women?: string;
-    men?: string;
-    kids?: string;
-    accessories?: string;
+    [key: string]: string | undefined;
   };
+  categoriesList?: Category[];
 }
 
 export default function TheCollections({ 
@@ -24,7 +22,8 @@ export default function TheCollections({
   backdrop,
   layout = 'slider',
   order,
-  categoryImages
+  categoryImages,
+  categoriesList
 }: TheCollectionsProps) {
   
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -69,7 +68,7 @@ export default function TheCollections({
     }
   };
   
-  const handleCategoryClick = (cat: 'all' | 'men' | 'women' | 'kids' | 'accessories') => {
+  const handleCategoryClick = (cat: string) => {
     onSelectCategory(cat);
     const catalogSection = document.getElementById('catalog-shelf');
     if (catalogSection) {
@@ -89,10 +88,10 @@ export default function TheCollections({
         }, ${backdrop.gradientFrom || '#1b1c19'}, ${backdrop.gradientTo || '#252622'})`
   } : {};
 
-  // Standard collection static details
-  const cardsConfig = {
+  // Default collection static details
+  const defaultCardsConfig: Record<string, { id: string; labelAr: string; labelEn: string; defaultImg: string; tagEn: string; tagAr: string }> = {
     women: {
-      id: 'women' as const,
+      id: 'women',
       labelAr: 'حريمي',
       labelEn: 'Women',
       defaultImg: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=1000",
@@ -100,7 +99,7 @@ export default function TheCollections({
       tagAr: "موسم ٢٠٢٦"
     },
     men: {
-      id: 'men' as const,
+      id: 'men',
       labelAr: 'رجالي',
       labelEn: 'Men',
       defaultImg: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800",
@@ -108,7 +107,7 @@ export default function TheCollections({
       tagAr: "أساسيات عصرية"
     },
     kids: {
-      id: 'kids' as const,
+      id: 'kids',
       labelAr: 'أطفالي',
       labelEn: 'Kids',
       defaultImg: "https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&q=80&w=800",
@@ -116,7 +115,7 @@ export default function TheCollections({
       tagAr: "موضة الصغار"
     },
     accessories: {
-      id: 'accessories' as const,
+      id: 'accessories',
       labelAr: 'إكسسوارات',
       labelEn: 'Accessories',
       defaultImg: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=800",
@@ -125,17 +124,40 @@ export default function TheCollections({
     }
   };
 
-  // Re-order active list according to collectionsOrder config
-  const activeOrder = order && order.length > 0 
-    ? order.filter(item => ['women', 'men', 'kids', 'accessories'].includes(item))
-    : (['women', 'men', 'kids', 'accessories'] as const);
-
-  // Fallback check to make sure all 4 items are present
-  const missingItems = ['women', 'men', 'kids', 'accessories'].filter(
-    (item) => !activeOrder.includes(item as any)
-  ) as ('women' | 'men' | 'kids' | 'accessories')[];
+  const dynamicCardsConfig: Record<string, { id: string; labelAr: string; labelEn: string; defaultImg: string; tagEn: string; tagAr: string }> = {};
   
-  const finalizedCategories = [...activeOrder, ...missingItems] as ('women' | 'men' | 'kids' | 'accessories')[];
+  const rawCats = categoriesList && categoriesList.length > 0 ? categoriesList : [
+    { id: 'women', nameAr: 'حريمي', nameEn: 'Women', subcategories: [] },
+    { id: 'men', nameAr: 'رجالي', nameEn: 'Men', subcategories: [] },
+    { id: 'kids', nameAr: 'أطفالي', nameEn: 'Kids', subcategories: [] },
+    { id: 'accessories', nameAr: 'إكسسوارات', nameEn: 'Accessories', subcategories: [] }
+  ];
+
+  rawCats.forEach(cat => {
+    dynamicCardsConfig[cat.id] = {
+      id: cat.id,
+      labelAr: cat.nameAr,
+      labelEn: cat.nameEn,
+      defaultImg: defaultCardsConfig[cat.id]?.defaultImg || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800",
+      tagEn: defaultCardsConfig[cat.id]?.tagEn || "PREMIUM STYLES",
+      tagAr: defaultCardsConfig[cat.id]?.tagAr || "مجموعات فاخرة"
+    };
+  });
+
+  const cardsConfig = dynamicCardsConfig;
+
+  // Re-order active list according to collectionsOrder config
+  const allowedKeys = Object.keys(cardsConfig);
+  const activeOrder = order && order.length > 0 
+    ? order.filter(item => allowedKeys.includes(item))
+    : allowedKeys;
+
+  // Fallback check to make sure all items are present
+  const missingItems = allowedKeys.filter(
+    (item) => !activeOrder.includes(item)
+  );
+  
+  const finalizedCategories = [...activeOrder, ...missingItems];
 
   return (
     <section 
