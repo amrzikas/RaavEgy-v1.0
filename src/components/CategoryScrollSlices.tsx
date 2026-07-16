@@ -127,17 +127,17 @@ export default function CategoryScrollSlices({
               background: 'linear-gradient(to bottom, #141512, #1d1e1a)'
             };
 
-            const scrollerRef = useRef<HTMLDivElement>(null);
-
             const scrollCategoryLeft = () => {
-              if (scrollerRef.current) {
-                scrollerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+              const scroller = document.getElementById(`scroller-${cat.id}`);
+              if (scroller) {
+                scroller.scrollBy({ left: -300, behavior: 'smooth' });
               }
             };
 
             const scrollCategoryRight = () => {
-              if (scrollerRef.current) {
-                scrollerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+              const scroller = document.getElementById(`scroller-${cat.id}`);
+              if (scroller) {
+                scroller.scrollBy({ left: 300, behavior: 'smooth' });
               }
             };
 
@@ -222,7 +222,7 @@ export default function CategoryScrollSlices({
                 {/* Right Column: Horizontal Scroll Slices of Products */}
                 <div className="w-full lg:w-[56%] relative flex items-center min-w-0">
                   <div 
-                    ref={scrollerRef}
+                    id={`scroller-${cat.id}`}
                     className="w-full flex gap-3 xs:gap-4 sm:gap-6 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none scroll-smooth"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >

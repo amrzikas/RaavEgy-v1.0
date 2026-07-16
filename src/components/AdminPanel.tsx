@@ -4244,136 +4244,143 @@ export default function AdminPanel({
                           </h4>
                         </div>
                         <div className="space-y-6">
-                          {[
-                            { id: 'women', labelAr: "مجموعة السيدات الفاخرة", labelEn: "Women's Collection" },
-                        { id: 'men', labelAr: "المجموعات الرجالية العصرية", labelEn: "Men's Collection" },
-                        { id: 'kids', labelAr: "قصص الأطفال القطنية العضوية", labelEn: "Kids & Baby Collection" },
-                        { id: 'accessories', labelAr: "الإكسسوارات الفاخرة المنسقة", labelEn: "Accessories & Leather" }
-                      ].map((cat) => {
-                        const existingTexts = homepageContent.categoryTexts?.[cat.id as 'women'|'men'|'kids'|'accessories'] || {};
-                        const currentTitleAr = existingTexts.titleAr || '';
-                        const currentTitleEn = existingTexts.titleEn || '';
-                        const currentDescAr = existingTexts.descAr || '';
-                        const currentDescEn = existingTexts.descEn || '';
-                        const currentImageUrl = homepageContent.categoryImages?.[cat.id as 'women'|'men'|'kids'|'accessories'] || '';
-
-                        const handleTextChange = (field: string, val: string) => {
-                          const updatedTexts = { ...(homepageContent.categoryTexts || {}) };
-                          updatedTexts[cat.id as 'women'|'men'|'kids'|'accessories'] = {
-                            ...(updatedTexts[cat.id as 'women'|'men'|'kids'|'accessories'] || {}),
-                            [field]: val
-                          };
-                          setHomepageContent({ ...homepageContent, categoryTexts: updatedTexts });
-                        };
-
-                        const handleImageUpdate = (val: string) => {
-                          const updatedImages = { ...(homepageContent.categoryImages || {}) };
-                          updatedImages[cat.id as 'women'|'men'|'kids'|'accessories'] = val;
-                          setHomepageContent({ ...homepageContent, categoryImages: updatedImages });
-                        };
-
-                        return (
-                          <div key={cat.id} className="p-4 bg-zinc-950 border border-zinc-850 rounded-2xl space-y-4">
-                            <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
-                              <span className="text-xs font-bold text-amber-400 font-mono uppercase">{isArabic ? cat.labelAr : cat.labelEn}</span>
+                          {categoriesToRender.length === 0 ? (
+                            <div className="text-center p-6 bg-zinc-900/40 border border-dashed border-zinc-800 rounded-2xl">
+                              <p className="text-xs text-zinc-400 font-sans">
+                                {isArabic 
+                                  ? "لا توجد فئات حقيقية مضافة حالياً. يرجى الذهاب إلى تبويب الفئات لإضافة الفئات الحقيقية وتفاصيلها أولاً." 
+                                  : "No actual categories created yet. Please go to the Categories tab and add some first."}
+                              </p>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans">
-                              {/* Title Inputs */}
-                              <div>
-                                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان بالعربية" : "Title (AR)"}</label>
-                                <input
-                                  type="text"
-                                  value={currentTitleAr}
-                                  onChange={(e) => handleTextChange('titleAr', e.target.value)}
-                                  placeholder={isArabic ? "العنوان بالعربية الافتراضي" : "Default Arabic Title"}
-                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان بالإنجليزية" : "Title (EN)"}</label>
-                                <input
-                                  type="text"
-                                  value={currentTitleEn}
-                                  onChange={(e) => handleTextChange('titleEn', e.target.value)}
-                                  placeholder={isArabic ? "العنوان بالإنجليزية الافتراضي" : "Default English Title"}
-                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
-                                />
-                              </div>
+                          ) : (
+                            categoriesToRender.map((cat) => {
+                              const existingTexts = homepageContent.categoryTexts?.[cat.id] || {};
+                              const currentTitleAr = existingTexts.titleAr || '';
+                              const currentTitleEn = existingTexts.titleEn || '';
+                              const currentDescAr = existingTexts.descAr || '';
+                              const currentDescEn = existingTexts.descEn || '';
+                              const currentImageUrl = homepageContent.categoryImages?.[cat.id] || '';
 
-                              {/* Description Inputs */}
-                              <div>
-                                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف بالعربية" : "Description (AR)"}</label>
-                                <textarea
-                                  value={currentDescAr}
-                                  onChange={(e) => handleTextChange('descAr', e.target.value)}
-                                  placeholder={isArabic ? "الوصف الوارد للمجموعة بالعربية" : "Default Arabic description"}
-                                  rows={2}
-                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 resize-none"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف بالإنجليزية" : "Description (EN)"}</label>
-                                <textarea
-                                  value={currentDescEn}
-                                  onChange={(e) => handleTextChange('descEn', e.target.value)}
-                                  placeholder={isArabic ? "الوصف الوارد للمجموعة بالإنجليزية" : "Default English description"}
-                                  rows={2}
-                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 resize-none"
-                                />
-                              </div>
+                              const handleTextChange = (field: string, val: string) => {
+                                const updatedTexts = { ...(homepageContent.categoryTexts || {}) };
+                                updatedTexts[cat.id] = {
+                                  ...(updatedTexts[cat.id] || {}),
+                                  [field]: val
+                                };
+                                setHomepageContent({ ...homepageContent, categoryTexts: updatedTexts });
+                              };
 
-                              {/* Image Input (URL) */}
-                              <div>
-                                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "رابط الصورة (URL)" : "Image Link (URL)"}</label>
-                                <input
-                                  type="url"
-                                  value={currentImageUrl}
-                                  onChange={(e) => handleImageUpdate(e.target.value)}
-                                  placeholder="https://images.unsplash.com/..."
-                                  className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono"
-                                />
-                              </div>
+                              const handleImageUpdate = (val: string) => {
+                                const updatedImages = { ...(homepageContent.categoryImages || {}) };
+                                updatedImages[cat.id] = val;
+                                setHomepageContent({ ...homepageContent, categoryImages: updatedImages });
+                              };
 
-                              {/* Image Direct upload */}
-                              <div>
-                                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "تحميل صورة من جهازك" : "Upload Image from Device"}</label>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={async (e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onloadend = () => {
-                                        handleImageUpdate(reader.result as string);
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  }}
-                                  className="w-full text-xs text-zinc-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-amber-400 hover:file:bg-zinc-750 cursor-pointer"
-                                />
-                                <span className="text-[10px] text-amber-500 font-medium mt-1 block">
-                                  {isArabic ? "المقاس المقترح لبطاقة المجموعة: 600x800 بكسل (أو نسبة 3:4 رأسية)" : "Recommended category card size: 600x800 px (or 3:4 portrait ratio)"}
-                                </span>
-                              </div>
-                            </div>
+                              return (
+                                <div key={cat.id} className="p-4 bg-zinc-950 border border-zinc-850 rounded-2xl space-y-4">
+                                  <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+                                    <span className="text-xs font-bold text-amber-400 font-mono uppercase">
+                                      {isArabic ? cat.nameAr : cat.nameEn} (ID: {cat.id})
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans">
+                                    {/* Title Inputs */}
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان بالعربية" : "Title (AR)"}</label>
+                                      <input
+                                        type="text"
+                                        value={currentTitleAr}
+                                        onChange={(e) => handleTextChange('titleAr', e.target.value)}
+                                        placeholder={isArabic ? cat.nameAr : "Default Arabic Title"}
+                                        className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "العنوان بالإنجليزية" : "Title (EN)"}</label>
+                                      <input
+                                        type="text"
+                                        value={currentTitleEn}
+                                        onChange={(e) => handleTextChange('titleEn', e.target.value)}
+                                        placeholder={isArabic ? cat.nameEn : "Default English Title"}
+                                        className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                      />
+                                    </div>
 
-                            {currentImageUrl && (
-                              <div className="flex items-center gap-3 bg-zinc-900 p-2 rounded-xl">
-                                <span className="text-[10px] text-zinc-500">{isArabic ? "معاينة:" : "Preview:"}</span>
-                                <img
-                                  src={currentImageUrl}
-                                  alt="Preview"
-                                  className="h-12 w-12 object-cover rounded-lg border border-zinc-800"
-                                  referrerPolicy="no-referrer"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                                    {/* Description Inputs */}
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف بالعربية" : "Description (AR)"}</label>
+                                      <textarea
+                                        value={currentDescAr}
+                                        onChange={(e) => handleTextChange('descAr', e.target.value)}
+                                        placeholder={isArabic ? "الوصف الوارد للمجموعة بالعربية" : "Default Arabic description"}
+                                        rows={2}
+                                        className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 resize-none"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "الوصف بالإنجليزية" : "Description (EN)"}</label>
+                                      <textarea
+                                        value={currentDescEn}
+                                        onChange={(e) => handleTextChange('descEn', e.target.value)}
+                                        placeholder={isArabic ? "الوصف الوارد للمجموعة بالإنجليزية" : "Default English description"}
+                                        rows={2}
+                                        className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 resize-none"
+                                      />
+                                    </div>
+
+                                    {/* Image Input (URL) */}
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "رابط الصورة (URL)" : "Image Link (URL)"}</label>
+                                      <input
+                                        type="url"
+                                        value={currentImageUrl}
+                                        onChange={(e) => handleImageUpdate(e.target.value)}
+                                        placeholder="https://images.unsplash.com/..."
+                                        className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 font-mono"
+                                      />
+                                    </div>
+
+                                    {/* Image Direct upload */}
+                                    <div>
+                                      <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-1">{isArabic ? "تحميل صورة من جهازك" : "Upload Image from Device"}</label>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={async (e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) {
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                              handleImageUpdate(reader.result as string);
+                                            };
+                                            reader.readAsDataURL(file);
+                                          }
+                                        }}
+                                        className="w-full text-xs text-zinc-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-amber-400 hover:file:bg-zinc-750 cursor-pointer"
+                                      />
+                                      <span className="text-[10px] text-amber-500 font-medium mt-1 block">
+                                        {isArabic ? "المقاس المقترح لبطاقة المجموعة: 600x800 بكسل (أو نسبة 3:4 رأسية)" : "Recommended category card size: 600x800 px (or 3:4 portrait ratio)"}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {currentImageUrl && (
+                                    <div className="flex items-center gap-3 bg-zinc-900 p-2 rounded-xl">
+                                      <span className="text-[10px] text-zinc-500">{isArabic ? "معاينة:" : "Preview:"}</span>
+                                      <img
+                                        src={currentImageUrl}
+                                        alt="Preview"
+                                        className="h-12 w-12 object-cover rounded-lg border border-zinc-800"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
                     </div>
                     )}
 

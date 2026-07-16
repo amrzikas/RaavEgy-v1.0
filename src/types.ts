@@ -304,16 +304,10 @@ export interface HomepageContent {
   adBanner2?: CustomAdBanner;
   heroSlides: HeroSlideInput[];
   categoryImages?: {
-    women?: string;
-    men?: string;
-    kids?: string;
-    accessories?: string;
+    [key: string]: string | undefined;
   };
   categoryTexts?: {
-    women?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
-    men?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
-    kids?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
-    accessories?: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; };
+    [key: string]: { titleAr?: string; titleEn?: string; descAr?: string; descEn?: string; } | undefined;
   };
   sectionBackgrounds?: {
     theCollections?: SectionBackdrop;
@@ -322,10 +316,7 @@ export interface HomepageContent {
     customCoutureForm?: SectionBackdrop;
   };
   categoryBackdrops?: {
-    women?: SectionBackdrop;
-    men?: SectionBackdrop;
-    kids?: SectionBackdrop;
-    accessories?: SectionBackdrop;
+    [key: string]: SectionBackdrop | undefined;
   };
   headerBgColor?: string;
   logoSize?: number;
