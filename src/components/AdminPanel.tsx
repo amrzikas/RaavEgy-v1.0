@@ -151,55 +151,9 @@ export default function AdminPanel({
     shippingPlanId: ''
   });
 
-  // Dynamic categories combined with static fallbacks
+  // Dynamic categories only, no static fallbacks
   const categoriesToRender = useMemo(() => {
-    return categories && categories.length > 0 ? categories : [
-      {
-        id: 'men',
-        nameAr: 'ملابس رجالي',
-        nameEn: "Men's Clothing",
-        subcategories: [
-          { ar: 'قمصان', en: 'Shirts' },
-          { ar: 'بناطيل', en: 'Pants' },
-          { ar: 'بدل', en: 'Suits' },
-          { ar: 'تيشرتات', en: 'T-Shirts' },
-          { ar: 'جاكيت ومعاطف', en: 'Jackets & Coats' }
-        ]
-      },
-      {
-        id: 'women',
-        nameAr: 'ملابس حريمي',
-        nameEn: "Women's Clothing",
-        subcategories: [
-          { ar: 'فساتين', en: 'Dresses' },
-          { ar: 'عبايات', en: 'Abayas' },
-          { ar: 'بناطيل', en: 'Pants' },
-          { ar: 'تنانير', en: 'Skirts' },
-          { ar: 'بلوزات', en: 'Blouses' }
-        ]
-      },
-      {
-        id: 'kids',
-        nameAr: 'ملابس أطفالي',
-        nameEn: "Kids' Wear",
-        subcategories: [
-          { ar: 'ملابس أولاد', en: 'Boys Wear' },
-          { ar: 'ملابس بنات', en: 'Girls Wear' },
-          { ar: 'أطقم أطفال', en: 'Kids Sets' }
-        ]
-      },
-      {
-        id: 'accessories',
-        nameAr: 'إكسسوارات',
-        nameEn: 'Accessories',
-        subcategories: [
-          { ar: 'حقائب', en: 'Bags' },
-          { ar: 'أحزمة', en: 'Belts' },
-          { ar: 'أحذية', en: 'Shoes' },
-          { ar: 'مجوهرات', en: 'Jewelry' }
-        ]
-      }
-    ];
+    return categories || [];
   }, [categories]);
 
   // Unique linked subcategories by category
@@ -3631,11 +3585,90 @@ export default function AdminPanel({
                               className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400 cursor-pointer"
                             >
                               <option value="split">{isArabic ? "كولاج منقسم (Split Screen Collage) - كلاسيكي فخم" : "Split Collage - Classical Luxury"}</option>
+                              <option value="split_dynamic">{isArabic ? "تقسيم ديناميكي تفاعلي (Split-Screen Dynamic Layout)" : "Split-Screen Dynamic Layout (Interactive)"}</option>
+                              <option value="three_columns">{isArabic ? "تصميم 3 مستطيلات سلايدر (Three Rectangles Slider) - رائع للصور المتكاملة" : "Three Column Rectangles Slider - Premium"}</option>
                               <option value="slider">{isArabic ? "سلايدر ملء الشاشة (Full-screen ambient slider)" : "Full-screen Ambient Slider"}</option>
                               <option value="grid">{isArabic ? "شبكة بينتو المبتكرة (Bento Grid Collage)" : "Bento Grid Collage"}</option>
                               <option value="single">{isArabic ? "بانر موحد بخلفية عريضة (Single luxury banner)" : "Single Luxury Banner"}</option>
                             </select>
                           </div>
+
+                          {/* Split Screen Dynamic Settings */}
+                          {homepageContent.heroSectionLayout === 'split_dynamic' && (
+                            <div className="p-4 bg-zinc-950/50 border border-zinc-800 rounded-2xl space-y-4">
+                              <h4 className="text-xs font-bold text-amber-400">
+                                {isArabic ? "إعدادات التقسيم الديناميكي للملابس النسائية والرجالية" : "Interactive Split-Screen Dynamic Layout Settings"}
+                              </h4>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Women's Half */}
+                                <div className="space-y-3">
+                                  <div className="border-b border-zinc-850 pb-1.5">
+                                    <span className="text-[10px] font-bold text-zinc-300 uppercase">
+                                      {isArabic ? "القسم النسائي" : "Women's Section"}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                                      {isArabic ? "رابط فيديو الخلفية (MP4)" : "Background Video URL (MP4)"}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={homepageContent.heroSectionWomenVideo || ''}
+                                      onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionWomenVideo: e.target.value })}
+                                      placeholder="https://assets.mixkit.co/videos/...large.mp4"
+                                      className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                                      {isArabic ? "رابط صورة الخلفية البديلة (في حال لم يعمل الفيديو)" : "Fallback/Default Image URL"}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={homepageContent.heroSectionWomenImage || ''}
+                                      onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionWomenImage: e.target.value })}
+                                      placeholder="https://images.unsplash.com/..."
+                                      className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Men's Half */}
+                                <div className="space-y-3">
+                                  <div className="border-b border-zinc-850 pb-1.5">
+                                    <span className="text-[10px] font-bold text-zinc-300 uppercase">
+                                      {isArabic ? "القسم الرجالي" : "Men's Section"}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                                      {isArabic ? "رابط فيديو الخلفية (يعمل عند التمرير بالماوس - MP4)" : "Hover Video URL (MP4)"}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={homepageContent.heroSectionMenVideo || ''}
+                                      onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionMenVideo: e.target.value })}
+                                      placeholder="https://assets.mixkit.co/videos/...large.mp4"
+                                      className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                                      {isArabic ? "رابط صورة الخلفية الافتراضية" : "Default Image URL"}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={homepageContent.heroSectionMenImage || ''}
+                                      onChange={(e) => setHomepageContent({ ...homepageContent, heroSectionMenImage: e.target.value })}
+                                      placeholder="https://images.unsplash.com/..."
+                                      className="w-full bg-zinc-900 border border-zinc-800 text-xs text-white p-2.5 rounded-xl outline-none focus:border-amber-400"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
 
                           {/* Titles Input */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3743,82 +3776,324 @@ export default function AdminPanel({
                               📸 {isArabic ? "إدارة صور الهيرو الرئيسي (الروابط أو التحميل)" : "Hero Images Manager (Links or Device Uploads)"}
                             </label>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {[0, 1, 2, 3].map((imgIdx) => {
-                                const currentImages = homepageContent.heroSectionImages || [];
-                                const imageUrl = currentImages[imgIdx] || '';
+                            {homepageContent.heroSectionLayout === 'three_columns' ? (
+                              <div className="space-y-6">
+                                {/* Size Specification Alert */}
+                                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-200 space-y-1">
+                                  <p className="font-bold flex items-center gap-1.5">
+                                    <span>⚠️</span>
+                                    <span>{isArabic ? "المقاس والتصميم الموصى به للصور (هام جداً):" : "Recommended Image Design Dimensions (Important):"}</span>
+                                  </p>
+                                  <p className="leading-relaxed font-medium">
+                                    {isArabic 
+                                      ? "يرجى تصميم الصور بمقاس 600 بكسل عرض × 900 بكسل ارتفاع (أبعاد 2:3 رأسي) لضمان تناسق تام للمستطيلات الثلاثة وظهورها كاملة وملء الإطار بشكل رائع." 
+                                      : "Please design your images exactly at 600px width × 900px height (2:3 vertical aspect ratio) for each of the three columns. This ensures perfect layout alignment and fits beautifully."}
+                                  </p>
+                                </div>
 
-                                return (
-                                  <div key={imgIdx} className="bg-zinc-900/50 border border-zinc-850 p-4 rounded-xl space-y-3">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-[10px] font-bold text-amber-500 font-mono">IMAGE #{imgIdx + 1}</span>
+                                {/* Column 1 Editor */}
+                                <div className="bg-zinc-950/40 border border-zinc-900 p-4 rounded-xl space-y-3">
+                                  <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                                    {isArabic ? "المستطيل الأول (اليسار) - يحتوي على 3 صور كحد أقصى" : "First Rectangle (Left Column) - Max 3 Images"}
+                                  </h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    {[0, 1, 2].map((idx) => {
+                                      const currentCol1 = homepageContent.heroSectionImagesColumn1 || [];
+                                      const imageUrl = currentCol1[idx] || '';
+
+                                      return (
+                                        <div key={idx} className="bg-zinc-900/60 border border-zinc-850 p-3 rounded-lg space-y-2.5 text-[11px]">
+                                          <div className="flex justify-between items-center">
+                                            <span className="font-mono font-bold text-zinc-500">IMAGE #{idx + 1}</span>
+                                            {imageUrl && (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const updated = [...currentCol1];
+                                                  updated[idx] = '';
+                                                  setHomepageContent({ ...homepageContent, heroSectionImagesColumn1: updated });
+                                                }}
+                                                className="text-[9px] text-rose-400 hover:text-rose-300 font-bold uppercase transition"
+                                              >
+                                                {isArabic ? "حذف" : "Clear"}
+                                              </button>
+                                            )}
+                                          </div>
+
+                                          {imageUrl && (
+                                            <div className="w-full h-20 rounded border border-zinc-800 bg-zinc-950 flex items-center justify-center overflow-hidden">
+                                              <img src={imageUrl} alt={`C1 Image ${idx + 1}`} className="w-full h-full object-cover" />
+                                            </div>
+                                          )}
+
+                                          <div>
+                                            <input
+                                              type="text"
+                                              value={imageUrl.startsWith('data:') ? '' : imageUrl}
+                                              onChange={(e) => {
+                                                const updated = [...currentCol1];
+                                                updated[idx] = e.target.value;
+                                                setHomepageContent({ ...homepageContent, heroSectionImagesColumn1: updated });
+                                              }}
+                                              placeholder="Paste image link here"
+                                              className="w-full bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-300 p-1.5 rounded outline-none font-mono focus:border-amber-400"
+                                            />
+                                          </div>
+
+                                          <div>
+                                            <input
+                                              type="file"
+                                              accept="image/*"
+                                              onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                  const reader = new FileReader();
+                                                  reader.onloadend = () => {
+                                                    const updated = [...currentCol1];
+                                                    updated[idx] = reader.result as string;
+                                                    setHomepageContent({ ...homepageContent, heroSectionImagesColumn1: updated });
+                                                  };
+                                                  reader.readAsDataURL(file);
+                                                }
+                                              }}
+                                              className="w-full text-[9px] text-zinc-400 file:mr-1 file:py-0.5 file:px-1.5 file:rounded file:border-0 file:text-[9px] file:font-bold file:bg-zinc-800 file:text-amber-400 cursor-pointer"
+                                            />
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                {/* Column 2 Editor */}
+                                <div className="bg-zinc-950/40 border border-zinc-900 p-4 rounded-xl space-y-3">
+                                  <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                                    {isArabic ? "المستطيل الثاني (الوسط) - يحتوي على 3 صور كحد أقصى" : "Second Rectangle (Center Column) - Max 3 Images"}
+                                  </h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    {[0, 1, 2].map((idx) => {
+                                      const currentCol2 = homepageContent.heroSectionImagesColumn2 || [];
+                                      const imageUrl = currentCol2[idx] || '';
+
+                                      return (
+                                        <div key={idx} className="bg-zinc-900/60 border border-zinc-850 p-3 rounded-lg space-y-2.5 text-[11px]">
+                                          <div className="flex justify-between items-center">
+                                            <span className="font-mono font-bold text-zinc-500">IMAGE #{idx + 1}</span>
+                                            {imageUrl && (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const updated = [...currentCol2];
+                                                  updated[idx] = '';
+                                                  setHomepageContent({ ...homepageContent, heroSectionImagesColumn2: updated });
+                                                }}
+                                                className="text-[9px] text-rose-400 hover:text-rose-300 font-bold uppercase transition"
+                                              >
+                                                {isArabic ? "حذف" : "Clear"}
+                                              </button>
+                                            )}
+                                          </div>
+
+                                          {imageUrl && (
+                                            <div className="w-full h-20 rounded border border-zinc-800 bg-zinc-950 flex items-center justify-center overflow-hidden">
+                                              <img src={imageUrl} alt={`C2 Image ${idx + 1}`} className="w-full h-full object-cover" />
+                                            </div>
+                                          )}
+
+                                          <div>
+                                            <input
+                                              type="text"
+                                              value={imageUrl.startsWith('data:') ? '' : imageUrl}
+                                              onChange={(e) => {
+                                                const updated = [...currentCol2];
+                                                updated[idx] = e.target.value;
+                                                setHomepageContent({ ...homepageContent, heroSectionImagesColumn2: updated });
+                                              }}
+                                              placeholder="Paste image link here"
+                                              className="w-full bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-300 p-1.5 rounded outline-none font-mono focus:border-amber-400"
+                                            />
+                                          </div>
+
+                                          <div>
+                                            <input
+                                              type="file"
+                                              accept="image/*"
+                                              onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                  const reader = new FileReader();
+                                                  reader.onloadend = () => {
+                                                    const updated = [...currentCol2];
+                                                    updated[idx] = reader.result as string;
+                                                    setHomepageContent({ ...homepageContent, heroSectionImagesColumn2: updated });
+                                                  };
+                                                  reader.readAsDataURL(file);
+                                                }
+                                              }}
+                                              className="w-full text-[9px] text-zinc-400 file:mr-1 file:py-0.5 file:px-1.5 file:rounded file:border-0 file:text-[9px] file:font-bold file:bg-zinc-800 file:text-amber-400 cursor-pointer"
+                                            />
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                {/* Column 3 Editor */}
+                                <div className="bg-zinc-950/40 border border-zinc-900 p-4 rounded-xl space-y-3">
+                                  <h4 className="text-xs font-bold text-amber-400 flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                                    {isArabic ? "المستطيل الثالث (اليمين) - يحتوي على 3 صور كحد أقصى" : "Third Rectangle (Right Column) - Max 3 Images"}
+                                  </h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    {[0, 1, 2].map((idx) => {
+                                      const currentCol3 = homepageContent.heroSectionImagesColumn3 || [];
+                                      const imageUrl = currentCol3[idx] || '';
+
+                                      return (
+                                        <div key={idx} className="bg-zinc-900/60 border border-zinc-850 p-3 rounded-lg space-y-2.5 text-[11px]">
+                                          <div className="flex justify-between items-center">
+                                            <span className="font-mono font-bold text-zinc-500">IMAGE #{idx + 1}</span>
+                                            {imageUrl && (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const updated = [...currentCol3];
+                                                  updated[idx] = '';
+                                                  setHomepageContent({ ...homepageContent, heroSectionImagesColumn3: updated });
+                                                }}
+                                                className="text-[9px] text-rose-400 hover:text-rose-300 font-bold uppercase transition"
+                                              >
+                                                {isArabic ? "حذف" : "Clear"}
+                                              </button>
+                                            )}
+                                          </div>
+
+                                          {imageUrl && (
+                                            <div className="w-full h-20 rounded border border-zinc-800 bg-zinc-950 flex items-center justify-center overflow-hidden">
+                                              <img src={imageUrl} alt={`C3 Image ${idx + 1}`} className="w-full h-full object-cover" />
+                                            </div>
+                                          )}
+
+                                          <div>
+                                            <input
+                                              type="text"
+                                              value={imageUrl.startsWith('data:') ? '' : imageUrl}
+                                              onChange={(e) => {
+                                                const updated = [...currentCol3];
+                                                updated[idx] = e.target.value;
+                                                setHomepageContent({ ...homepageContent, heroSectionImagesColumn3: updated });
+                                              }}
+                                              placeholder="Paste image link here"
+                                              className="w-full bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-300 p-1.5 rounded outline-none font-mono focus:border-amber-400"
+                                            />
+                                          </div>
+
+                                          <div>
+                                            <input
+                                              type="file"
+                                              accept="image/*"
+                                              onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                  const reader = new FileReader();
+                                                  reader.onloadend = () => {
+                                                    const updated = [...currentCol3];
+                                                    updated[idx] = reader.result as string;
+                                                    setHomepageContent({ ...homepageContent, heroSectionImagesColumn3: updated });
+                                                  };
+                                                  reader.readAsDataURL(file);
+                                                }
+                                              }}
+                                              className="w-full text-[9px] text-zinc-400 file:mr-1 file:py-0.5 file:px-1.5 file:rounded file:border-0 file:text-[9px] file:font-bold file:bg-zinc-800 file:text-amber-400 cursor-pointer"
+                                            />
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[0, 1, 2, 3].map((imgIdx) => {
+                                  const currentImages = homepageContent.heroSectionImages || [];
+                                  const imageUrl = currentImages[imgIdx] || '';
+
+                                  return (
+                                    <div key={imgIdx} className="bg-zinc-900/50 border border-zinc-850 p-4 rounded-xl space-y-3">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-bold text-amber-500 font-mono">IMAGE #{imgIdx + 1}</span>
+                                        {imageUrl && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const updated = [...currentImages];
+                                              updated[imgIdx] = '';
+                                              setHomepageContent({ ...homepageContent, heroSectionImages: updated });
+                                            }}
+                                            className="text-[9px] text-rose-400 hover:text-rose-300 font-bold uppercase transition"
+                                          >
+                                            {isArabic ? "حذف الصورة" : "Clear"}
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {/* Thumbnail preview if exists */}
                                       {imageUrl && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
+                                        <div className="w-full h-24 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950 flex items-center justify-center">
+                                          <img src={imageUrl} alt={`Hero ${imgIdx + 1}`} className="w-full h-full object-contain p-1" />
+                                        </div>
+                                      )}
+
+                                      {/* Link input */}
+                                      <div>
+                                        <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                                          {isArabic ? "رابط الصورة الخارجي" : "External Image Link / URL"}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={imageUrl.startsWith('data:') ? '' : imageUrl}
+                                          onChange={(e) => {
                                             const updated = [...currentImages];
-                                            updated[imgIdx] = '';
+                                            updated[imgIdx] = e.target.value;
                                             setHomepageContent({ ...homepageContent, heroSectionImages: updated });
                                           }}
-                                          className="text-[9px] text-rose-400 hover:text-rose-300 font-bold uppercase transition"
-                                        >
-                                          {isArabic ? "حذف الصورة" : "Clear"}
-                                        </button>
-                                      )}
-                                    </div>
-
-                                    {/* Thumbnail preview if exists */}
-                                    {imageUrl && (
-                                      <div className="w-full h-24 rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950 flex items-center justify-center">
-                                        <img src={imageUrl} alt={`Hero ${imgIdx + 1}`} className="w-full h-full object-contain p-1" />
+                                          placeholder="https://images.unsplash.com/... or enter image link"
+                                          className="w-full bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-300 p-2 rounded-lg outline-none font-mono focus:border-amber-400"
+                                        />
                                       </div>
-                                    )}
 
-                                    {/* Link input */}
-                                    <div>
-                                      <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
-                                        {isArabic ? "رابط الصورة الخارجي" : "External Image Link / URL"}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={imageUrl.startsWith('data:') ? '' : imageUrl}
-                                        onChange={(e) => {
-                                          const updated = [...currentImages];
-                                          updated[imgIdx] = e.target.value;
-                                          setHomepageContent({ ...homepageContent, heroSectionImages: updated });
-                                        }}
-                                        placeholder="https://images.unsplash.com/... or enter image link"
-                                        className="w-full bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-300 p-2 rounded-lg outline-none font-mono focus:border-amber-400"
-                                      />
+                                      {/* File uploader */}
+                                      <div>
+                                        <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
+                                          {isArabic ? "أو رفع ملف من جهازك" : "Or Upload Image from Device"}
+                                        </label>
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                              const reader = new FileReader();
+                                              reader.onloadend = () => {
+                                                const updated = [...currentImages];
+                                                updated[imgIdx] = reader.result as string;
+                                                setHomepageContent({ ...homepageContent, heroSectionImages: updated });
+                                              };
+                                              reader.readAsDataURL(file);
+                                            }
+                                          }}
+                                          className="w-full text-[10px] text-zinc-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-zinc-800 file:text-amber-400 hover:file:bg-zinc-750 cursor-pointer"
+                                        />
+                                      </div>
                                     </div>
-
-                                    {/* File uploader */}
-                                    <div>
-                                      <label className="block text-[9px] font-bold text-zinc-500 uppercase mb-1">
-                                        {isArabic ? "أو رفع ملف من جهازك" : "Or Upload Image from Device"}
-                                      </label>
-                                      <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={async (e) => {
-                                          const file = e.target.files?.[0];
-                                          if (file) {
-                                            const reader = new FileReader();
-                                            reader.onloadend = () => {
-                                              const updated = [...currentImages];
-                                              updated[imgIdx] = reader.result as string;
-                                              setHomepageContent({ ...homepageContent, heroSectionImages: updated });
-                                            };
-                                            reader.readAsDataURL(file);
-                                          }
-                                        }}
-                                        className="w-full text-[10px] text-zinc-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-zinc-800 file:text-amber-400 hover:file:bg-zinc-750 cursor-pointer"
-                                      />
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}

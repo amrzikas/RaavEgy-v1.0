@@ -345,7 +345,14 @@ export interface HomepageContent {
   heroSectionBtnTextEn?: string;
   heroSectionBtnLink?: string;
   heroSectionImages?: string[];
-  heroSectionLayout?: 'single' | 'split' | 'grid' | 'slider';
+  heroSectionImagesColumn1?: string[];
+  heroSectionImagesColumn2?: string[];
+  heroSectionImagesColumn3?: string[];
+  heroSectionLayout?: 'single' | 'split' | 'grid' | 'slider' | 'three_columns' | 'split_dynamic';
+  heroSectionWomenImage?: string;
+  heroSectionWomenVideo?: string;
+  heroSectionMenImage?: string;
+  heroSectionMenVideo?: string;
   heroCarouselEnabled?: boolean;
   collectionsSectionEnabled?: boolean;
   trendSectionEnabled?: boolean;

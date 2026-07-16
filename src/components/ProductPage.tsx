@@ -230,9 +230,33 @@ export default function ProductPage({
         {/* Product Details Section Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           
-          {/* Left Column: Stunning Premium Imagery (5 cols) */}
-          <div className="lg:col-span-6 space-y-4">
-            <div className="bg-white rounded-[2rem] overflow-hidden border border-zinc-100 shadow-sm aspect-[4/5] relative group">
+          {/* Left Column: Stunning Premium Imagery (6 cols) with side thumbnails */}
+          <div className="lg:col-span-6 flex flex-col sm:flex-row gap-4 items-start">
+            {/* Multiple Images Thumbnails Gallery Sidebar */}
+            {product.images && product.images.filter(Boolean).length > 0 && (
+              <div className="flex sm:flex-col gap-2.5 shrink-0 order-last sm:order-first justify-center sm:justify-start overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 w-full sm:w-20">
+                {/* Always include root product.image as an option */}
+                {[product.image, ...product.images.filter(img => img !== product.image)].filter(Boolean).slice(0, 5).map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImgUrl(img)}
+                    className={`w-14 h-18 sm:w-20 sm:h-24 bg-zinc-50 rounded-2xl overflow-hidden border-2 transition duration-200 cursor-pointer relative shrink-0 ${
+                      activeImgUrl === img ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-zinc-250/50 hover:border-zinc-400'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex-1 w-full bg-white rounded-[2rem] overflow-hidden border border-zinc-100 shadow-sm aspect-[4/5] relative group">
               <img
                 src={activeImgUrl || product.image}
                 alt={isArabic ? product.nameAr : product.nameEn}
@@ -267,30 +291,6 @@ export default function ProductPage({
                 {getCategoryName(product.category)}
               </span>
             </div>
-
-            {/* Multiple Images Thumbnails Gallery Row */}
-            {product.images && product.images.filter(Boolean).length > 0 && (
-              <div className="grid grid-cols-5 gap-1.5 sm:gap-3 mt-4">
-                {/* Always include root product.image as an option */}
-                {[product.image, ...product.images.filter(img => img !== product.image)].filter(Boolean).slice(0, 5).map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setActiveImgUrl(img)}
-                    className={`aspect-[4/5] bg-zinc-50 rounded-2xl overflow-hidden border-2 transition duration-200 cursor-pointer relative ${
-                      activeImgUrl === img ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-zinc-250/50 hover:border-zinc-400'
-                    }`}
-                  >
-                    <img
-                      src={img}
-                      alt=""
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Right Column: Interaction Controls (6 cols) */}

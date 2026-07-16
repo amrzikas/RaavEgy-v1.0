@@ -48,12 +48,7 @@ export default function ShopPage({
 
   const categoriesToRender = useMemo(() => {
     const list = [{ id: 'all', nameAr: 'كل الموديلات المعروضة', nameEn: 'Global Wardrobe' }];
-    const rawCats = categoriesList && categoriesList.length > 0 ? categoriesList : [
-      { id: 'men', nameAr: 'ملابس وأزياء رجالي', nameEn: 'Men\'s Wear', subcategories: [] },
-      { id: 'women', nameAr: 'أزياء نسائية فاخرة', nameEn: 'Women\'s Apparel', subcategories: [] },
-      { id: 'kids', nameAr: 'ملابس أطفال مريحة', nameEn: 'Organic Kids', subcategories: [] },
-      { id: 'accessories', nameAr: 'ساعات وإكسسوارات مميزة', nameEn: 'Curated Accessories', subcategories: [] }
-    ];
+    const rawCats = categoriesList && categoriesList.length > 0 ? categoriesList : [];
     rawCats.forEach(c => {
       list.push({
         id: c.id,

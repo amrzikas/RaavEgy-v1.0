@@ -87,9 +87,27 @@ export default function ProductDetailsModal({
             <X size={17} />
           </button>
 
-          {/* Left Column: Big high quality image */}
-          <div className="w-full md:w-1/2 flex flex-col items-stretch bg-zinc-50 relative">
-            <div className="aspect-square md:flex-1 relative overflow-hidden">
+          {/* Left Column: Big high quality image and side thumbnails */}
+          <div className="w-full md:w-1/2 flex flex-col sm:flex-row gap-4 p-4 sm:p-5 bg-zinc-50 relative items-stretch">
+            {/* Micro Thumbnails column/row if multi images exist */}
+            {product.images && product.images.filter(Boolean).length > 0 && (
+              <div className="flex sm:flex-col gap-2 shrink-0 order-last sm:order-first justify-center sm:justify-start overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 w-full sm:w-16">
+                {[product.image, ...product.images.filter(img => img !== product.image)].filter(Boolean).slice(0, 5).map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImgUrl(img)}
+                    className={`w-12 h-12 sm:w-14 sm:h-18 bg-white rounded-xl overflow-hidden border-2 transition cursor-pointer relative shrink-0 ${
+                      activeImgUrl === img ? 'border-amber-400 ring-1 ring-amber-400' : 'border-zinc-200 hover:border-zinc-300'
+                    }`}
+                  >
+                    <img src={img} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex-1 aspect-square md:flex-1 relative overflow-hidden rounded-2xl bg-zinc-100">
               <img
                 src={activeImgUrl || product.image}
                 alt={isArabic ? product.nameAr : product.nameEn}
@@ -102,24 +120,6 @@ export default function ProductDetailsModal({
                 {getCategoryName(product.category)}
               </span>
             </div>
-
-            {/* Micro Thumbnail row if multi images exist */}
-            {product.images && product.images.filter(Boolean).length > 0 && (
-              <div className="p-3 bg-zinc-100/40 border-t border-zinc-200/40 grid grid-cols-5 gap-2 shrink-0">
-                {[product.image, ...product.images.filter(img => img !== product.image)].filter(Boolean).slice(0, 5).map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setActiveImgUrl(img)}
-                    className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition cursor-pointer relative ${
-                      activeImgUrl === img ? 'border-amber-400 ring-1 ring-amber-400' : 'border-zinc-200 hover:border-zinc-300'
-                    }`}
-                  >
-                    <img src={img} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Right Column: Interactive Details Area */}

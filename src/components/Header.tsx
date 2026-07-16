@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Lock, ShieldAlert, Sparkles, ChevronDown, Search, User, Menu, X, ChevronRight, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Product } from '../types';
+import { Product, Category } from '../types';
 
 interface HeaderProps {
   cartCount: number;
@@ -14,6 +14,7 @@ interface HeaderProps {
   selectedSubcategory?: string | null;
   setSelectedSubcategory?: (subcategory: string | null) => void;
   products?: Product[];
+  categoriesList?: Category[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   isArabic: boolean;
@@ -31,7 +32,7 @@ interface HeaderProps {
   logoTextColor?: string;
   logoTextFont?: string;
   isHeroMerged?: boolean;
-  heroLayout?: 'single' | 'split' | 'grid' | 'slider';
+  heroLayout?: 'single' | 'split' | 'grid' | 'slider' | 'three_columns' | 'split_dynamic';
 }
 
 export default function Header({
@@ -45,6 +46,7 @@ export default function Header({
   selectedSubcategory,
   setSelectedSubcategory,
   products = [],
+  categoriesList = [],
   searchQuery,
   setSearchQuery,
   isArabic,
@@ -83,10 +85,19 @@ export default function Header({
 
   const categories = [
     { id: 'all', labelAr: 'الكل', labelEn: 'All' },
-    { id: 'men', labelAr: 'رجالي', labelEn: 'Men' },
-    { id: 'women', labelAr: 'حريمي', labelEn: 'Women' },
-    { id: 'kids', labelAr: 'أطفالي', labelEn: 'Kids' },
-    { id: 'accessories', labelAr: 'إكسسوارات', labelEn: 'Accessories' }
+    ...(categoriesList && categoriesList.length > 0
+      ? categoriesList.map(cat => ({
+          id: cat.id,
+          labelAr: cat.nameAr,
+          labelEn: cat.nameEn
+        }))
+      : [
+          { id: 'women', labelAr: 'حريمي', labelEn: 'Women' },
+          { id: 'men', labelAr: 'رجالي', labelEn: 'Men' },
+          { id: 'kids', labelAr: 'أطفالي', labelEn: 'Kids' },
+          { id: 'accessories', labelAr: 'إكسسوارات', labelEn: 'Accessories' }
+        ]
+    )
   ];
 
   // Helper to discover subcategories under a specific category in real-time
@@ -94,6 +105,23 @@ export default function Header({
     const list: { ar: string; en: string }[] = [];
     const seen = new Set<string>();
 
+    // 1. Add DB-defined subcategories from categoriesList
+    const matchedCategory = categoriesList?.find(c => c.id === catId);
+    if (matchedCategory && matchedCategory.subcategories) {
+      matchedCategory.subcategories.forEach((sub) => {
+        const ar = sub.ar?.trim() || '';
+        const en = sub.en?.trim() || '';
+        if (ar || en) {
+          const key = `${ar}|||${en}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            list.push({ ar, en });
+          }
+        }
+      });
+    }
+
+    // 2. Discover subcategories assigned to products as fallback / extra completeness
     products.forEach((prod) => {
       if (catId !== 'all' && prod.category !== catId) return;
       const subAr = prod.subcategoryAr?.trim();
@@ -163,7 +191,7 @@ export default function Header({
   };
 
   const isMergedTransparent = isHeroMerged && !isScrolled;
-  const isHeroDark = heroLayout === 'slider' || heroLayout === 'single';
+  const isHeroDark = heroLayout === 'slider' || heroLayout === 'single' || heroLayout === 'three_columns' || heroLayout === 'split_dynamic';
   const isLight = isMergedTransparent 
     ? !isHeroDark 
     : isLightColor(headerBgColor);
@@ -303,32 +331,59 @@ export default function Header({
               <AnimatePresence>
                 {shopDropdownOpen && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute left-0 mt-2 w-56 bg-white border border-zinc-150 shadow-xl rounded-lg py-2 z-55 text-zinc-900 overflow-hidden"
+                    exit={{ opacity: 0, y: 15 }}
+                    className="absolute left-1/2 -translate-x-1/2 mt-3 w-[280px] sm:w-[480px] md:w-[680px] lg:w-[840px] xl:w-[960px] bg-white border border-zinc-100 shadow-2xl rounded-2xl p-6 md:p-8 z-55 text-zinc-900 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 md:gap-8 overflow-hidden"
+                    style={{ direction: isArabic ? 'rtl' : 'ltr' }}
                   >
-                    {categories.map((cat) => {
+                    {/* Brand card in English on left or Arabic on right */}
+                    <div className="hidden lg:flex flex-col justify-between p-5 rounded-2xl bg-gradient-to-br from-zinc-50 to-zinc-100 border border-zinc-200/50 text-start select-none h-full min-h-[190px]">
+                      <div className="space-y-2">
+                        <span className="text-[9px] tracking-[0.3em] text-amber-500 font-extrabold uppercase block">
+                          ✦ RAAV COUTURE
+                        </span>
+                        <h4 className="text-sm font-serif font-extrabold text-zinc-900 leading-snug">
+                          {isArabic ? "تفصيل راقي مصمم من أجلك" : "Bespoke Luxury Tailored For You"}
+                        </h4>
+                        <p className="text-[10px] text-zinc-500 leading-relaxed font-normal">
+                          {isArabic 
+                            ? "اكتشف الفخامة في كل تفصيل، أو صمم طرازك الفريد." 
+                            : "Discover perfection in every stitch, or handcraft your custom couture."
+                          }
+                        </p>
+                      </div>
+                      
+                      <button
+                        onClick={() => handleCategorySelect('all')}
+                        className="mt-4 w-full px-4 py-2 bg-zinc-950 hover:bg-zinc-850 text-white rounded-xl font-bold text-[9px] tracking-wider uppercase transition text-center cursor-pointer"
+                      >
+                        {isArabic ? "عرض كل الموديلات ✦" : "BROWSE ALL ✦"}
+                      </button>
+                    </div>
+
+                    {/* Columns for each Category */}
+                    {categories.filter(c => c.id !== 'all').map((cat) => {
                       const subcats = getSubcategoriesForCategory(cat.id);
                       return (
-                        <div key={cat.id} className="border-b border-zinc-50 last:border-0 pb-1 last:pb-0">
+                        <div key={cat.id} className="space-y-4 text-start" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                           <button
                             onClick={() => handleCategorySelect(cat.id)}
-                            className={`w-full text-left px-4 py-2 text-xs tracking-wider uppercase transition cursor-pointer flex justify-between items-center ${
+                            className={`w-full text-xs tracking-widest font-extrabold uppercase pb-2 border-b border-zinc-100 transition duration-300 hover:text-amber-500 flex justify-between items-center ${
                               selectedCategory === cat.id && activeView === 'shop'
-                                ? 'bg-zinc-100 text-zinc-900 font-bold' 
-                                : 'text-zinc-650 hover:bg-zinc-50 hover:text-black font-semibold'
+                                ? 'text-amber-500 font-black border-amber-200'
+                                : 'text-zinc-950 hover:bg-black/[0.02]'
                             }`}
-                            style={{ direction: isArabic ? 'rtl' : 'ltr' }}
+                            style={{ textAlign: isArabic ? 'right' : 'left', direction: isArabic ? 'rtl' : 'ltr' }}
                           >
                             <span>{isArabic ? cat.labelAr : cat.labelEn}</span>
                             {selectedCategory === cat.id && activeView === 'shop' && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                             )}
                           </button>
 
-                          {cat.id !== 'all' && subcats.length > 0 && (
-                            <div className="pl-6 pr-3 py-1 flex flex-col gap-1 bg-zinc-50/50">
+                          {subcats.length > 0 ? (
+                            <div className="flex flex-col gap-2.5">
                               {subcats.map((sub) => {
                                 const label = isArabic ? sub.ar : sub.en;
                                 const isSelected = selectedCategory === cat.id && (selectedSubcategory === sub.en || selectedSubcategory === sub.ar);
@@ -336,18 +391,27 @@ export default function Header({
                                   <button
                                     key={sub.en}
                                     onClick={() => handleSubcategorySelect(cat.id, sub.en)}
-                                    className={`text-left w-full py-1 text-[10px] uppercase font-medium transition cursor-pointer ${
-                                      isSelected 
-                                        ? 'text-zinc-950 font-bold' 
-                                        : 'text-zinc-500 hover:text-black'
+                                    className={`w-full text-[11px] font-medium tracking-wide uppercase transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+                                      isSelected
+                                        ? 'text-amber-500 font-bold'
+                                        : 'text-zinc-500 hover:text-amber-500'
+                                    } ${
+                                      isArabic 
+                                        ? 'hover:pr-2 hover:pl-0 pr-0 pl-0' 
+                                        : 'hover:pl-2 hover:pr-0 pl-0 pr-0'
                                     }`}
-                                    style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
+                                    style={{ textAlign: isArabic ? 'right' : 'left', direction: isArabic ? 'rtl' : 'ltr' }}
                                   >
-                                    — {label}
+                                    <span className="text-[8px] opacity-40">✦</span>
+                                    <span>{label}</span>
                                   </button>
                                 );
                               })}
                             </div>
+                          ) : (
+                            <p className="text-[10px] text-zinc-400 font-light italic">
+                              {isArabic ? "قريباً..." : "Coming soon..."}
+                            </p>
                           )}
                         </div>
                       );

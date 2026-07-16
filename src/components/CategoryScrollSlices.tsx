@@ -52,12 +52,7 @@ export default function CategoryScrollSlices({
         fallbackDescAr: fallbackDescs[c.id]?.ar || (isArabic ? 'تصميم مذهل بجودة وخامات فاخرة استثنائية.' : 'Fabulous designs with exceptional quality fabrics.'),
         fallbackDescEn: fallbackDescs[c.id]?.en || (isArabic ? 'تصميم مذهل بجودة وخامات فاخرة استثنائية.' : 'Fabulous designs with exceptional quality fabrics.')
       }))
-    : [
-        { id: 'women', fallbackTitleAr: 'حريمي', fallbackTitleEn: 'Women Collection', fallbackDescAr: 'قطع أنيقة وحصرية مصممة لتناسب المرأة الواثقة والعصرية.', fallbackDescEn: 'Exclusive elegant statements designed for the confident modern woman.' },
-        { id: 'men', fallbackTitleAr: 'رجالي', fallbackTitleEn: 'Men Collection', fallbackDescAr: 'تصاميم رسمية وغير رسمية توفر الراحة والأناقة لكل يوم.', fallbackDescEn: 'Sharp lines and effortless styles optimized for casual and formal wear.' },
-        { id: 'kids', fallbackTitleAr: 'أطفالي', fallbackTitleEn: 'Kids Collection', fallbackDescAr: 'ملابس صغار ناعمة ومحاكة بحرفية عالية لتوفر أجمل طلّة وأكبر راحة.', fallbackDescEn: 'Premium fabrics tailored meticulously to provide safety, longevity, and absolute style.' },
-        { id: 'accessories', fallbackTitleAr: 'إكسسوارات', fallbackTitleEn: 'Luxe Accessories', fallbackDescAr: 'لمسات نهائية تكمل مظهرك الفخم وتجعله متكاملاً.', fallbackDescEn: 'Impeccable accents and leather elements meant to elevate your daily style statement.' }
-      ];
+    : [];
 
   const handleCategoryHeaderClick = (catId: string) => {
     onSelectCategory(catId);

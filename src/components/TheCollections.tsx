@@ -126,12 +126,7 @@ export default function TheCollections({
 
   const dynamicCardsConfig: Record<string, { id: string; labelAr: string; labelEn: string; defaultImg: string; tagEn: string; tagAr: string }> = {};
   
-  const rawCats = categoriesList && categoriesList.length > 0 ? categoriesList : [
-    { id: 'women', nameAr: 'حريمي', nameEn: 'Women', subcategories: [] },
-    { id: 'men', nameAr: 'رجالي', nameEn: 'Men', subcategories: [] },
-    { id: 'kids', nameAr: 'أطفالي', nameEn: 'Kids', subcategories: [] },
-    { id: 'accessories', nameAr: 'إكسسوارات', nameEn: 'Accessories', subcategories: [] }
-  ];
+  const rawCats = categoriesList && categoriesList.length > 0 ? categoriesList : [];
 
   rawCats.forEach(cat => {
     dynamicCardsConfig[cat.id] = {
@@ -192,6 +187,16 @@ export default function TheCollections({
             </button>
           </div>
         </div>
+
+        {finalizedCategories.length === 0 && (
+          <div className={`text-center py-12 rounded-2xl border border-dashed ${isLightText ? 'border-zinc-800 text-zinc-400' : 'border-zinc-200 text-zinc-500'}`}>
+            <p className="text-sm font-medium">
+              {isArabic 
+                ? "لا توجد تصنيفات حالياً. يرجى إضافة فئات من لوحة التحكم لتظهر هنا." 
+                : "No categories created yet. Please create categories from the admin dashboard to showcase them here."}
+            </p>
+          </div>
+        )}
 
         {/* ----------------------------------------------------- */}
         {/* Render Layout: SPLIT VIEW (Classic asymmetrical stack) */}
@@ -401,28 +406,28 @@ export default function TheCollections({
                 return (
                   <div 
                     key={cfg.id} 
-                    className="flex-none w-[70vw] xs:w-[50vw] sm:w-[40vw] md:w-[28vw] snap-start h-[190px] sm:h-[300px] md:h-[380px] lg:h-[440px]"
+                    className="flex-none w-[52vw] xs:w-[40vw] sm:w-[32vw] md:w-[22vw] lg:w-[18vw] snap-start h-[160px] sm:h-[240px] md:h-[300px] lg:h-[360px]"
                   >
                     <motion.div
                       whileHover={{ y: -3 }}
                       transition={{ duration: 0.3 }}
                       onClick={() => !isDragging && handleCategoryClick(cfg.id)}
-                      className="relative w-full h-full rounded-2xl md:rounded-3xl overflow-hidden shadow-lg cursor-pointer group border border-zinc-800/10"
+                      className="relative w-full h-full rounded-2xl md:rounded-3xl overflow-hidden shadow-lg cursor-pointer group border border-zinc-800/10 bg-black flex items-center justify-center"
                     >
                       <img
                         src={optimizeUnsplashUrl(customImg || cfg.defaultImg, 350, 70)}
                         alt={cfg.labelEn}
                         loading="lazy"
                         draggable={false}
-                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 select-none pointer-events-none"
+                        className="w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105 select-none pointer-events-none z-0"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
-                      <div className="absolute bottom-3 left-3 sm:bottom-6 sm:left-6 text-white select-none text-left pointer-events-none" style={{ textAlign: 'left' }}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none z-10" />
+                      <div className="absolute bottom-3 left-3 sm:bottom-6 sm:left-6 text-white select-none text-left pointer-events-none z-20" style={{ textAlign: 'left' }}>
                         <span className="text-[6px] sm:text-[8px] font-bold text-amber-400 tracking-wider block uppercase">
                           {isArabic ? cfg.tagAr : cfg.tagEn}
                         </span>
-                        <h3 className="text-xs sm:text-lg md:text-xl font-serif font-bold mt-0.5">
+                        <h3 className="text-xs sm:text-base md:text-lg font-serif font-bold mt-0.5 leading-tight">
                           {isArabic ? cfg.labelAr : cfg.labelEn}
                         </h3>
                       </div>

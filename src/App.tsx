@@ -345,6 +345,7 @@ export default function App() {
           selectedSubcategory={selectedSubcategory}
           setSelectedSubcategory={setSelectedSubcategory}
           products={activeProducts}
+          categoriesList={categoriesList}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           isArabic={isArabic}
@@ -385,6 +386,13 @@ export default function App() {
                       btnTextEn={homepageContent?.heroSectionBtnTextEn}
                       btnLink={homepageContent?.heroSectionBtnLink}
                       images={homepageContent?.heroSectionImages}
+                      imagesColumn1={homepageContent?.heroSectionImagesColumn1}
+                      imagesColumn2={homepageContent?.heroSectionImagesColumn2}
+                      imagesColumn3={homepageContent?.heroSectionImagesColumn3}
+                      womenImage={homepageContent?.heroSectionWomenImage}
+                      womenVideo={homepageContent?.heroSectionWomenVideo}
+                      menImage={homepageContent?.heroSectionMenImage}
+                      menVideo={homepageContent?.heroSectionMenVideo}
                       layout={homepageContent?.heroSectionLayout || 'split'}
                       isMergedHeader={activeView === 'home' && !searchQuery && homepageContent?.heroSectionEnabled !== false}
                       onActionClick={(link) => {

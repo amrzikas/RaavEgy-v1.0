@@ -1691,53 +1691,7 @@ export async function saveExpenses(expenses: BusinessExpense[]): Promise<void> {
   }
 }
 
-export const DEFAULT_CATEGORIES: Category[] = [
-  {
-    id: 'men',
-    nameAr: 'ملابس رجالي',
-    nameEn: "Men's Clothing",
-    subcategories: [
-      { ar: 'قمصان', en: 'Shirts' },
-      { ar: 'بناطيل', en: 'Pants' },
-      { ar: 'بدل', en: 'Suits' },
-      { ar: 'تيشرتات', en: 'T-Shirts' },
-      { ar: 'جاكيت ومعاطف', en: 'Jackets & Coats' }
-    ]
-  },
-  {
-    id: 'women',
-    nameAr: 'ملابس حريمي',
-    nameEn: "Women's Clothing",
-    subcategories: [
-      { ar: 'فساتين', en: 'Dresses' },
-      { ar: 'عبايات', en: 'Abayas' },
-      { ar: 'بناطيل', en: 'Pants' },
-      { ar: 'تنانير', en: 'Skirts' },
-      { ar: 'بلوزات', en: 'Blouses' }
-    ]
-  },
-  {
-    id: 'kids',
-    nameAr: 'ملابس أطفالي',
-    nameEn: "Kids' Wear",
-    subcategories: [
-      { ar: 'ملابس أولاد', en: 'Boys Wear' },
-      { ar: 'ملابس بنات', en: 'Girls Wear' },
-      { ar: 'أطقم أطفال', en: 'Kids Sets' }
-    ]
-  },
-  {
-    id: 'accessories',
-    nameAr: 'إكسسوارات',
-    nameEn: 'Accessories',
-    subcategories: [
-      { ar: 'حقائب', en: 'Bags' },
-      { ar: 'أحزمة', en: 'Belts' },
-      { ar: 'أحذية', en: 'Shoes' },
-      { ar: 'مجوهرات', en: 'Jewelry' }
-    ]
-  }
-];
+export const DEFAULT_CATEGORIES: Category[] = [];
 
 export async function getCategories(): Promise<Category[]> {
   const pathForGet = 'settings/categories';
