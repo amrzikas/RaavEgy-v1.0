@@ -170,9 +170,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Info card body */}
       <div className="p-4 sm:p-5 flex flex-col flex-1" style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}>
-        <h3 className="text-zinc-950 font-serif font-bold text-xs sm:text-sm tracking-tight mb-1.5 cursor-pointer hover:text-amber-800 transition break-words" onClick={() => onOpenDetails(product)}>
+        <h3 className="text-zinc-950 font-serif font-bold text-xs sm:text-sm tracking-tight mb-1 cursor-pointer hover:text-amber-800 transition break-words" onClick={() => onOpenDetails(product)}>
           {isArabic ? product.nameAr : product.nameEn}
         </h3>
+        
+        {/* Distinguishing Feature immediately after product name */}
+        {(isArabic ? product.distinguishingFeatureAr : product.distinguishingFeatureEn) && (
+          <div className="inline-block self-start text-[10px] font-bold text-amber-800 bg-amber-50/70 border border-amber-200/60 px-2 py-0.5 rounded-md mb-1.5 uppercase tracking-wide">
+            {isArabic ? product.distinguishingFeatureAr : product.distinguishingFeatureEn}
+          </div>
+        )}
         
         <p className="text-zinc-500 text-xs mb-4 line-clamp-2 h-8 leading-relaxed font-sans font-light">
           {isArabic ? product.descriptionAr : product.descriptionEn}

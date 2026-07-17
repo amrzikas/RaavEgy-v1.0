@@ -249,7 +249,7 @@ export default function MainHeroSection({
         <div className={`relative w-full h-[44vh] sm:h-[60vh] md:h-[75vh] min-h-[340px] sm:min-h-[450px] flex items-center justify-center ${
           isMergedHeader ? 'pt-16 md:pt-28' : ''
         }`}>
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             <motion.div
               key={activeSlide}
               initial={{ opacity: 0 }}
@@ -520,7 +520,7 @@ export default function MainHeroSection({
           <div className="absolute inset-0 w-full h-full grid grid-cols-3 gap-1 md:gap-1.5 bg-zinc-950 rounded-none overflow-hidden select-none pointer-events-none">
             {/* Column 1 */}
             <div className="relative h-full w-full rounded-none overflow-hidden bg-zinc-950">
-              <AnimatePresence mode="wait">
+              <AnimatePresence>
                 <motion.img
                   key={col1Slide}
                   initial={{ opacity: 0, scale: 1.02 }}
@@ -529,7 +529,7 @@ export default function MainHeroSection({
                   transition={{ duration: 0.9 }}
                   src={optimizeUnsplashUrl(col1Images[col1Slide], 600, 75)}
                   alt="Couture 1"
-                  className="w-full h-full object-cover rounded-none"
+                  className="absolute inset-0 w-full h-full object-cover rounded-none"
                   referrerPolicy="no-referrer"
                 />
               </AnimatePresence>
@@ -549,7 +549,7 @@ export default function MainHeroSection({
 
             {/* Column 2 */}
             <div className="relative h-full w-full rounded-none overflow-hidden bg-zinc-950">
-              <AnimatePresence mode="wait">
+              <AnimatePresence>
                 <motion.img
                   key={col2Slide}
                   initial={{ opacity: 0, scale: 1.02 }}
@@ -558,7 +558,7 @@ export default function MainHeroSection({
                   transition={{ duration: 0.9 }}
                   src={optimizeUnsplashUrl(col2Images[col2Slide], 600, 75)}
                   alt="Couture 2"
-                  className="w-full h-full object-cover rounded-none"
+                  className="absolute inset-0 w-full h-full object-cover rounded-none"
                   referrerPolicy="no-referrer"
                 />
               </AnimatePresence>
@@ -578,7 +578,7 @@ export default function MainHeroSection({
 
             {/* Column 3 */}
             <div className="relative h-full w-full rounded-none overflow-hidden bg-zinc-950">
-              <AnimatePresence mode="wait">
+              <AnimatePresence>
                 <motion.img
                   key={col3Slide}
                   initial={{ opacity: 0, scale: 1.02 }}
@@ -587,7 +587,7 @@ export default function MainHeroSection({
                   transition={{ duration: 0.9 }}
                   src={optimizeUnsplashUrl(col3Images[col3Slide], 600, 75)}
                   alt="Couture 3"
-                  className="w-full h-full object-cover rounded-none"
+                  className="absolute inset-0 w-full h-full object-cover rounded-none"
                   referrerPolicy="no-referrer"
                 />
               </AnimatePresence>

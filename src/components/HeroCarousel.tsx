@@ -159,51 +159,61 @@ export default function HeroCarousel({
             </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, x: isArabic ? 15 : -15 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: isArabic ? -15 : 15 }}
-              transition={{ duration: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-zinc-50 p-4 sm:p-5 rounded-2xl border border-zinc-200/60"
-              style={{ direction: isArabic ? 'rtl' : 'ltr' }}
-            >
-              {/* Thumbnail left (or right based on RTL) */}
-              <div className="md:col-span-3 aspect-[16/10] md:aspect-[4/3] rounded-xl overflow-hidden shadow-sm relative bg-white flex items-center justify-center">
-                <img
+          <div 
+            className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-zinc-50 p-4 sm:p-5 rounded-2xl border border-zinc-200/60 relative min-h-[140px] sm:min-h-[110px]"
+            style={{ direction: isArabic ? 'rtl' : 'ltr' }}
+          >
+            {/* Thumbnail left (or right based on RTL) */}
+            <div className="md:col-span-3 aspect-[16/10] md:aspect-[4/3] rounded-xl overflow-hidden shadow-sm relative bg-white flex items-center justify-center">
+              <AnimatePresence initial={false}>
+                <motion.img
+                  key={currentSlide.image}
                   src={optimizeUnsplashUrl(currentSlide.image || '', 400, 75)}
                   alt={isArabic ? currentSlide.titleAr : currentSlide.titleEn}
-                  className={`w-full h-full ${isCustomImage(currentSlide.image) ? 'object-contain p-1.5' : 'object-cover'}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  className={`absolute inset-0 w-full h-full ${isCustomImage(currentSlide.image) ? 'object-contain p-1.5' : 'object-cover'}`}
                   referrerPolicy="no-referrer"
                 />
-              </div>
+              </AnimatePresence>
+            </div>
 
-              {/* Copy middle */}
-              <div className="md:col-span-6 space-y-1.5 text-center md:text-start" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                <div className="text-[9px] font-bold tracking-[0.15em] text-amber-800 uppercase">
-                  {isArabic ? currentSlide.overlineAr : currentSlide.overlineEn}
-                </div>
-                <h3 className="text-base sm:text-lg font-serif font-light text-zinc-950">
-                  {isArabic ? currentSlide.titleAr : currentSlide.titleEn}
-                </h3>
-                <p className="text-zinc-500 text-[11px] sm:text-xs leading-relaxed font-sans font-light line-clamp-2">
-                  {isArabic ? currentSlide.descAr : currentSlide.descEn}
-                </p>
-              </div>
-
-              {/* Action right */}
-              <div className="md:col-span-3 flex justify-center md:justify-end">
-                <button
-                  onClick={() => onBrowseCategory(currentSlide.cat || 'all')}
-                  className="px-5 py-2.5 bg-zinc-950 hover:bg-zinc-900 text-white hover:text-amber-100 rounded-full font-bold text-[10px] tracking-wider uppercase transition shadow-sm flex items-center gap-1.5 cursor-pointer font-sans"
+            {/* Copy middle */}
+            <div className="md:col-span-6 space-y-1.5 text-center md:text-start relative min-h-[60px]" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentIndex}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
                 >
-                  <span>{isArabic ? "استكشف" : "EXPLORE"}</span>
-                  <span className="text-xs">→</span>
-                </button>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+                  <div className="text-[9px] font-bold tracking-[0.15em] text-amber-800 uppercase">
+                    {isArabic ? currentSlide.overlineAr : currentSlide.overlineEn}
+                  </div>
+                  <h3 className="text-base sm:text-lg font-serif font-light text-zinc-950">
+                    {isArabic ? currentSlide.titleAr : currentSlide.titleEn}
+                  </h3>
+                  <p className="text-zinc-500 text-[11px] sm:text-xs leading-relaxed font-sans font-light line-clamp-2">
+                    {isArabic ? currentSlide.descAr : currentSlide.descEn}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Action right */}
+            <div className="md:col-span-3 flex justify-center md:justify-end">
+              <button
+                onClick={() => onBrowseCategory(currentSlide.cat || 'all')}
+                className="px-5 py-2.5 bg-zinc-950 hover:bg-zinc-900 text-white hover:text-amber-100 rounded-full font-bold text-[10px] tracking-wider uppercase transition shadow-sm flex items-center gap-1.5 cursor-pointer font-sans"
+              >
+                <span>{isArabic ? "استكشف" : "EXPLORE"}</span>
+                <span className="text-xs">→</span>
+              </button>
+            </div>
+          </div>
 
           {/* Indicators */}
           <div className="mt-3 flex justify-center gap-1.5">
@@ -229,92 +239,107 @@ export default function HeroCarousel({
     <div id="hero-slider-stage" className="relative bg-[#ffffff] overflow-hidden w-full py-8 md:py-16 border-b border-zinc-100 select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide.id}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.6 }}
-            className={`grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center`}
-            style={{ direction: isArabic ? 'rtl' : 'ltr' }}
-          >
+        <div
+          className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center"
+          style={{ direction: isArabic ? 'rtl' : 'ltr' }}
+        >
+          
+          {/* Left/Main Column - Editorial Copy */}
+          <div className="md:col-span-5 flex flex-col justify-center min-h-[360px] relative" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="space-y-6 md:space-y-8"
+              >
+                {/* Spaced Elegant Subtitle */}
+                <div className="text-[10px] md:text-xs font-semibold tracking-[0.25em] text-zinc-400 uppercase font-sans">
+                  {isArabic ? currentSlide.overlineAr : currentSlide.overlineEn}
+                </div>
+
+                {/* Title Section (with Serifying) */}
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight leading-[1.08] text-zinc-950 font-serif">
+                  {renderTitle(isArabic ? currentSlide.titleAr : currentSlide.titleEn, !isArabic)}
+                </h1>
+
+                {/* Body Description */}
+                <p className="text-zinc-500 text-xs sm:text-sm md:text-[15px]/relaxed font-sans font-light max-w-md">
+                  {isArabic ? currentSlide.descAr : currentSlide.descEn}
+                </p>
+
+                {/* Action Buttons styled precisely like the screenshot */}
+                <div className="pt-2 flex flex-wrap gap-4 items-center" style={{ justifyContent: isArabic ? 'flex-start' : 'flex-start' }}>
+                  <button
+                    onClick={() => onBrowseCategory('all')}
+                    className="px-8 py-4 bg-black hover:bg-zinc-900 text-white hover:text-amber-100 rounded-full font-semibold text-xs tracking-[0.15em] uppercase transition shadow-md flex items-center gap-2 cursor-pointer font-sans"
+                  >
+                    <span>{isArabic ? "تسوق التشكيلة" : "SHOP COLLECTION"}</span>
+                    <span className="text-sm">→</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => onBrowseCategory(currentSlide.cat)}
+                    className="px-8 py-4 bg-transparent hover:bg-zinc-50 border border-zinc-200 text-zinc-800 hover:text-black hover:border-zinc-400 rounded-full font-semibold text-xs tracking-[0.15em] uppercase transition cursor-pointer font-sans"
+                  >
+                    {isArabic ? "استكشف التشكيلة المنسقة" : "EXPLORE LOOKBOOK"}
+                  </button>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Right Column - Scenic Rounded Image and Overlapping Balloon Card */}
+          <div className="md:col-span-7 relative flex justify-center items-center mt-6 md:mt-0">
             
-            {/* Left/Main Column - Editorial Copy */}
-            <div className="md:col-span-5 space-y-6 md:space-y-8 flex flex-col justify-center" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-              
-              {/* Spaced Elegant Subtitle */}
-              <div className="text-[10px] md:text-xs font-semibold tracking-[0.25em] text-zinc-400 uppercase font-sans">
-                {isArabic ? currentSlide.overlineAr : currentSlide.overlineEn}
-              </div>
-
-              {/* Title Section (with Serifying) */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-tight leading-[1.08] text-zinc-950 font-serif">
-                {renderTitle(isArabic ? currentSlide.titleAr : currentSlide.titleEn, !isArabic)}
-              </h1>
-
-              {/* Body Description */}
-              <p className="text-zinc-500 text-xs sm:text-sm md:text-[15px]/relaxed font-sans font-light max-w-md">
-                {isArabic ? currentSlide.descAr : currentSlide.descEn}
-              </p>
-
-              {/* Action Buttons styled precisely like the screenshot */}
-              <div className="pt-2 flex flex-wrap gap-4 items-center" style={{ justifyContent: isArabic ? 'flex-start' : 'flex-start' }}>
-                <button
-                  onClick={() => onBrowseCategory('all')}
-                  className="px-8 py-4 bg-black hover:bg-zinc-900 text-white hover:text-amber-100 rounded-full font-semibold text-xs tracking-[0.15em] uppercase transition shadow-md flex items-center gap-2 cursor-pointer font-sans"
-                >
-                  <span>{isArabic ? "تسوق التشكيلة" : "SHOP COLLECTION"}</span>
-                  <span className="text-sm">→</span>
-                </button>
-                
-                <button
-                  onClick={() => onBrowseCategory(currentSlide.cat)}
-                  className="px-8 py-4 bg-transparent hover:bg-zinc-50 border border-zinc-200 text-zinc-800 hover:text-black hover:border-zinc-400 rounded-full font-semibold text-xs tracking-[0.15em] uppercase transition cursor-pointer font-sans"
-                >
-                  {isArabic ? "استكشف التشكيلة المنسقة" : "EXPLORE LOOKBOOK"}
-                </button>
-              </div>
-
-            </div>
-
-            {/* Right Column - Scenic Rounded Image and Overlapping Balloon Card */}
-            <div className="md:col-span-7 relative flex justify-center items-center mt-6 md:mt-0">
-              
-              {/* Round Corner Frame precisely like the screenshot */}
-              <div className="relative w-full max-w-lg aspect-[5/4] sm:aspect-[4/3] rounded-[2.2rem] md:rounded-[3rem] overflow-hidden shadow-2xl bg-white flex items-center justify-center">
-                <img
+            {/* Round Corner Frame precisely like the screenshot */}
+            <div className="relative w-full max-w-lg aspect-[5/4] sm:aspect-[4/3] rounded-[2.2rem] md:rounded-[3rem] overflow-hidden shadow-2xl bg-white flex items-center justify-center">
+              <AnimatePresence initial={false}>
+                <motion.img
+                  key={currentSlide.image}
                   src={optimizeUnsplashUrl(currentSlide.image, 1000, 75)}
                   alt={isArabic ? currentSlide.titleAr : currentSlide.titleEn}
-                  className={`w-full h-full ${isCustomImage(currentSlide.image) ? 'object-contain p-3' : 'object-cover'} select-none`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.7, ease: "easeInOut" }}
+                  className={`absolute inset-0 w-full h-full ${isCustomImage(currentSlide.image) ? 'object-contain p-3' : 'object-cover'} select-none`}
                   referrerPolicy="no-referrer"
                   fetchPriority="high"
                 />
-                
-                {/* Micro-light gradient to ensure clean overlay contrast */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-black/10 via-transparent to-transparent pointer-events-none" />
-              </div>
-
-              {/* Overlapping Editor's Pick Card exactly matching the visual placement */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 }}
-                className={`absolute bottom-[-24px] ${isArabic ? 'right-4 sm:right-12' : 'left-4 sm:left-12'} w-[240px] sm:w-[280px] bg-white/95 backdrop-blur-md p-5 sm:p-6 rounded-2xl shadow-xl border border-zinc-100 z-10 flex flex-col space-y-2`}
-                style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
-              >
-                <div className="text-[9px] font-bold tracking-[0.2em] text-zinc-400 uppercase font-sans">
-                  {isArabic ? "اختيارات المحرر" : "EDITOR'S PICK"}
-                </div>
-                <div className="font-serif italic text-zinc-800 text-[12px] sm:text-[13px] leading-relaxed">
-                  "{isArabic ? currentSlide.quoteAr : currentSlide.quoteEn}"
-                </div>
-              </motion.div>
-
+              </AnimatePresence>
+              
+              {/* Micro-light gradient to ensure clean overlay contrast */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/10 via-transparent to-transparent pointer-events-none z-10" />
             </div>
 
-          </motion.div>
-        </AnimatePresence>
+            {/* Overlapping Editor's Pick Card exactly matching the visual placement */}
+            <div className={`absolute bottom-[-24px] ${isArabic ? 'right-4 sm:right-12' : 'left-4 sm:left-12'} w-[240px] sm:w-[280px] z-10`}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentIndex}
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{ duration: 0.4 }}
+                  className="bg-white/95 backdrop-blur-md p-5 sm:p-6 rounded-2xl shadow-xl border border-zinc-100 flex flex-col space-y-2 w-full"
+                  style={{ direction: isArabic ? 'rtl' : 'ltr', textAlign: isArabic ? 'right' : 'left' }}
+                >
+                  <div className="text-[9px] font-bold tracking-[0.2em] text-zinc-400 uppercase font-sans">
+                    {isArabic ? "اختيارات المحرر" : "EDITOR'S PICK"}
+                  </div>
+                  <div className="font-serif italic text-zinc-800 text-[12px] sm:text-[13px] leading-relaxed">
+                    "{isArabic ? currentSlide.quoteAr : currentSlide.quoteEn}"
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+          </div>
+
+        </div>
 
         {/* Manual Slides Dot navigation and side control steps */}
         <div className="mt-14 flex items-center justify-between border-t border-zinc-100 pt-6">

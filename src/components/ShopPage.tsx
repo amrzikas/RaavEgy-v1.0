@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Product, Category } from '../types';
 import { getProductPrice } from '../utils';
-import { SlidersHorizontal, Search, ArrowUpDown, Eye, ArrowLeft, Check, Sparkles, AlertCircle, X } from 'lucide-react';
-import { motion } from 'motion/react';
+import { SlidersHorizontal, Search, ArrowUpDown, Eye, ArrowLeft, Check, Sparkles, AlertCircle, X, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface ShopPageProps {
   products: Product[];
@@ -23,6 +23,133 @@ const PREMIUM_COLORS = [
   { hex: '#f5f5dc', labelEn: 'Beige/Sand', labelAr: 'بيج رملي' },
   { hex: '#dc2626', labelEn: 'Royal Red', labelAr: 'أحمر ملكي' }
 ];
+
+// ShopProductCard Helper Component for hover cycling and distinguishing features
+interface ShopProductCardProps {
+  product: Product;
+  onSelectProduct: (product: Product) => void;
+  isArabic: boolean;
+  getCategoryName: (cat: string) => string;
+}
+
+const ShopProductCard: React.FC<ShopProductCardProps> = ({
+  product,
+  onSelectProduct,
+  isArabic,
+  getCategoryName
+}) => {
+  // Collect all unique images
+  const allImages = React.useMemo(() => {
+    const list: string[] = [];
+    if (product.image) list.push(product.image);
+    if (product.images && Array.isArray(product.images)) {
+      product.images.forEach(img => {
+        if (img && img !== product.image) {
+          list.push(img);
+        }
+      });
+    }
+    return list;
+  }, [product.image, product.images]);
+
+  const [hoverIndex, setHoverIndex] = React.useState(0);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isHovered || allImages.length <= 1) {
+      setHoverIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setHoverIndex((prev) => (prev + 1) % allImages.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [isHovered, allImages]);
+
+  const activeImage = allImages[hoverIndex] || product.image;
+
+  return (
+    <motion.div
+      layout
+      onClick={() => onSelectProduct(product)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group bg-white rounded-2xl overflow-hidden border border-zinc-100 hover:border-zinc-200/80 hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col h-full relative"
+    >
+      {/* Relative Image Display */}
+      <div className="aspect-[4/5] bg-zinc-50 relative overflow-hidden">
+        <img
+          src={activeImage}
+          alt={isArabic ? product.nameAr : product.nameEn}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
+          referrerPolicy="no-referrer"
+        />
+        
+        {/* Hover image pagination indicators */}
+        {allImages.length > 1 && isHovered && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-10 bg-black/40 backdrop-blur-md py-1 px-2.5 rounded-full">
+            {allImages.map((_, idx) => (
+              <span
+                key={idx}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  hoverIndex === idx ? 'w-2.5 bg-white' : 'w-1 bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Dark overlay & eye quick view indicator */}
+        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
+          <span className="p-2.5 bg-white text-zinc-900 rounded-full shadow-md scale-75 group-hover:scale-100 transition duration-300">
+            <Eye size={16} strokeWidth={2.5} />
+          </span>
+        </div>
+
+        {/* Out of stock watermark */}
+        {!product.inStock && (
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
+            <span className="px-3 py-1.5 bg-zinc-950 text-white font-sans text-[10px] font-bold uppercase rounded-lg tracking-widest shadow-sm">
+              {isArabic ? "نفذت الكمية" : "Sold Out"}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Meta tags and pricing */}
+      <div className="p-4 flex-1 flex flex-col justify-between" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+        <div>
+          {/* Category meta label & Stock Indicator */}
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest font-sans block">
+              {getCategoryName(product.category)}
+            </span>
+          </div>
+          
+          <h4 className="text-[10px] sm:text-xs font-bold text-zinc-900 leading-tight group-hover:text-black transition break-words mb-1">
+            {isArabic ? product.nameAr : product.nameEn}
+          </h4>
+
+          {/* Distinguishing Feature badge */}
+          {(isArabic ? product.distinguishingFeatureAr : product.distinguishingFeatureEn) && (
+            <div className="inline-block text-[9px] font-extrabold text-amber-805 bg-amber-50 border border-amber-100/60 px-2 py-0.5 rounded-md mt-1 mb-1.5 uppercase tracking-wide">
+              {isArabic ? product.distinguishingFeatureAr : product.distinguishingFeatureEn}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 pt-2 border-t border-zinc-100/60 flex items-center justify-between text-xs font-bold text-zinc-900 font-serif">
+          <span>{product.price} {isArabic ? "ج.م" : "EGP"}</span>
+          {product.inStock && (
+            <span className="text-[10px] text-zinc-400 font-sans font-light">
+              {isArabic ? "معاينة مجاناً" : "Try-on free"}
+            </span>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 export default function ShopPage({ 
   products, 
@@ -62,39 +189,99 @@ export default function ShopPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  const [maxPrice, setMaxPrice] = useState<number>(2500);
+  const [maxPrice, setMaxPrice] = useState<number>(25000);
   const [minPrice, setMinPrice] = useState<number>(0);
   const [sortBy, setSortBy] = useState<'default' | 'price-low' | 'price-high' | 'newest'>('default');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(() => {
+    return initialCategory && initialCategory !== 'all' ? { [initialCategory]: true } : {};
+  });
 
   // Sync initial category from outside (e.g. Header menu clicks)
   React.useEffect(() => {
     setSelectedCategory(initialCategory);
     setSelectedSubcategory(initialSubcategory);
+    if (initialCategory && initialCategory !== 'all') {
+      setExpandedCategories(prev => ({ ...prev, [initialCategory]: true }));
+    }
   }, [initialCategory, initialSubcategory]);
 
-  // Compute unique subcategories for the current selected category
-  const availableSubcategories = useMemo(() => {
-    const list: { ar: string; en: string }[] = [];
-    const seen = new Set<string>();
+  // Compute unique subcategories nested per main category
+  const categoriesWithSubcategories = useMemo(() => {
+    return categoriesToRender.map((cat) => {
+      if (cat.id === 'all') {
+        return {
+          ...cat,
+          subcategories: []
+        };
+      }
 
-    products.forEach((prod) => {
-      if (selectedCategory !== 'all' && prod.category !== selectedCategory) return;
-      
-      const subAr = prod.subcategoryAr?.trim();
-      const subEn = prod.subcategoryEn?.trim();
+      const subs: { ar: string; en: string }[] = [];
+      const seen = new Set<string>();
 
-      if (subAr || subEn) {
-        const key = `${subAr || ''}|||${subEn || ''}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          list.push({ ar: subAr || subEn || '', en: subEn || subAr || '' });
+      products.forEach((prod) => {
+        if (prod.category !== cat.id) return;
+
+        const subAr = prod.subcategoryAr?.trim();
+        const subEn = prod.subcategoryEn?.trim();
+
+        if (subAr || subEn) {
+          const key = `${subAr || ''}|||${subEn || ''}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            subs.push({ ar: subAr || subEn || '', en: subEn || subAr || '' });
+          }
         }
+      });
+
+      return {
+        ...cat,
+        subcategories: subs
+      };
+    });
+  }, [categoriesToRender, products]);
+
+  // Sync maxPrice with the actual maximum product price in the active products
+  React.useEffect(() => {
+    if (products && products.length > 0) {
+      const prices = products.map(p => getProductPrice(p).current);
+      const calculatedMax = Math.max(...prices, 3000);
+      setMaxPrice(calculatedMax);
+    }
+  }, [products]);
+
+  // Extract only colors that actually exist in the currently available products
+  const availableColors = useMemo(() => {
+    const colorHexes = new Set<string>();
+    products.forEach((prod) => {
+      if (prod.colors && Array.isArray(prod.colors)) {
+        prod.colors.forEach((col) => {
+          if (col && col.trim()) {
+            colorHexes.add(col.trim().toLowerCase());
+          }
+        });
       }
     });
 
-    return list;
-  }, [products, selectedCategory]);
+    return Array.from(colorHexes).map((hex) => {
+      const found = PREMIUM_COLORS.find(
+        (pc) => pc.hex.toLowerCase() === hex
+      );
+      if (found) return found;
+
+      return {
+        hex: hex,
+        labelEn: hex.toUpperCase(),
+        labelAr: isArabic ? `لون ${hex.toUpperCase()}` : hex.toUpperCase()
+      };
+    });
+  }, [products, isArabic]);
+
+  // Compute unique subcategories for compatibility (if needed)
+  const availableSubcategories = useMemo(() => {
+    const activeCat = categoriesWithSubcategories.find(c => c.id === selectedCategory);
+    return activeCat ? activeCat.subcategories : [];
+  }, [categoriesWithSubcategories, selectedCategory]);
 
   // Reset all filters
   const handleResetFilters = () => {
@@ -104,7 +291,12 @@ export default function ShopPage({
     setSelectedSize(null);
     setSelectedColor(null);
     setMinPrice(0);
-    setMaxPrice(2500);
+    if (products && products.length > 0) {
+      const prices = products.map(p => getProductPrice(p).current);
+      setMaxPrice(Math.max(...prices, 3000));
+    } else {
+      setMaxPrice(25000);
+    }
     setSortBy('default');
   };
 
@@ -115,8 +307,8 @@ export default function ShopPage({
         // Category Filter
         if (selectedCategory !== 'all' && prod.category !== selectedCategory) return false;
 
-        // Subcategory Filter
-        if (selectedSubcategory) {
+        // Subcategory Filter (only active if not in "Global Wardrobe" / "all")
+        if (selectedCategory !== 'all' && selectedSubcategory) {
           const subAr = prod.subcategoryAr?.toLowerCase().trim();
           const subEn = prod.subcategoryEn?.toLowerCase().trim();
           const filterLower = selectedSubcategory.toLowerCase();
@@ -246,9 +438,9 @@ export default function ShopPage({
 
           {/* SIDEBAR FILTERS (Desktop & Mobile Drawer) */}
           <div className={`
-            lg:block lg:col-span-1 lg:static lg:bg-white lg:p-6 lg:rounded-2xl lg:border lg:border-zinc-100 lg:shadow-xs lg:h-fit lg:w-auto
+            lg:block lg:col-span-1 lg:static lg:bg-white lg:p-7 lg:rounded-3rem lg:border lg:border-zinc-100 lg:shadow-xs lg:h-fit lg:w-auto space-y-10
             ${showFiltersMobile 
-              ? 'fixed inset-y-0 right-0 w-[85vw] max-w-[340px] bg-white p-6 z-50 overflow-y-auto shadow-2xl border-l border-zinc-100 space-y-6 block' 
+              ? 'fixed inset-y-0 right-0 w-[85vw] max-w-[340px] bg-white p-6 z-50 overflow-y-auto shadow-2xl border-l border-zinc-100 space-y-10 block' 
               : 'hidden'
             }
           `}>
@@ -267,99 +459,139 @@ export default function ShopPage({
             </div>
             
             {/* Search Box */}
-            <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
+            <div style={{ textAlign: isArabic ? 'right' : 'left' }} className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                 {isArabic ? "البحث بالاسم الكلمة" : "Search Outfit"}
               </h3>
               <div className="relative">
                 <input
                   type="text"
                   placeholder={isArabic ? "مثال: لينن، فستان، كاب..." : "e.g. Linen, Dress, Hat..."}
-                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-2 px-4 text-xs focus:outline-none focus:border-black focus:bg-white text-zinc-900 transition-all pl-10"
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-2.5 px-4 text-xs focus:outline-none focus:border-black focus:bg-white text-zinc-900 transition-all pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ direction: isArabic ? 'rtl' : 'ltr' }}
                 />
-                <Search size={14} className="absolute left-3.5 top-3 text-zinc-400" />
+                <Search size={14} className="absolute left-3.5 top-3.5 text-zinc-400" />
               </div>
             </div>
 
-            {/* Category Filter */}
-            <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                {isArabic ? "التصنيف الرئيسي" : "Categories"}
+            {/* Nested Categories & Subcategories Hierarchical Filter */}
+            <div style={{ textAlign: isArabic ? 'right' : 'left' }} className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                {isArabic ? "أقسام المعرض والملابس" : "Wardrobe Categories"}
               </h3>
-              <div className="space-y-1.5">
-                {categoriesToRender.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => {
-                      setSelectedCategory(cat.id);
-                    }}
-                    className={`w-full text-right px-3 py-2 rounded-lg text-xs font-medium transition cursor-pointer flex justify-between items-center ${
-                      selectedCategory === cat.id
-                        ? "bg-black text-white"
-                        : "bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
-                    }`}
-                  >
-                    <span>
-                      {isArabic ? cat.nameAr : cat.nameEn}
-                    </span>
-                    {selectedCategory === cat.id && <Check size={12} strokeWidth={3} />}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Dynamic Subcategories */}
-            {availableSubcategories.length > 0 && (
-              <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                  {isArabic ? "الفئة الفرعية" : "Subcategories"}
-                </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    onClick={() => setSelectedSubcategory(null)}
-                    className={`px-3 py-1.5 rounded-full text-[10.5px] font-semibold transition cursor-pointer border ${
-                      selectedSubcategory === null
-                        ? "bg-amber-100/40 text-amber-950 border-amber-300 font-extrabold"
-                        : "bg-zinc-50 hover:bg-zinc-100 text-zinc-650 border-zinc-200"
-                    }`}
-                  >
-                    {isArabic ? "الكل" : "All"}
-                  </button>
-                  {availableSubcategories.map((sub) => {
-                    const label = isArabic ? sub.ar : sub.en;
-                    const isSelected = selectedSubcategory === sub.en || selectedSubcategory === sub.ar;
-                    return (
+              <div className="space-y-3.5">
+                {categoriesWithSubcategories.map((cat) => {
+                  const isCatSelected = selectedCategory === cat.id;
+                  const hasSubcategories = cat.subcategories.length > 0;
+                  const isExpanded = !!expandedCategories[cat.id];
+                  
+                  return (
+                    <div key={cat.id} className="space-y-2.5">
+                      {/* Main Category Row Button */}
                       <button
-                        key={sub.en}
-                        onClick={() => setSelectedSubcategory(isSelected ? null : sub.en)}
-                        className={`px-3 py-1.5 rounded-full text-[10.5px] font-semibold transition cursor-pointer border ${
-                          isSelected
-                            ? "bg-amber-100/40 text-amber-950 border-amber-300 font-extrabold"
-                            : "bg-zinc-50 hover:bg-zinc-100 text-zinc-650 border-zinc-200"
+                        onClick={() => {
+                          setSelectedCategory(cat.id);
+                          setSelectedSubcategory(null);
+                          if (hasSubcategories) {
+                            setExpandedCategories(prev => ({
+                              ...prev,
+                              [cat.id]: !prev[cat.id]
+                            }));
+                          }
+                        }}
+                        className={`w-full text-right px-4 py-3.5 rounded-2xl text-xs font-semibold transition-all duration-250 cursor-pointer flex justify-between items-center group ${
+                          isCatSelected
+                            ? "bg-zinc-950 text-white shadow-md font-bold"
+                            : "bg-zinc-50 text-zinc-700 hover:bg-zinc-100"
                         }`}
                       >
-                        {label}
+                        <span className="flex items-center gap-2">
+                          {isCatSelected && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 animate-pulse" />}
+                          {isArabic ? cat.nameAr : cat.nameEn}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {isCatSelected && !selectedSubcategory && (
+                            <Check size={12} strokeWidth={3} className="text-amber-400" />
+                          )}
+                          {hasSubcategories && (
+                            <motion.span
+                              animate={{ rotate: isExpanded ? 180 : 0 }}
+                              transition={{ duration: 0.2 }}
+                              className={`transition duration-200 ${isCatSelected ? 'text-zinc-300 group-hover:text-white' : 'text-zinc-400 group-hover:text-zinc-700'}`}
+                            >
+                              <ChevronDown size={14} />
+                            </motion.span>
+                          )}
+                        </div>
                       </button>
-                    );
-                  })}
-                </div>
+
+                      {/* Collapsible Nested Subcategories List with smooth slide down animation */}
+                      <AnimatePresence initial={false}>
+                        {isExpanded && hasSubcategories && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div 
+                              className="mr-3 ml-3 pl-3 pr-3 border-amber-300 space-y-2 py-2 flex flex-col"
+                              style={{
+                                borderRightWidth: isArabic ? '2px' : '0px',
+                                borderLeftWidth: !isArabic ? '2px' : '0px',
+                              }}
+                            >
+                              {cat.subcategories.map((sub) => {
+                                const subLabel = isArabic ? sub.ar : sub.en;
+                                const isSubSelected = isCatSelected && (selectedSubcategory === sub.en || selectedSubcategory === sub.ar);
+                                
+                                return (
+                                  <button
+                                    key={sub.en}
+                                    onClick={() => {
+                                      setSelectedCategory(cat.id);
+                                      setSelectedSubcategory(sub.en);
+                                    }}
+                                    className={`w-full text-right py-2 px-3.5 rounded-xl text-[11px] font-medium transition-all duration-200 cursor-pointer flex justify-between items-center ${
+                                      isSubSelected
+                                        ? "bg-amber-50 text-amber-950 font-bold shadow-xs border-r-3 border-amber-500"
+                                        : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+                                    }`}
+                                    style={{
+                                      borderRightWidth: isArabic && isSubSelected ? '3px' : '0px',
+                                      borderLeftWidth: !isArabic && isSubSelected ? '3px' : '0px',
+                                      borderColor: '#f59e0b'
+                                    }}
+                                  >
+                                    <span>{subLabel}</span>
+                                    {isSubSelected && <Check size={10} strokeWidth={3} className="text-amber-700 font-bold" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
 
             {/* Price Filter Slider and text */}
-            <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
+            <div style={{ textAlign: isArabic ? 'right' : 'left' }} className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                 {isArabic ? "سعر القطعة بالأقصى" : "Maximum Budget"}
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <input
                   type="range"
                   min="0"
-                  max="3000"
-                  step="50"
+                  max="25000"
+                  step="100"
                   className="w-full accent-black cursor-ew-resize bg-zinc-100 h-1.5 rounded-lg appearance-none"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(parseInt(e.target.value))}
@@ -372,18 +604,18 @@ export default function ShopPage({
             </div>
 
             {/* Size Selector */}
-            <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
+            <div style={{ textAlign: isArabic ? 'right' : 'left' }} className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                 {isArabic ? "المقاس المطلوب" : "Clothing Size"}
               </h3>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {AVAILABLE_SIZES.map((sz) => (
                   <button
                     key={sz}
                     onClick={() => setSelectedSize(selectedSize === sz ? null : sz)}
-                    className={`h-8 min-w-[32px] px-2 rounded-md font-semibold text-xs transition border cursor-pointer flex items-center justify-center font-mono ${
+                    className={`h-8 min-w-[32px] px-2.5 rounded-lg font-semibold text-xs transition border cursor-pointer flex items-center justify-center font-mono ${
                       selectedSize === sz
-                        ? "bg-black border-black text-white"
+                        ? "bg-black border-black text-white shadow-xs scale-102"
                         : "bg-white border-zinc-200 text-zinc-700 hover:border-zinc-400 hover:bg-zinc-50"
                     }`}
                   >
@@ -394,30 +626,31 @@ export default function ShopPage({
             </div>
 
             {/* Color Interactive Dots */}
-            <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">
-                {isArabic ? "اللون المفضل" : "Color Choice"}
+            <div style={{ textAlign: isArabic ? 'right' : 'left' }} className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                {isArabic ? "اللون المفضل (الألوان المتاحة فقط)" : "Color Choice (Only Available)"}
               </h3>
-              <div className="flex flex-wrap gap-2">
-                {PREMIUM_COLORS.map((col) => (
+              <div className="flex flex-wrap gap-2.5">
+                {availableColors.map((col) => (
                   <button
                     key={col.hex}
                     onClick={() => setSelectedColor(selectedColor === col.hex ? null : col.hex)}
-                    className={`w-7 h-7 rounded-full border cursor-pointer relative transition hover:scale-105 flex items-center justify-center ${
+                    className={`w-7.5 h-7.5 rounded-full border cursor-pointer relative transition duration-200 hover:scale-110 flex items-center justify-center ${
                       selectedColor === col.hex
-                        ? "ring-2 ring-black ring-offset-2 ring-offset-white"
+                        ? "ring-2 ring-amber-500 ring-offset-2 ring-offset-white"
                         : "border-zinc-200"
                     }`}
                     style={{ backgroundColor: col.hex }}
                     title={isArabic ? col.labelAr : col.labelEn}
                   >
                     {selectedColor === col.hex && (
-                      <Check size={11} className={col.hex.toLowerCase() === '#ffffff' ? 'text-zinc-950' : 'text-white'} strokeWidth={3} />
+                      <Check size={12} className={col.hex.toLowerCase() === '#ffffff' ? 'text-zinc-950' : 'text-white'} strokeWidth={3.5} />
                     )}
                   </button>
                 ))}
               </div>
             </div>
+
 
             {/* Sorting */}
             <div style={{ textAlign: isArabic ? 'right' : 'left' }}>
@@ -510,63 +743,13 @@ export default function ShopPage({
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredProducts.flatMap((product, idx) => {
                   const productCard = (
-                    <motion.div
-                      layout
+                    <ShopProductCard
                       key={product.id}
-                      onClick={() => onSelectProduct(product)}
-                      className="group bg-white rounded-2xl overflow-hidden border border-zinc-100 hover:border-zinc-200/80 hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col h-full relative"
-                    >
-                      {/* Relative Image Display */}
-                      <div className="aspect-[4/5] bg-zinc-50 relative overflow-hidden">
-                        <img
-                          src={product.image}
-                          alt={isArabic ? product.nameAr : product.nameEn}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
-                          referrerPolicy="no-referrer"
-                        />
-                        
-                        {/* Dark overlay & eye quick view indicator */}
-                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                          <span className="p-2.5 bg-white text-zinc-900 rounded-full shadow-md scale-75 group-hover:scale-100 transition duration-300">
-                            <Eye size={16} strokeWidth={2.5} />
-                          </span>
-                        </div>
-
-                        {/* Out of stock watermark */}
-                        {!product.inStock && (
-                          <div className="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
-                            <span className="px-3 py-1.5 bg-zinc-950 text-white font-sans text-[10px] font-bold uppercase rounded-lg tracking-widest shadow-sm">
-                              {isArabic ? "نفذت الكمية" : "Sold Out"}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Meta tags and pricing */}
-                      <div className="p-4 flex-1 flex flex-col justify-between" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                        <div>
-                          {/* Category meta label & Stock Indicator */}
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest font-sans block">
-                              {getCategoryName(product.category)}
-                            </span>
-                          </div>
-                          
-                          <h4 className="text-[10px] sm:text-xs font-medium text-zinc-900 leading-tight group-hover:text-black transition break-words">
-                            {isArabic ? product.nameAr : product.nameEn}
-                          </h4>
-                        </div>
-
-                        <div className="mt-3 pt-2 border-t border-zinc-100/60 flex items-center justify-between text-xs font-bold text-zinc-900 font-serif">
-                          <span>{product.price} {isArabic ? "ج.م" : "EGP"}</span>
-                          {product.inStock && (
-                            <span className="text-[10px] text-zinc-400 font-sans font-light">
-                              {isArabic ? "معاينة مجاناً" : "Try-on free"}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
+                      product={product}
+                      onSelectProduct={onSelectProduct}
+                      isArabic={isArabic}
+                      getCategoryName={getCategoryName}
+                    />
                   );
 
                   // If idx is exactly 2, let's insert a beautiful fashion editorial card right after it!

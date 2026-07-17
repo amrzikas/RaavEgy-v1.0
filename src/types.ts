@@ -20,6 +20,8 @@ export interface Product {
   inStock: boolean;
   isActive?: boolean; // display on website or not
   isTrend?: boolean;  // highlight in 'the trend pieces' section
+  distinguishingFeatureAr?: string; // المميزة للمنتج
+  distinguishingFeatureEn?: string; // Distinguishing feature
   quantity?: number;  // total stock quantity available
   shippingPlanId?: string; // assigned shipping plan id
   createdAt: number;

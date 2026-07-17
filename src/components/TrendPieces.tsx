@@ -13,6 +13,187 @@ interface TrendPiecesProps {
   backdrop?: SectionBackdrop;
 }
 
+// TrendSideProductCard Helper Component for hover image cycling and distinguishing features
+interface TrendSideProductCardProps {
+  product: Product;
+  paddedNum: string;
+  isEven: boolean;
+  isArabic: boolean;
+  onSelectProduct: (product: Product) => void;
+  onQuickAddToCart: (product: Product) => void;
+}
+
+const TrendSideProductCard: React.FC<TrendSideProductCardProps> = ({
+  product,
+  paddedNum,
+  isEven,
+  isArabic,
+  onSelectProduct,
+  onQuickAddToCart
+}) => {
+  // Collect all unique images
+  const allImages = React.useMemo(() => {
+    const list: string[] = [];
+    if (product.image) list.push(product.image);
+    if (product.images && Array.isArray(product.images)) {
+      product.images.forEach(img => {
+        if (img && img !== product.image) {
+          list.push(img);
+        }
+      });
+    }
+    return list;
+  }, [product.image, product.images]);
+
+  const [hoverIndex, setHoverIndex] = React.useState(0);
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isHovered || allImages.length <= 1) {
+      setHoverIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setHoverIndex((prev) => (prev + 1) % allImages.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [isHovered, allImages]);
+
+  const activeImage = allImages[hoverIndex] || product.image;
+
+  return (
+    <motion.div
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.3 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`h-full border rounded-lg sm:rounded-[2rem] p-1.5 xs:p-3.5 sm:p-5 lg:p-7 flex flex-col justify-between shadow-xs sm:shadow-md relative overflow-hidden group/item select-none transition-colors ${
+        isEven 
+          ? "bg-white border-zinc-150/40 text-zinc-950" 
+          : "bg-zinc-950 border-zinc-900 text-white"
+      }`}
+    >
+      {/* Substantial decorative background index number */}
+      <div className={`absolute right-1 top-0 sm:right-6 sm:top-3 font-serif text-[18px] xs:text-3xl sm:text-[3.5rem] lg:text-[4.5rem] font-bold leading-none pointer-events-none select-none transition-opacity ${
+        isEven ? "text-zinc-100/75" : "text-zinc-900/55"
+      }`}>
+        {paddedNum}
+      </div>
+
+      <div className="flex gap-1 xs:gap-2.5 sm:gap-5 h-full items-stretch relative z-10" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+        
+        {/* Info Column */}
+        <div className="flex-1 flex flex-col justify-between py-0.5 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+          <div className="space-y-0.5 sm:space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-[4px] xs:text-[7px] sm:text-[9px] font-sans font-bold tracking-wider uppercase block ${
+                isEven ? "text-amber-805" : "text-amber-400"
+              }`}>
+                {isArabic ? "تنسيق مذهل" : "TREND ELEMENT"}
+              </span>
+            </div>
+            <h3 
+              onClick={() => onSelectProduct(product)}
+              className={`text-[8px] xs:text-[10px] sm:text-sm lg:text-base font-serif font-semibold tracking-tight leading-snug cursor-pointer transition break-words ${
+                isEven ? "text-zinc-950 hover:text-amber-855" : "text-white hover:text-amber-400"
+              }`}
+            >
+              {isArabic ? product.nameAr : product.nameEn}
+            </h3>
+
+            {/* Distinguishing Feature Badge */}
+            {(isArabic ? product.distinguishingFeatureAr : product.distinguishingFeatureEn) && (
+              <div className={`inline-block text-[7px] xs:text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                isEven 
+                  ? "text-amber-855 bg-amber-50 border border-amber-100" 
+                  : "text-amber-400 bg-amber-400/10 border border-amber-400/20"
+              }`}>
+                {isArabic ? product.distinguishingFeatureAr : product.distinguishingFeatureEn}
+              </div>
+            )}
+
+            <p className={`hidden sm:block text-[11px] leading-relaxed font-sans line-clamp-2 ${
+              isEven ? "text-zinc-400" : "text-zinc-350"
+            }`}>
+              {isArabic ? product.descriptionAr : product.descriptionEn}
+            </p>
+          </div>
+
+          <div className={`flex items-center justify-between pt-1 sm:pt-2 border-t gap-0.5 sm:gap-2 ${
+            isEven ? "border-zinc-100" : "border-zinc-850"
+          }`}>
+            {(() => {
+              const priceInfo = getProductPrice(product);
+              return (
+                <div className="flex flex-col text-right animate-fade-in" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                  {priceInfo.hasDiscount && (
+                    <span className="text-zinc-455 line-through text-[5px] xs:text-[8px] sm:text-[10px] font-serif leading-none mb-0.5">
+                      {priceInfo.original} {isArabic ? 'ج.م' : 'EGP'}
+                    </span>
+                  )}
+                  <div className="flex items-baseline gap-0.5">
+                    <span className={`font-serif font-extrabold text-[8px] xs:text-sm sm:text-lg ${
+                      priceInfo.hasDiscount 
+                        ? (isEven ? "text-amber-805" : "text-amber-300") 
+                        : (isEven ? "text-zinc-950" : "text-amber-400")
+                    }`}>
+                      {priceInfo.current}
+                    </span>
+                    <span className={`text-[5px] xs:text-[8px] sm:text-[10px] font-sans ml-0.5 mr-0.5 ${
+                      isEven ? "text-zinc-500" : "text-zinc-400"
+                    }`}>{isArabic ? 'ج.م' : 'EGP'}</span>
+                  </div>
+                </div>
+              );
+            })()}
+            
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <button
+                onClick={() => onSelectProduct(product)}
+                className={`p-0.5 xs:p-1.5 sm:p-2.5 rounded-md sm:rounded-full transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  isEven ? "bg-zinc-950 text-white hover:bg-amber-855" : "bg-amber-500 text-black hover:bg-amber-400 border-none"
+                }`}
+                title={isArabic ? "عرض التفاصيل" : "View Details"}
+              >
+                <Eye className="w-2.5 h-2.5 sm:w-[14px] sm:h-[14px]" />
+              </button>
+              <button
+                onClick={() => onQuickAddToCart(product)}
+                className={`p-0.5 xs:p-1.5 sm:p-2.5 rounded-md sm:rounded-full transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  isEven ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-200" : "bg-white/10 hover:bg-white hover:text-black text-white border border-white/15"
+                }`}
+                title={isArabic ? "إشارة سريعة" : "Quick Add"}
+              >
+                <ShoppingCart className="w-2.5 h-2.5 sm:w-[14px] sm:h-[14px]" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Side Thumbnail Image Clip */}
+        <div 
+          className="w-10 xs:w-16 sm:w-24 lg:w-32 aspect-[3/4] bg-zinc-50 rounded-md sm:rounded-2xl overflow-hidden shadow-xs cursor-pointer select-none shrink-0" 
+          onClick={() => onSelectProduct(product)}
+        >
+          <img
+            src={optimizeUnsplashUrl(activeImage, 200, 65)}
+            alt={isArabic ? product.nameAr : product.nameEn}
+            referrerPolicy="no-referrer"
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110"
+            onError={(e) => {
+              e.currentTarget.src = isEven 
+                ? "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&q=65&w=200" 
+                : "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=65&w=200";
+            }}
+          />
+        </div>
+
+      </div>
+    </motion.div>
+  );
+};
+
 export default function TrendPieces({
   products,
   onSelectProduct,
@@ -241,121 +422,14 @@ export default function TrendPieces({
                     key={product.id}
                     className="flex-none snap-start h-[105px] xs:h-[145px] sm:h-[195px] md:h-[235px] lg:h-[298px]"
                   >
-                    <motion.div
-                      whileHover={{ y: -2 }}
-                      transition={{ duration: 0.3 }}
-                      className={`h-full border rounded-lg sm:rounded-[2rem] p-1.5 xs:p-3.5 sm:p-5 lg:p-7 flex flex-col justify-between shadow-xs sm:shadow-md relative overflow-hidden group/item select-none transition-colors ${
-                        isEven 
-                          ? "bg-white border-zinc-150/40 text-zinc-950" 
-                          : "bg-zinc-950 border-zinc-900 text-white"
-                      }`}
-                    >
-                      {/* Substantial decorative background index number */}
-                      <div className={`absolute right-1 top-0 sm:right-6 sm:top-3 font-serif text-[18px] xs:text-3xl sm:text-[3.5rem] lg:text-[4.5rem] font-bold leading-none pointer-events-none select-none transition-opacity ${
-                        isEven ? "text-zinc-100/75" : "text-zinc-900/55"
-                      }`}>
-                        {paddedNum}
-                      </div>
-
-                      <div className="flex gap-1 xs:gap-2.5 sm:gap-5 h-full items-stretch relative z-10" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
-                        
-                        {/* Info Column */}
-                        <div className="flex-1 flex flex-col justify-between py-0.5 text-right sm:text-right" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                          <div className="space-y-0.5 sm:space-y-1.5">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`text-[4px] xs:text-[7px] sm:text-[9px] font-sans font-bold tracking-wider uppercase block ${
-                                isEven ? "text-amber-805" : "text-amber-400"
-                              }`}>
-                                {isArabic ? "تنسيق مذهل" : "TREND ELEMENT"}
-                              </span>
-                            </div>
-                            <h3 
-                              onClick={() => onSelectProduct(product)}
-                              className={`text-[8px] xs:text-[10px] sm:text-sm lg:text-base font-serif font-semibold tracking-tight leading-snug cursor-pointer transition break-words ${
-                                isEven ? "text-zinc-950 hover:text-amber-805" : "text-white hover:text-amber-400"
-                              }`}
-                            >
-                              {isArabic ? product.nameAr : product.nameEn}
-                            </h3>
-                            <p className={`hidden sm:block text-[11px] leading-relaxed font-sans line-clamp-2 ${
-                              isEven ? "text-zinc-400" : "text-zinc-350"
-                            }`}>
-                              {isArabic ? product.descriptionAr : product.descriptionEn}
-                            </p>
-                          </div>
-
-                          <div className={`flex items-center justify-between pt-1 sm:pt-2 border-t gap-0.5 sm:gap-2 ${
-                            isEven ? "border-zinc-100" : "border-zinc-850"
-                          }`}>
-                            {(() => {
-                              const priceInfo = getProductPrice(product);
-                              return (
-                                <div className="flex flex-col text-right animate-fade-in" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                                  {priceInfo.hasDiscount && (
-                                    <span className="text-zinc-450 line-through text-[5px] xs:text-[8px] sm:text-[10px] font-serif leading-none mb-0.5">
-                                      {priceInfo.original} {isArabic ? 'ج.م' : 'EGP'}
-                                    </span>
-                                  )}
-                                  <div className="flex items-baseline gap-0.5">
-                                    <span className={`font-serif font-extrabold text-[8px] xs:text-sm sm:text-lg ${
-                                      priceInfo.hasDiscount 
-                                        ? (isEven ? "text-amber-805" : "text-amber-300") 
-                                        : (isEven ? "text-zinc-950" : "text-amber-400")
-                                    }`}>
-                                      {priceInfo.current}
-                                    </span>
-                                    <span className={`text-[5px] xs:text-[8px] sm:text-[10px] font-sans ml-0.5 mr-0.5 ${
-                                      isEven ? "text-zinc-500" : "text-zinc-400"
-                                    }`}>{isArabic ? 'ج.م' : 'EGP'}</span>
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                            
-                            <div className="flex items-center gap-0.5 sm:gap-1">
-                              <button
-                                onClick={() => onSelectProduct(product)}
-                                className={`p-0.5 xs:p-1.5 sm:p-2.5 rounded-md sm:rounded-full transition cursor-pointer flex items-center justify-center shrink-0 ${
-                                  isEven ? "bg-zinc-950 text-white hover:bg-amber-805" : "bg-amber-500 text-black hover:bg-amber-400 border-none"
-                                }`}
-                                title={isArabic ? "عرض التفاصيل" : "View Details"}
-                              >
-                                <Eye className="w-2.5 h-2.5 sm:w-[14px] sm:h-[14px]" />
-                              </button>
-                              <button
-                                onClick={() => onQuickAddToCart(product)}
-                                className={`p-0.5 xs:p-1.5 sm:p-2.5 rounded-md sm:rounded-full transition cursor-pointer flex items-center justify-center shrink-0 ${
-                                  isEven ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-200" : "bg-white/10 hover:bg-white hover:text-black text-white border border-white/15"
-                                }`}
-                                title={isArabic ? "إشارة سريعة" : "Quick Add"}
-                              >
-                                <ShoppingCart className="w-2.5 h-2.5 sm:w-[14px] sm:h-[14px]" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Side Thumbnail Image Clip */}
-                        <div 
-                          className="w-10 xs:w-16 sm:w-24 lg:w-32 aspect-[3/4] bg-zinc-50 rounded-md sm:rounded-2xl overflow-hidden shadow-xs cursor-pointer select-none shrink-0" 
-                          onClick={() => onSelectProduct(product)}
-                        >
-                          <img
-                            src={optimizeUnsplashUrl(product.image, 200, 65)}
-                            alt={isArabic ? product.nameAr : product.nameEn}
-                            referrerPolicy="no-referrer"
-                            loading="lazy"
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover/item:scale-110"
-                            onError={(e) => {
-                              e.currentTarget.src = isEven 
-                                ? "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&q=65&w=200" 
-                                : "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=65&w=200";
-                            }}
-                          />
-                        </div>
-
-                      </div>
-                    </motion.div>
+                    <TrendSideProductCard
+                      product={product}
+                      paddedNum={paddedNum}
+                      isEven={isEven}
+                      isArabic={isArabic}
+                      onSelectProduct={onSelectProduct}
+                      onQuickAddToCart={onQuickAddToCart}
+                    />
                   </div>
                 );
               })}

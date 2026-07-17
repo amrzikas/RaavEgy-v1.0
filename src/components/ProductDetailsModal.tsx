@@ -126,9 +126,16 @@ export default function ProductDetailsModal({
           <div className="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-between h-full bg-zinc-50/20">
             <div>
               {/* Product title */}
-              <h2 className="text-xl sm:text-2xl font-serif font-medium text-zinc-900 tracking-tight leading-tight mb-2">
+              <h2 className="text-xl sm:text-2xl font-serif font-medium text-zinc-900 tracking-tight leading-tight mb-1">
                 {isArabic ? product.nameAr : product.nameEn}
               </h2>
+
+              {/* Distinguishing Feature immediately after product name */}
+              {(isArabic ? product.distinguishingFeatureAr : product.distinguishingFeatureEn) && (
+                <div className="inline-block text-[11px] font-bold text-amber-800 bg-amber-50/70 border border-amber-200/60 px-3 py-1 rounded-md mb-3 uppercase tracking-wide">
+                  {isArabic ? product.distinguishingFeatureAr : product.distinguishingFeatureEn}
+                </div>
+              )}
 
               {/* Price Tag */}
               <div className="flex items-center gap-2 mb-5 justify-start flex-wrap">

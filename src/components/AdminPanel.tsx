@@ -127,6 +127,8 @@ export default function AdminPanel({
   const [formData, setFormData] = useState({
     nameAr: '',
     nameEn: '',
+    distinguishingFeatureAr: '',
+    distinguishingFeatureEn: '',
     descriptionAr: '',
     descriptionEn: '',
     detailsAr: '',
@@ -675,6 +677,8 @@ export default function AdminPanel({
     setFormData({
       nameAr: '',
       nameEn: '',
+      distinguishingFeatureAr: '',
+      distinguishingFeatureEn: '',
       descriptionAr: '',
       descriptionEn: '',
       detailsAr: '',
@@ -717,6 +721,8 @@ export default function AdminPanel({
     setFormData({
       nameAr: prod.nameAr,
       nameEn: prod.nameEn,
+      distinguishingFeatureAr: prod.distinguishingFeatureAr || '',
+      distinguishingFeatureEn: prod.distinguishingFeatureEn || '',
       descriptionAr: prod.descriptionAr,
       descriptionEn: prod.descriptionEn,
       detailsAr: prod.detailsAr || '',
@@ -757,6 +763,8 @@ export default function AdminPanel({
     const productPayload: any = {
       nameAr: formData.nameAr.trim(),
       nameEn: formData.nameEn.trim(),
+      distinguishingFeatureAr: formData.distinguishingFeatureAr.trim(),
+      distinguishingFeatureEn: formData.distinguishingFeatureEn.trim(),
       descriptionAr: formData.descriptionAr.trim(),
       descriptionEn: formData.descriptionEn.trim(),
       detailsAr: formData.detailsAr.trim(),
@@ -5484,6 +5492,28 @@ export default function AdminPanel({
                           className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-left text-white"
                           value={formData.nameEn}
                           onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
+                        />
+                      </div>
+
+                      {/* Distinguishing Feature Arabic */}
+                      <div>
+                        <label className="block text-xs font-semibold text-zinc-400 mb-1">{isArabic ? "السمة المميزة للمنتج بالعربية (مثال: ناعم، مقاوم للماء، صوف طبيعي)" : "Distinguishing Feature (Arabic)"}</label>
+                        <input
+                          type="text" placeholder={isArabic ? "مثال: قطن 100% ممتاز" : "e.g. 100% Premium Cotton"}
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                          value={formData.distinguishingFeatureAr}
+                          onChange={(e) => setFormData({ ...formData, distinguishingFeatureAr: e.target.value })}
+                        />
+                      </div>
+
+                      {/* Distinguishing Feature English */}
+                      <div>
+                        <label className="block text-xs font-semibold text-zinc-400 mb-1">{isArabic ? "السمة المميزة للمنتج بالإنجليزية" : "Distinguishing Feature (English)"}</label>
+                        <input
+                          type="text" placeholder="e.g. 100% Premium Cotton"
+                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-left text-white"
+                          value={formData.distinguishingFeatureEn}
+                          onChange={(e) => setFormData({ ...formData, distinguishingFeatureEn: e.target.value })}
                         />
                       </div>
 
