@@ -8,16 +8,42 @@ service cloud.firestore {
         request.auth.uid == get(/databases/$(database)/documents/admin_config/setup).data.adminUid;
     }
 
+    // Helper to check if the user is a validated employee with active credentials
+    function isEmployee(request) {
+      return request.auth != null && 
+        exists(/databases/$(database)/documents/employees/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.isTemporaryPasswordActive == false;
+    }
+
+    // Helper to check if employee is assigned a specific responsibility
+    function hasResponsibility(request, resp) {
+      return isEmployee(request) && 
+        get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.responsibilities.hasAny([resp, 'all_management', 'manage_site']);
+    }
+
+    // Employees Directory
+    match /employees/{employeeId} {
+      allow create, delete: if isAdmin(request);
+      allow read: if isAdmin(request) || (request.auth != null && request.auth.uid == employeeId);
+      // Employees can update their own record to change isTemporaryPasswordActive to false
+      allow update: if isAdmin(request) || (
+        request.auth != null && 
+        request.auth.uid == employeeId && 
+        request.resource.data.email == resource.data.email &&
+        request.resource.data.name == resource.data.name
+      );
+    }
+
     // Products
     match /products2/{productId} {
       allow read: if true;
-      allow write: if isAdmin(request);
+      allow write: if isAdmin(request) || hasResponsibility(request, 'products');
     }
 
     // Orders
     match /orders/{orderId} {
       allow create: if true;
-      allow read: if isAdmin(request) || (
+      allow read: if isAdmin(request) || hasResponsibility(request, 'orders') || (
         request.auth != null && (
           resource.data.customerId == request.auth.uid || 
           (
@@ -26,58 +52,55 @@ service cloud.firestore {
           )
         )
       );
-      allow update, delete: if isAdmin(request);
+      allow update, delete: if isAdmin(request) || hasResponsibility(request, 'orders');
     }
 
     // User Profiles
     match /users/{userId} {
-      allow read, write: if (request.auth != null && request.auth.uid == userId) || isAdmin(request);
+      allow read, write: if (request.auth != null && request.auth.uid == userId) || isAdmin(request) || isEmployee(request);
     }
 
     // Shipping Plans
     match /shipping_plans/{planId} {
       allow read: if true;
-      allow write: if isAdmin(request);
+      allow write: if isAdmin(request) || hasResponsibility(request, 'shipping');
     }
 
-    // Settings (loyalty, payment)
+    // Settings (loyalty, payment, homepage content, support content, settlements, business expenses)
     match /settings/{settingId} {
       allow read: if true;
-      allow write: if isAdmin(request);
+      allow write: if isAdmin(request) || isEmployee(request); // Let any authorized active staff adjust settings if needed or keep it simple
     }
 
     // Reviews
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin(request));
+      allow update, delete: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin(request) || hasResponsibility(request, 'products'));
     }
 
     // Notifications
     match /notifications/{notifId} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin(request));
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin(request));
+      allow create: if request.auth != null || isEmployee(request) || isAdmin(request);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin(request) || isEmployee(request));
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin(request) || isEmployee(request));
     }
 
     // Conversations & Messages
     match /conversations/{convId} {
       allow create: if request.auth != null;
-      allow read, update: if request.auth != null && (resource.data.customerId == request.auth.uid || isAdmin(request));
+      allow read, update: if request.auth != null && (resource.data.customerId == request.auth.uid || isAdmin(request) || hasResponsibility(request, 'conversations'));
       
       match /messages/{msgId} {
         allow read, create: if request.auth != null;
-        allow update, delete: if isAdmin(request);
+        allow update, delete: if isAdmin(request) || hasResponsibility(request, 'conversations');
       }
     }
 
     // Admin Config Setup
     match /admin_config/setup {
-      // Allow read to anyone to check if initialized
       allow read: if true;
-      // Allow create only if setup doesn't already exist
       allow create: if !exists(/databases/$(database)/documents/admin_config/setup);
-      // Allow update only by the admin itself
       allow update: if request.auth != null && request.auth.uid == resource.data.adminUid;
     }
   }

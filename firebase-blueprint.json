@@ -131,9 +131,26 @@
         "createdAt": { "type": "number" }
       },
       "required": ["senderId", "senderRole", "senderName", "text", "createdAt"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Employee record with temporary password status and specific responsibilities",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "responsibilities": { "type": "array" },
+        "isTemporaryPasswordActive": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["email", "name", "responsibilities", "isTemporaryPasswordActive", "createdAt"]
     }
   },
   "firestore": {
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "List of site employees added by Admin with assigned responsibilities and login flags"
+    },
     "/products2/{productId}": {
       "schema": "Product",
       "description": "Contains items catalog details"

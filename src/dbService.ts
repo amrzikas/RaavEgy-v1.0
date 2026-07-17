@@ -1733,4 +1733,96 @@ export function subscribeToCategories(callback: (categories: Category[]) => void
   );
 }
 
+// === User/Employee Management & Custom Responsibilities ===
+import { initializeApp } from 'firebase/app';
+import { getAuth as getFirebaseAuth, createUserWithEmailAndPassword as createAuthUser, signOut as signOutAuth } from 'firebase/auth';
+import { firebaseConfig } from './firebase';
+
+const EMPLOYEES_COLL = 'employees';
+
+export async function createEmployeeAccount(email: string, temporaryPassword: string): Promise<string> {
+  const secondaryAppName = `employee-creators-${Date.now()}`;
+  const secondaryApp = initializeApp(firebaseConfig, secondaryAppName);
+  const secondaryAuth = getFirebaseAuth(secondaryApp);
+  try {
+    const userCred = await createAuthUser(secondaryAuth, email, temporaryPassword);
+    const uid = userCred.user.uid;
+    await signOutAuth(secondaryAuth);
+    return uid;
+  } catch (error) {
+    console.error("Secondary app registration failed:", error);
+    throw error;
+  }
+}
+
+export async function createEmployeeInDb(id: string, name: string, email: string, responsibilities: string[]): Promise<void> {
+  const pathForWrite = `${EMPLOYEES_COLL}/${id}`;
+  try {
+    const docRef = doc(db, EMPLOYEES_COLL, id);
+    await setDoc(docRef, {
+      id,
+      name,
+      email,
+      responsibilities,
+      isTemporaryPasswordActive: true,
+      createdAt: Date.now()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, pathForWrite);
+  }
+}
+
+export function subscribeToEmployees(callback: (employees: any[]) => void) {
+  const pathForOnSnapshot = EMPLOYEES_COLL;
+  const q = query(collection(db, EMPLOYEES_COLL), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const list: any[] = [];
+    snapshot.forEach((docSnap) => {
+      list.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
+    });
+    callback(list);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, pathForOnSnapshot);
+  });
+}
+
+export async function removeEmployee(id: string): Promise<void> {
+  const pathForWrite = `${EMPLOYEES_COLL}/${id}`;
+  try {
+    const docRef = doc(db, EMPLOYEES_COLL, id);
+    await deleteDoc(docRef);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, pathForWrite);
+  }
+}
+
+export async function getEmployeeProfile(uid: string): Promise<any | null> {
+  const pathForGet = `${EMPLOYEES_COLL}/${uid}`;
+  try {
+    const docRef = doc(db, EMPLOYEES_COLL, uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+  } catch (error) {
+    console.warn("Could not fetch employee profile (might be customer/admin):", error);
+  }
+  return null;
+}
+
+export async function markTemporaryPasswordChanged(uid: string): Promise<void> {
+  const pathForWrite = `${EMPLOYEES_COLL}/${uid}`;
+  try {
+    const docRef = doc(db, EMPLOYEES_COLL, uid);
+    await updateDoc(docRef, {
+      isTemporaryPasswordActive: false
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, pathForWrite);
+  }
+}
+
 

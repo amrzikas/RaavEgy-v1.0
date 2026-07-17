@@ -3,7 +3,8 @@ import {
   X, Lock, ShieldAlert, Sparkles, Plus, Edit, Trash2, CheckCircle, Clock, Truck, 
   FileText, Activity, ArrowLeft, Check, PlusCircle, ShoppingBag, Landmark, Database,
   Gift, Wallet, Award, CreditCard, ChevronRight, CheckSquare, PlusSquare, ArrowUpDown,
-  Send, Layers, Menu, PieChart, Sliders, ChevronDown, Megaphone, Image, Tag, Grid, Eye, Paintbrush
+  Send, Layers, Menu, PieChart, Sliders, ChevronDown, Megaphone, Image, Tag, Grid, Eye, Paintbrush,
+  Users, UserCheck, Key
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -18,6 +19,7 @@ import {
   createUserWithEmailAndPassword, 
   onAuthStateChanged, 
   signOut,
+  updatePassword,
   User
 } from 'firebase/auth';
 import { 
@@ -49,7 +51,13 @@ import {
   saveHomepageContent,
   getExpenses,
   saveExpenses,
-  saveCategories
+  saveCategories,
+  createEmployeeAccount,
+  createEmployeeInDb,
+  subscribeToEmployees,
+  removeEmployee,
+  getEmployeeProfile,
+  markTemporaryPasswordChanged
 } from '../dbService';
 import { Product, Order, OrderStatus, ShippingPlan, LoyaltyConfig, PaymentConfig, WalletDetail, InstaPayDetail, SettlementPeriod, SupportPagesContent, HomepageContent, FaqItem, HeroSlideInput, BusinessExpense, Category, Subcategory } from '../types';
 import { PRESET_COLORS } from '../utils';
@@ -90,8 +98,61 @@ export default function AdminPanel({
   const [authLoading, setAuthLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Sub-navigation tabs: 'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content' | 'reports' | 'categories'
-  const [activeTab, setActiveTab] = useState<'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content' | 'reports' | 'categories'>('stats');
+  // Employee Management states
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [employeeProfile, setEmployeeProfile] = useState<any | null>(null);
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
+  const [employeeFormData, setEmployeeFormData] = useState({
+    name: '',
+    email: '',
+    temporaryPassword: '',
+    responsibilities: [] as string[]
+  });
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmNewPasswordInput, setConfirmNewPasswordInput] = useState('');
+  const [tempPasswordError, setTempPasswordError] = useState<string | null>(null);
+
+  // Sub-navigation tabs
+  const [activeTab, setActiveTab] = useState<'stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content' | 'reports' | 'categories' | 'employees'>('stats');
+
+  const hasTabPermission = (tab: string) => {
+    // Super admin has all permissions
+    if (adminUser && !employeeProfile) return true;
+    if (!employeeProfile) return false;
+    
+    // Check if employee's responsibilities include the tab or 'all_management' / 'manage_site'
+    const resps = employeeProfile.responsibilities || [];
+    if (resps.includes('all_management') || resps.includes('manage_site')) return true;
+    
+    // Map tab names to responsibility strings
+    if (tab === 'stats' && resps.includes('stats')) return true;
+    if (tab === 'products' && resps.includes('products')) return true;
+    if (tab === 'orders' && resps.includes('orders')) return true;
+    if (tab === 'shipping' && resps.includes('shipping')) return true;
+    if (tab === 'loyalty' && resps.includes('loyalty')) return true;
+    if (tab === 'payments' && resps.includes('payments')) return true;
+    if (tab === 'conversations' && resps.includes('conversations')) return true;
+    if (tab === 'accounts' && resps.includes('accounts')) return true;
+    if (tab === 'content' && resps.includes('content')) return true;
+    if (tab === 'reports' && resps.includes('reports')) return true;
+    if (tab === 'categories' && resps.includes('categories')) return true;
+    
+    return false;
+  };
+
+  // Redirect to first allowed tab for employee
+  useEffect(() => {
+    if (employeeProfile) {
+      const allowedTabs: ('stats' | 'products' | 'orders' | 'shipping' | 'loyalty' | 'payments' | 'conversations' | 'accounts' | 'content' | 'reports' | 'categories' | 'employees')[] = [
+        'stats', 'products', 'orders', 'shipping', 'loyalty', 'payments', 'conversations', 'accounts', 'content', 'reports', 'categories'
+      ];
+      const currentAllowed = allowedTabs.find(tab => hasTabPermission(tab));
+      if (currentAllowed && !hasTabPermission(activeTab)) {
+        setActiveTab(currentAllowed);
+      }
+    }
+  }, [employeeProfile]);
+
   const [reportFromDate, setReportFromDate] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 30);
@@ -501,10 +562,14 @@ export default function AdminPanel({
     let unsubPlans: (() => void) | undefined;
     let unsubCust: (() => void) | undefined;
     let unsubConversations: (() => void) | undefined;
+    let unsubEmployees: (() => void) | undefined;
 
     if (adminUser && isOpen) {
       getAdminSetupStatus().then((status) => {
-        if (status && status.isInitialized && status.adminUid === adminUser.uid) {
+        const isSuperAdmin = status && status.isInitialized && status.adminUid === adminUser.uid;
+        const isEmp = employeeProfile !== null;
+
+        if (isSuperAdmin) {
           unsubPlans = subscribeToShippingPlans((plans) => {
             setShippingPlans(plans);
           });
@@ -514,6 +579,28 @@ export default function AdminPanel({
           unsubConversations = subscribeToAllConversations((convs) => {
             setConversations(convs);
           });
+          unsubEmployees = subscribeToEmployees((list) => {
+            setEmployees(list);
+          });
+        } else if (isEmp) {
+          const resps = employeeProfile?.responsibilities || [];
+          const hasAll = resps.includes('all_management') || resps.includes('manage_site');
+
+          if (hasAll || resps.includes('shipping')) {
+            unsubPlans = subscribeToShippingPlans((plans) => {
+              setShippingPlans(plans);
+            });
+          }
+          if (hasAll || resps.includes('orders')) {
+            unsubCust = subscribeToAllCustomerProfiles((list) => {
+              setCustomers(list);
+            });
+          }
+          if (hasAll || resps.includes('conversations')) {
+            unsubConversations = subscribeToAllConversations((convs) => {
+              setConversations(convs);
+            });
+          }
         }
       }).catch((err) => {
         console.error("Admin check failed", err);
@@ -531,8 +618,9 @@ export default function AdminPanel({
       if (unsubPlans) unsubPlans();
       if (unsubCust) unsubCust();
       if (unsubConversations) unsubConversations();
+      if (unsubEmployees) unsubEmployees();
     };
-  }, [adminUser, isOpen]);
+  }, [adminUser, isOpen, employeeProfile]);
 
   // Handle active message listener
   useEffect(() => {
@@ -557,9 +645,24 @@ export default function AdminPanel({
   useEffect(() => {
     if (isOpen) {
       checkSetupStatus();
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
         setAdminUser(user);
         setErrorMsg(null);
+        if (user) {
+          const status = await getAdminSetupStatus();
+          if (user.uid !== status.adminUid) {
+            const emp = await getEmployeeProfile(user.uid);
+            if (emp) {
+              setEmployeeProfile(emp);
+            } else {
+              setEmployeeProfile(null);
+            }
+          } else {
+            setEmployeeProfile(null);
+          }
+        } else {
+          setEmployeeProfile(null);
+        }
       });
       return unsubscribe;
     }
@@ -634,7 +737,7 @@ export default function AdminPanel({
     }
   };
 
-  // Login Administrator
+  // Login Administrator & Employees
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthLoading(true);
@@ -649,11 +752,22 @@ export default function AdminPanel({
       }
 
       const userCred = await signInWithEmailAndPassword(auth, emailInput, passwordInput);
+      const user = userCred.user;
       
-      // Confirm they are actually the admin UID saved in the database config Doc
-      if (userCred.user.uid !== status.adminUid) {
-        await signOut(auth);
-        setErrorMsg(isArabic ? "مرفوض! هذا الحساب ليس حساب المسؤول المسجل في النظام." : "Access Denied! You are not the configured Super Admin.");
+      if (user.uid === status.adminUid) {
+        setAdminUser(user);
+        setEmployeeProfile(null);
+      } else {
+        const emp = await getEmployeeProfile(user.uid);
+        if (emp) {
+          setEmployeeProfile(emp);
+          setAdminUser(user);
+        } else {
+          await signOut(auth);
+          setAdminUser(null);
+          setEmployeeProfile(null);
+          setErrorMsg(isArabic ? "مرفوض! هذا الحساب ليس مسجلاً ضمن طاقم العمل أو الإدارة." : "Access Denied! You are not registered as an employee or admin.");
+        }
       }
     } catch (err: any) {
       console.error(err);
@@ -666,8 +780,116 @@ export default function AdminPanel({
   const handleLogout = async () => {
     await signOut(auth);
     setAdminUser(null);
+    setEmployeeProfile(null);
     setEmailInput('');
     setPasswordInput('');
+  };
+
+  // User & Employee Management Handlers
+  const handleAddEmployeeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { name, email, temporaryPassword, responsibilities } = employeeFormData;
+
+    if (!name.trim() || !email.trim() || !temporaryPassword.trim()) {
+      alert(isArabic ? "برجاء ملء جميع حقول الموظف!" : "Please fill in all employee fields!");
+      return;
+    }
+
+    if (temporaryPassword.trim().length < 6) {
+      alert(isArabic ? "يجب أن تكون كلمة المرور المؤقتة من ٦ أحرف على الأقل!" : "Temporary password must be at least 6 characters!");
+      return;
+    }
+
+    if (responsibilities.length === 0) {
+      alert(isArabic ? "برجاء تحديد مسؤولية واحدة على الأقل للموظف!" : "Please select at least one responsibility!");
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      // 1. Create account in Firebase auth using the non-logout secondary instance method
+      const uid = await createEmployeeAccount(email.trim(), temporaryPassword.trim());
+
+      // 2. Save details in the Firestore 'employees' collection
+      await createEmployeeInDb(uid, name.trim(), email.trim(), responsibilities);
+
+      // 3. Reset form and alert success
+      setEmployeeFormData({
+        name: '',
+        email: '',
+        temporaryPassword: '',
+        responsibilities: []
+      });
+      setShowEmployeeForm(false);
+      alert(isArabic ? "تم إضافة الموظف وتحديد مسؤولياته بنجاح!" : "Employee added and responsibilities assigned successfully!");
+    } catch (err: any) {
+      console.error(err);
+      alert(isArabic 
+        ? `فشل إضافة الموظف: ${err.message || "خطأ غير معروف"}` 
+        : `Failed to add employee: ${err.message || "Unknown error"}`
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleDeleteEmployee = async (id: string, name: string) => {
+    const confirmDelete = window.confirm(
+      isArabic 
+        ? `هل أنت متأكد من رغبتك في حذف الموظف "${name}"؟ لن يتمكن من تسجيل الدخول مرة أخرى.` 
+        : `Are you sure you want to delete employee "${name}"? They will lose access immediately.`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await removeEmployee(id);
+      alert(isArabic ? "تم حذف الموظف بنجاح!" : "Employee deleted successfully!");
+    } catch (err: any) {
+      console.error(err);
+      alert(isArabic ? "فشل حذف الموظف من قاعدة البيانات." : "Failed to delete employee.");
+    }
+  };
+
+  const handleChangeTemporaryPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTempPasswordError(null);
+
+    if (newPasswordInput.length < 6) {
+      setTempPasswordError(isArabic ? "يجب أن تكون كلمة المرور الجديدة ٦ أحرف على الأقل." : "New password must be at least 6 characters.");
+      return;
+    }
+
+    if (newPasswordInput !== confirmNewPasswordInput) {
+      setTempPasswordError(isArabic ? "كلمتا المرور غير متطابقتين!" : "Passwords do not match!");
+      return;
+    }
+
+    setAuthLoading(true);
+    try {
+      // Update in Firebase auth
+      await updatePassword(auth.currentUser!, newPasswordInput);
+
+      // Update in Firestore to deactivate the temporary flag
+      await markTemporaryPasswordChanged(auth.currentUser!.uid);
+
+      // Refresh the locally stored employee profile flag
+      setEmployeeProfile(prev => prev ? { ...prev, isTemporaryPasswordActive: false } : null);
+      
+      setNewPasswordInput('');
+      setConfirmNewPasswordInput('');
+      alert(isArabic 
+        ? "تم تغيير كلمة المرور المؤقتة بنجاح! يمكنك الآن إدارة الموقع." 
+        : "Password changed successfully! You can now manage the site."
+      );
+    } catch (err: any) {
+      console.error(err);
+      setTempPasswordError(isArabic 
+        ? `فشل تحديث كلمة المرور: ${err.message || "خطأ غير معروف"}` 
+        : `Failed to update password: ${err.message || "Unknown error"}`
+      );
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   // Setup Product action form
@@ -1612,152 +1834,193 @@ export default function AdminPanel({
               </button>
             </div>
 
-            <button
-              onClick={() => { setActiveTab('stats'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'stats'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <Activity size={14} />
-              <span>{isArabic ? "الإحصائيات والأرباح" : "Sales Insights"}</span>
-            </button>
+            {hasTabPermission('stats') && (
+              <button
+                onClick={() => { setActiveTab('stats'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'stats'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <Activity size={14} />
+                <span>{isArabic ? "الإحصائيات والأرباح" : "Sales Insights"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('products'); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'products'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <ShoppingBag size={14} />
-              <span>{isArabic ? "قائمة الملابس والمنتجات" : "Products Inventory"}</span>
-            </button>
+            {hasTabPermission('products') && (
+              <button
+                onClick={() => { setActiveTab('products'); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'products'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <ShoppingBag size={14} />
+                <span>{isArabic ? "قائمة الملابس والمنتجات" : "Products Inventory"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('orders'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'orders'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <FileText size={14} />
-              <span>{isArabic ? "إدارة الطلبات الواردة" : "Manage Client Orders"}</span>
-              {pendingOrdersCount > 0 && (
-                <span className="bg-red-650 text-white rounded-full text-[9px] px-1.5 py-0.5 font-bold font-mono">
-                  {pendingOrdersCount}
-                </span>
-              )}
-            </button>
+            {hasTabPermission('orders') && (
+              <button
+                onClick={() => { setActiveTab('orders'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'orders'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <FileText size={14} />
+                <span>{isArabic ? "إدارة الطلبات الواردة" : "Manage Client Orders"}</span>
+                {pendingOrdersCount > 0 && (
+                  <span className="bg-red-650 text-white rounded-full text-[9px] px-1.5 py-0.5 font-bold font-mono">
+                    {pendingOrdersCount}
+                  </span>
+                )}
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('shipping'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'shipping'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <Truck size={14} />
-              <span>{isArabic ? "شركات ومصاريف الشحن" : "Shipping Logistics"}</span>
-              {shippingPlans.length > 0 && (
-                <span className="bg-zinc-800 text-amber-400 rounded-full text-[9px] px-1.5 py-0.5 font-bold font-mono">
-                  {shippingPlans.length}
-                </span>
-              )}
-            </button>
+            {hasTabPermission('shipping') && (
+              <button
+                onClick={() => { setActiveTab('shipping'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'shipping'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <Truck size={14} />
+                <span>{isArabic ? "شركات ومصاريف الشحن" : "Shipping Logistics"}</span>
+                {shippingPlans.length > 0 && (
+                  <span className="bg-zinc-800 text-amber-400 rounded-full text-[9px] px-1.5 py-0.5 font-bold font-mono">
+                    {shippingPlans.length}
+                  </span>
+                )}
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('loyalty'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'loyalty'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <Award size={14} />
-              <span>{isArabic ? "برنامج نقاط العملاء" : "Customer Loyalty Points"}</span>
-            </button>
+            {hasTabPermission('loyalty') && (
+              <button
+                onClick={() => { setActiveTab('loyalty'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'loyalty'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <Award size={14} />
+                <span>{isArabic ? "برنامج نقاط العملاء" : "Customer Loyalty Points"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('payments'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'payments'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <Wallet size={14} />
-              <span>{isArabic ? "طرق الدفع المتاحة" : "Payment Options"}</span>
-            </button>
+            {hasTabPermission('payments') && (
+              <button
+                onClick={() => { setActiveTab('payments'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'payments'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <Wallet size={14} />
+                <span>{isArabic ? "طرق الدفع المتاحة" : "Payment Options"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('conversations'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'conversations'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <Sparkles size={14} />
-              <span>{isArabic ? "طلبات مخصصة ورسائل" : "Special Orders & Chat"}</span>
-              {conversations.length > 0 && (
-                <span className="bg-zinc-800 text-amber-400 rounded-full text-[9px] px-1.5 py-0.5 font-bold font-mono">
-                  {conversations.length}
-                </span>
-              )}
-            </button>
+            {hasTabPermission('conversations') && (
+              <button
+                onClick={() => { setActiveTab('conversations'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'conversations'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <Sparkles size={14} />
+                <span>{isArabic ? "طلبات مخصصة ورسائل" : "Special Orders & Chat"}</span>
+                {conversations.length > 0 && (
+                  <span className="bg-zinc-800 text-amber-400 rounded-full text-[9px] px-1.5 py-0.5 font-bold font-mono">
+                    {conversations.length}
+                  </span>
+                )}
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('accounts'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'accounts'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <Landmark size={14} />
-              <span>{isArabic ? "الحسابات والتسويات" : "Financial Accounts"}</span>
-            </button>
+            {hasTabPermission('accounts') && (
+              <button
+                onClick={() => { setActiveTab('accounts'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'accounts'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <Landmark size={14} />
+                <span>{isArabic ? "الحسابات والتسويات" : "Financial Accounts"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('content'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'content'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <Layers size={14} />
-              <span>{isArabic ? "تحرير محتوى الصفحات" : "Page Content Editor"}</span>
-            </button>
+            {hasTabPermission('content') && (
+              <button
+                onClick={() => { setActiveTab('content'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'content'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <Layers size={14} />
+                <span>{isArabic ? "تحرير محتوى الصفحات" : "Page Content Editor"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('reports'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'reports'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <PieChart size={14} />
-              <span>{isArabic ? "التقارير المفصلة" : "Detailed Reports"}</span>
-            </button>
+            {hasTabPermission('reports') && (
+              <button
+                onClick={() => { setActiveTab('reports'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'reports'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <PieChart size={14} />
+                <span>{isArabic ? "التقارير المفصلة" : "Detailed Reports"}</span>
+              </button>
+            )}
 
-            <button
-              onClick={() => { setActiveTab('categories'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
-              className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
-                activeTab === 'categories'
-                  ? "bg-amber-400 text-black shadow-md font-extrabold"
-                  : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
-              }`}
-            >
-              <Grid size={14} />
-              <span>{isArabic ? "إدارة الفئات والأقسام" : "Categories & Divisions"}</span>
-            </button>
+            {hasTabPermission('categories') && (
+              <button
+                onClick={() => { setActiveTab('categories'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'categories'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <Grid size={14} />
+                <span>{isArabic ? "إدارة الفئات والأقسام" : "Categories & Divisions"}</span>
+              </button>
+            )}
+
+            {adminUser && !employeeProfile && (
+              <button
+                onClick={() => { setActiveTab('employees'); setShowProductForm(false); setIsMobileSidebarOpen(false); }}
+                className={`px-4 py-3 text-xs font-bold rounded-xl flex items-center gap-2 transition duration-200 shrink-0 cursor-pointer ${
+                  activeTab === 'employees'
+                    ? "bg-amber-400 text-black shadow-md font-extrabold"
+                    : "text-zinc-400 hover:text-zinc-150 hover:bg-zinc-800/40"
+                }`}
+              >
+                <Users size={14} />
+                <span>{isArabic ? "إدارة الموظفين والصلاحيات" : "Employee Management"}</span>
+                {employees.length > 0 && (
+                  <span className="bg-zinc-805 text-amber-400 rounded-full text-[9px] px-1.5 py-0.5 font-bold font-mono">
+                    {employees.length}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Daytime Lighting switcher toggle */}
             <div className="hidden md:flex flex-col gap-1.5 pt-3 border-t border-zinc-800/80 font-sans select-none shrink-0 text-right">
@@ -1836,7 +2099,79 @@ export default function AdminPanel({
 
           {/* MAIN WORKING AREA TABLE */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-            {activeTab === 'stats' && (
+            {employeeProfile && employeeProfile.isTemporaryPasswordActive ? (
+              /* FORCE TEMPORARY PASSWORD CHANGE */
+              <div className="max-w-md mx-auto my-12 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl relative overflow-hidden text-right">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-yellow-450 to-amber-500" />
+                <div className="text-center space-y-2">
+                  <div className="inline-flex p-3 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full mb-2 animate-pulse">
+                    <Key size={24} />
+                  </div>
+                  <h3 className="text-lg font-bold text-white tracking-tight font-serif">
+                    {isArabic ? "تغيير كلمة المرور المؤقتة إجباري" : "Change Temporary Password Required"}
+                  </h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    {isArabic 
+                      ? "أهلاً بك في طاقم عمل رااف! لحماية حسابك وحماية بيانات المتجر، يرجى استبدال كلمة المرور المؤقتة التي أرسلها إليك المدير بكلمة مرور جديدة ودائمة."
+                      : "Welcome to RAAV staff! To secure your account and store information, please replace your temporary credentials with a permanent password."}
+                  </p>
+                </div>
+
+                <form onSubmit={handleChangeTemporaryPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5">
+                      {isArabic ? "كلمة المرور الدائمة الجديدة" : "New Permanent Password"}
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="******"
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 text-left font-mono"
+                      value={newPasswordInput}
+                      onChange={(e) => setNewPasswordInput(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5">
+                      {isArabic ? "تأكيد كلمة المرور الجديدة" : "Confirm Permanent Password"}
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="******"
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 text-left font-mono"
+                      value={confirmNewPasswordInput}
+                      onChange={(e) => setConfirmNewPasswordInput(e.target.value)}
+                    />
+                  </div>
+
+                  {tempPasswordError && (
+                    <div className="p-3 bg-red-950/20 border border-red-900/30 rounded-xl text-xs text-red-400 leading-relaxed flex items-start gap-2">
+                      <ShieldAlert size={14} className="shrink-0 mt-0.5 text-red-400" />
+                      <span>{tempPasswordError}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={authLoading}
+                    className="w-full py-3 bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs rounded-xl transition duration-200 flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer"
+                  >
+                    {authLoading ? (
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <UserCheck size={14} />
+                        <span>{isArabic ? "تأكيد وتفعيل الحساب" : "Activate Account"}</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <>
+                {activeTab === 'stats' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-zinc-800 pb-4">
                   <div>
@@ -8972,6 +9307,241 @@ export default function AdminPanel({
                   </div>
                 )}
               </div>
+            )}
+
+            {activeTab === 'employees' && (
+              <div className="space-y-6 text-right font-sans">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-zinc-800 pb-4">
+                  <div>
+                    <h3 className="text-xl font-bold font-serif text-white tracking-tight">
+                      {isArabic ? "إدارة الموظفين وصلاحيات الوصول" : "Staff Directory & Granular Access Control"}
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-1">
+                      {isArabic ? "أضف موظفين جدد، حدد مسؤولياتهم، وتابع حالة حساباتهم." : "Provision new operator sub-accounts, specify allowed actions, and manage active staff."}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setShowEmployeeForm(!showEmployeeForm)}
+                    className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-black text-xs font-extrabold rounded-xl transition cursor-pointer self-start"
+                  >
+                    {showEmployeeForm ? (
+                      <>
+                        <X size={14} />
+                        <span>{isArabic ? "إلغاء وإغلاق" : "Cancel"}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={14} />
+                        <span>{isArabic ? "إضافة موظف جديد" : "Provision New Employee"}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <AnimatePresence>
+                  {showEmployeeForm && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 space-y-6 text-right"
+                    >
+                      <h4 className="font-extrabold text-white text-sm">
+                        {isArabic ? "استمارة تسجيل موظف جديد" : "New Employee Registration Details"}
+                      </h4>
+
+                      <form onSubmit={handleAddEmployeeSubmit} className="space-y-5">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                              {isArabic ? "اسم الموظف" : "Full Name"}
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="e.g. Amr Zikas"
+                              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 text-right"
+                              value={employeeFormData.name}
+                              onChange={(e) => setEmployeeFormData(p => ({ ...p, name: e.target.value }))}
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                              {isArabic ? "البريد الإلكتروني للموظف" : "Employee Email Address"}
+                            </label>
+                            <input
+                              type="email"
+                              required
+                              placeholder="e.g. employee@raavegy.com"
+                              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 text-left font-mono"
+                              value={employeeFormData.email}
+                              onChange={(e) => setEmployeeFormData(p => ({ ...p, email: e.target.value }))}
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                              {isArabic ? "كلمة المرور المؤقتة" : "Temporary Password"}
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="e.g. Temp123456"
+                              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-400 focus:border-amber-400 text-left font-mono"
+                              value={employeeFormData.temporaryPassword}
+                              onChange={(e) => setEmployeeFormData(p => ({ ...p, temporaryPassword: e.target.value }))}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                            {isArabic ? "تحديد الصلاحيات والمسؤوليات المسندة" : "Assign Allowed Responsibilities"}
+                          </label>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 bg-zinc-950 p-4 rounded-2xl border border-zinc-850">
+                            {[
+                              { key: 'stats', ar: 'الإحصائيات والأرباح', en: 'Sales Insights' },
+                              { key: 'products', ar: 'إدارة المنتجات والملابس', en: 'Products Inventory' },
+                              { key: 'orders', ar: 'إدارة طلبات العملاء', en: 'Client Orders' },
+                              { key: 'shipping', ar: 'شركات ومصاريف الشحن', en: 'Shipping Logistics' },
+                              { key: 'loyalty', ar: 'نقاط العملاء والهدايا', en: 'Loyalty Points' },
+                              { key: 'payments', ar: 'طرق الدفع والتحويلات', en: 'Payment Options' },
+                              { key: 'conversations', ar: 'المحادثات والطلبات المخصصة', en: 'Chat & Custom Orders' },
+                              { key: 'accounts', ar: 'الحسابات والمصاريف الماليه', en: 'Financial Accounts' },
+                              { key: 'content', ar: 'تحرير محتوى الصفحات', en: 'Page Content Editor' },
+                              { key: 'reports', ar: 'التقارير والمستندات', en: 'Detailed Reports' },
+                              { key: 'categories', ar: 'الفئات والأقسام الفرعية', en: 'Categories & Divisions' },
+                              { key: 'all_management', ar: 'صلاحية كاملة (مدير نظام جاري)', en: 'Full Administrator Access' },
+                            ].map((resp) => {
+                              const isSelected = employeeFormData.responsibilities.includes(resp.key);
+                              return (
+                                <button
+                                  key={resp.key}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      setEmployeeFormData(p => ({
+                                        ...p,
+                                        responsibilities: p.responsibilities.filter(r => r !== resp.key)
+                                      }));
+                                    } else {
+                                      setEmployeeFormData(p => ({
+                                        ...p,
+                                        responsibilities: [...p.responsibilities, resp.key]
+                                      }));
+                                    }
+                                  }}
+                                  className={`p-3 rounded-xl border text-right transition flex items-center justify-between gap-2 cursor-pointer ${
+                                    isSelected 
+                                      ? "bg-amber-400/10 border-amber-400 text-white font-extrabold" 
+                                      : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
+                                  }`}
+                                >
+                                  <span className="text-[11px] truncate leading-none">
+                                    {isArabic ? resp.ar : resp.en}
+                                  </span>
+                                  <div className={`w-3.5 h-3.5 rounded border shrink-0 flex items-center justify-center ${
+                                    isSelected ? "border-amber-400 bg-amber-400" : "border-zinc-700 bg-zinc-800"
+                                  }`}>
+                                    {isSelected && <Check size={10} className="text-black stroke-[3.5]" />}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={authLoading}
+                          className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-black font-extrabold text-xs rounded-xl transition duration-200 flex items-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer mr-auto"
+                        >
+                          {authLoading ? (
+                            <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <UserCheck size={14} />
+                              <span>{isArabic ? "تسجيل الموظف الجديد وتوليد الحساب" : "Confirm and Provision Employee"}</span>
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Employees Directory List */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 text-right space-y-4">
+                  <h4 className="font-extrabold text-white text-sm">
+                    {isArabic ? "قائمة الموظفين المسجلين" : "Active Staff Directory"}
+                  </h4>
+
+                  {employees.length === 0 ? (
+                    <div className="text-zinc-500 p-8 text-center border border-dashed border-zinc-800 rounded-2xl">
+                      {isArabic ? "لم يتم إضافة أي موظف في لوحة التحكم بعد." : "No employees provisioned on this workspace yet."}
+                    </div>
+                  ) : (
+                    <div className="border border-zinc-800 bg-zinc-950 rounded-2xl overflow-hidden divide-y divide-zinc-850">
+                      {employees.map((emp) => (
+                        <div key={emp.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-white text-sm">{emp.name}</span>
+                              {emp.isTemporaryPasswordActive ? (
+                                <span className="text-[9px] bg-yellow-500/15 text-yellow-450 font-bold px-2 py-0.5 rounded-full border border-yellow-500/20">
+                                  {isArabic ? "كلمة مرور مؤقتة جارية" : "Temporary Password Pending"}
+                                </span>
+                              ) : (
+                                <span className="text-[9px] bg-emerald-500/15 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                  {isArabic ? "حساب مفعل ونشط" : "Active & Verified"}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-zinc-450 block font-mono">{emp.email}</span>
+                            
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {(emp.responsibilities || []).map((respKey: string) => {
+                                const names: Record<string, string> = {
+                                  stats: isArabic ? 'الإحصائيات' : 'Insights',
+                                  products: isArabic ? 'المنتجات' : 'Products',
+                                  orders: isArabic ? 'الطلبات' : 'Orders',
+                                  shipping: isArabic ? 'الشحن' : 'Shipping',
+                                  loyalty: isArabic ? 'النقاط' : 'Loyalty',
+                                  payments: isArabic ? 'طرق الدفع' : 'Payments',
+                                  conversations: isArabic ? 'المحادثات' : 'Chat',
+                                  accounts: isArabic ? 'الحسابات' : 'Accounts',
+                                  content: isArabic ? 'المحتوى' : 'Content',
+                                  reports: isArabic ? 'التقارير' : 'Reports',
+                                  categories: isArabic ? 'الأقسام' : 'Categories',
+                                  all_management: isArabic ? 'إدارة كاملة' : 'Super Administrator',
+                                };
+                                return (
+                                  <span key={respKey} className="text-[9.5px] bg-zinc-850 text-zinc-300 px-2 py-0.5 rounded border border-zinc-800">
+                                    {names[respKey] || respKey}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteEmployee(emp.id, emp.name)}
+                            className="p-2 bg-red-950/20 hover:bg-red-950/40 text-red-450 border border-red-900/30 rounded-xl transition cursor-pointer self-end sm:self-center"
+                            title={isArabic ? "حذف الموظف نهائياً" : "Remove Employee"}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+              </>
             )}
 
           </div>
