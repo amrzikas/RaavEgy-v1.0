@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ShoppingBag, Trash2, ArrowLeft, CheckCircle, Package, Send, CreditCard, Landmark, Wallet, AlertCircle, MapPin } from 'lucide-react';
-import { OrderItem, PaymentConfig, ShippingPlan, SavedAddress } from '../types';
+import { OrderItem, PaymentConfig, ShippingPlan, SavedAddress, EGYPT_GOVERNORATES } from '../types';
 import { createOrder, getPaymentConfig, getShippingPlans, getUserProfile } from '../dbService';
 import { auth } from '../firebase';
 
@@ -48,6 +48,7 @@ export default function CartSlider({
   // Form Fields
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerRegion, setCustomerRegion] = useState<string>('القاهرة');
   const [customerCityId, setCustomerCityId] = useState('cairo');
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerNotes, setCustomerNotes] = useState('');
@@ -104,13 +105,16 @@ export default function CartSlider({
             }
 
             if (profile.city) {
-              const matchedCity = EGYPTIAN_CITIES.find(
-                c => c.id === profile.city.toLowerCase() || 
-                     c.nameEn.toLowerCase().includes(profile.city.toLowerCase()) || 
-                     c.nameAr.includes(profile.city)
+              const matchedGov = EGYPT_GOVERNORATES.find(
+                g => g.id === profile.city.toLowerCase() || 
+                     g.nameEn.toLowerCase().includes(profile.city.toLowerCase()) || 
+                     g.nameAr.includes(profile.city)
               );
-              if (matchedCity) {
-                setCustomerCityId(matchedCity.id);
+              if (matchedGov) {
+                setCustomerRegion(matchedGov.nameAr);
+                setCustomerCityId(matchedGov.id);
+              } else {
+                setCustomerRegion(profile.city);
               }
             }
 
@@ -147,16 +151,60 @@ export default function CartSlider({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const itemsPriceTotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  
-  // Decide active plan attributes
-  const selectedCityInfo = EGYPTIAN_CITIES.find(c => c.id === customerCityId) || EGYPTIAN_CITIES[0];
 
-  const deliveryFee = itemsPriceTotal > 1200 && (customerCityId === 'cairo' || customerCityId === 'giza') 
-    ? 0 
-    : selectedCityInfo.fee;
+  // Dynamic regions available across active shipping plans + default governorates
+  const availableRegions = React.useMemo(() => {
+    const regionSet = new Set<string>();
+    EGYPT_GOVERNORATES.forEach(g => regionSet.add(g.nameAr));
+    shippingPlans.forEach(p => {
+      if (p.regions && p.regions.length > 0) {
+        p.regions.forEach(r => regionSet.add(r));
+      }
+    });
+    return Array.from(regionSet);
+  }, [shippingPlans]);
+
+  // Carriers that explicitly cover the customer's selected region
+  const matchingCarriers = React.useMemo(() => {
+    if (shippingPlans.length === 0) return [];
+    return shippingPlans.filter(p => !p.regions || p.regions.length === 0 || p.regions.includes(customerRegion));
+  }, [shippingPlans, customerRegion]);
+
+  const activeCarrierPlan = React.useMemo(() => {
+    if (matchingCarriers.length === 0) return null;
+    return matchingCarriers.find(p => p.id === selectedCarrierPlanId) || matchingCarriers[0];
+  }, [matchingCarriers, selectedCarrierPlanId]);
+
+  // Calculate 3-tier delivery fee automatically based on subtotal & region
+  const { deliveryFee, appliedTierLabel } = React.useMemo(() => {
+    if (activeCarrierPlan) {
+      if (itemsPriceTotal < 500) {
+        return {
+          deliveryFee: activeCarrierPlan.rateUnder500 ?? activeCarrierPlan.price ?? 50,
+          appliedTierLabel: isArabic ? "شحنات أقل من 500 ج.م" : "Orders < 500 EGP"
+        };
+      } else if (itemsPriceTotal <= 1000) {
+        return {
+          deliveryFee: activeCarrierPlan.rate500To1000 ?? activeCarrierPlan.price ?? 40,
+          appliedTierLabel: isArabic ? "شحنات من 500 إلى 1000 ج.م" : "Orders 500-1000 EGP"
+        };
+      } else {
+        return {
+          deliveryFee: activeCarrierPlan.rateOver1000 ?? activeCarrierPlan.price ?? 30,
+          appliedTierLabel: isArabic ? "شحنات أكثر من 1000 ج.م" : "Orders > 1000 EGP"
+        };
+      }
+    }
+    // Fallback if no carriers in DB
+    const matchedCity = EGYPTIAN_CITIES.find(c => c.nameAr.includes(customerRegion) || c.id === customerCityId) || EGYPTIAN_CITIES[0];
+    return {
+      deliveryFee: matchedCity.fee,
+      appliedTierLabel: isArabic ? "تسعير افتراضي" : "Standard Flat Rate"
+    };
+  }, [activeCarrierPlan, itemsPriceTotal, customerRegion, customerCityId, isArabic]);
+
+  if (!isOpen) return null;
 
   const grandTotal = itemsPriceTotal + deliveryFee;
 
@@ -190,12 +238,12 @@ export default function CartSlider({
         customerName,
         customerPhone,
         customerAddress,
-        customerCity: isArabic ? selectedCityInfo.nameAr.split(' ')[0] : selectedCityInfo.nameEn.split(' ')[0],
+        customerCity: customerRegion,
         customerNotes: customerNotes.trim() || undefined,
         items: cartItems,
         total: grandTotal,
         shippingFee: deliveryFee,
-        shippingPlanId: selectedCarrierPlanId || undefined,
+        shippingPlanId: activeCarrierPlan?.id || selectedCarrierPlanId || undefined,
         paymentMethod: resolvedPaymentMethod,
         paymentProof: paymentProofImage || undefined
       });
@@ -370,22 +418,67 @@ export default function CartSlider({
                       />
                     </div>
 
-                    {/* Egyptian Province Selection (Governorate) */}
+                    {/* Region / Governorate Selection */}
                     <div>
                       <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
-                        {isArabic ? "المحافظة للتوصيل (تضاف قيمة الشحن تلقائياً) *" : "Select Governorate (Delivery Fee Calculated Automatically) *"}
+                        {isArabic ? "اختر المحافظة أو المنطقة للتوصيل *" : "Select Delivery Region / Governorate *"}
                       </label>
                       <select
-                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2.5 text-xs text-zinc-900 focus:outline-none focus:bg-white focus:border-black transition-all cursor-pointer"
-                        value={customerCityId}
-                        onChange={(e) => setCustomerCityId(e.target.value)}
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2.5 text-xs text-zinc-900 font-bold focus:outline-none focus:bg-white focus:border-black transition-all cursor-pointer"
+                        value={customerRegion}
+                        onChange={(e) => {
+                          const reg = e.target.value;
+                          setCustomerRegion(reg);
+                          const gov = EGYPT_GOVERNORATES.find(g => g.nameAr === reg);
+                          if (gov) setCustomerCityId(gov.id);
+                        }}
                       >
-                        {EGYPTIAN_CITIES.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {isArabic ? c.nameAr : c.nameEn}
+                        {availableRegions.map((reg) => (
+                          <option key={reg} value={reg}>
+                            {reg}
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    {/* Carrier Selector (if carriers match selected region) */}
+                    {matchingCarriers.length > 0 && (
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">
+                          {isArabic ? "شركة الشحن المتاحة لمنطقتك *" : "Available Shipping Carrier *"}
+                        </label>
+                        <select
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2.5 text-xs text-zinc-900 font-bold focus:outline-none focus:bg-white focus:border-black transition-all cursor-pointer"
+                          value={activeCarrierPlan?.id || ''}
+                          onChange={(e) => setSelectedCarrierPlanId(e.target.value)}
+                        >
+                          {matchingCarriers.map((carrier) => {
+                            let fee = carrier.price;
+                            if (itemsPriceTotal < 500) fee = carrier.rateUnder500 ?? carrier.price ?? 50;
+                            else if (itemsPriceTotal <= 1000) fee = carrier.rate500To1000 ?? carrier.price ?? 40;
+                            else fee = carrier.rateOver1000 ?? carrier.price ?? 30;
+
+                            return (
+                              <option key={carrier.id} value={carrier.id}>
+                                {isArabic ? carrier.companyNameAr : carrier.companyNameEn} ({fee} {isArabic ? "ج.م - " + (isArabic ? carrier.deliveryTimeAr : carrier.deliveryTimeEn) : "EGP"})
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Auto-Calculated Shipping Info Box */}
+                    <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs space-y-1">
+                      <div className="flex justify-between items-center text-amber-950 font-extrabold">
+                        <span>{isArabic ? `رسوم الشحن لمنطقة (${customerRegion}):` : `Shipping fee for (${customerRegion}):`}</span>
+                        <span className="text-sm font-mono font-black text-amber-900">{deliveryFee} {isArabic ? "ج.م" : "EGP"}</span>
+                      </div>
+                      <p className="text-[10px] text-amber-800 font-medium">
+                        {isArabic 
+                          ? `حُسب تلقائياً بناءً على إجمالي المنتجات (${itemsPriceTotal} ج.م) ➔ الفئة: ${appliedTierLabel}`
+                          : `Calculated from cart subtotal (${itemsPriceTotal} EGP) ➔ Tier: ${appliedTierLabel}`}
+                      </p>
                     </div>
 
                     {/* Detailed Street Address */}

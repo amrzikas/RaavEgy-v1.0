@@ -59,7 +59,7 @@ import {
   getEmployeeProfile,
   markTemporaryPasswordChanged
 } from '../dbService';
-import { Product, Order, OrderStatus, ShippingPlan, LoyaltyConfig, PaymentConfig, WalletDetail, InstaPayDetail, SettlementPeriod, SupportPagesContent, HomepageContent, FaqItem, HeroSlideInput, BusinessExpense, Category, Subcategory } from '../types';
+import { Product, Order, OrderStatus, ShippingPlan, LoyaltyConfig, PaymentConfig, WalletDetail, InstaPayDetail, SettlementPeriod, SupportPagesContent, HomepageContent, FaqItem, HeroSlideInput, BusinessExpense, Category, Subcategory, EGYPT_GOVERNORATES } from '../types';
 import { PRESET_COLORS } from '../utils';
 
 interface AdminPanelProps {
@@ -271,10 +271,15 @@ export default function AdminPanel({
   // Sub-forms & states for Shipping management
   const [showShippingForm, setShowShippingForm] = useState(false);
   const [editingShipping, setEditingShipping] = useState<ShippingPlan | null>(null);
+  const [customRegionInput, setCustomRegionInput] = useState('');
   const [shippingFormData, setShippingFormData] = useState({
     companyNameAr: '',
     companyNameEn: '',
     price: 50,
+    rateUnder500: 50,
+    rate500To1000: 40,
+    rateOver1000: 30,
+    regions: [] as string[],
     deliveryTimeAr: '٢ - ٤ أيام',
     deliveryTimeEn: '2 - 4 Days',
     isActive: true
@@ -1115,28 +1120,41 @@ export default function AdminPanel({
   // === SHIPPING PLAN ACTIONS ===
   const handleSaveShippingPlan = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!shippingFormData.companyNameAr.trim()) {
+      alert(isArabic ? "برجاء كتابة اسم شركة الشحن بالعربي" : "Please enter shipping carrier name in Arabic");
+      return;
+    }
     try {
       const payload = {
         companyNameAr: shippingFormData.companyNameAr.trim(),
-        companyNameEn: shippingFormData.companyNameEn.trim(),
-        price: Number(shippingFormData.price),
+        companyNameEn: shippingFormData.companyNameEn.trim() || shippingFormData.companyNameAr.trim(),
+        price: Number(shippingFormData.rateUnder500 || shippingFormData.price || 50),
+        rateUnder500: Number(shippingFormData.rateUnder500 ?? 50),
+        rate500To1000: Number(shippingFormData.rate500To1000 ?? 40),
+        rateOver1000: Number(shippingFormData.rateOver1000 ?? 30),
+        regions: shippingFormData.regions || [],
         deliveryTimeAr: shippingFormData.deliveryTimeAr.trim(),
-        deliveryTimeEn: shippingFormData.deliveryTimeEn.trim(),
+        deliveryTimeEn: shippingFormData.deliveryTimeEn.trim() || '2-4 Days',
         isActive: shippingFormData.isActive
       };
       if (editingShipping) {
         await updateShippingPlan(editingShipping.id, payload);
-        alert(isArabic ? "تم تحديث خطة الشحن!" : "Shipping plan updated!");
+        alert(isArabic ? "تم تحديث أسعار ومناطق شركة الشحن بنجاح!" : "Shipping plan and region rates updated!");
       } else {
         await createShippingPlan(payload);
-        alert(isArabic ? "تم حفظ خطة الشحن الجديدة!" : "New shipping plan created!");
+        alert(isArabic ? "تم حفظ شركة الشحن الجديدة بنجاح!" : "New shipping plan registered!");
       }
       setShowShippingForm(false);
       setEditingShipping(null);
+      setCustomRegionInput('');
       setShippingFormData({
         companyNameAr: '',
         companyNameEn: '',
         price: 50,
+        rateUnder500: 50,
+        rate500To1000: 40,
+        rateOver1000: 30,
+        regions: [],
         deliveryTimeAr: '٢ - ٤ أيام',
         deliveryTimeEn: '2 - 4 Days',
         isActive: true
@@ -1150,13 +1168,18 @@ export default function AdminPanel({
   const handleEditShippingPlan = (plan: ShippingPlan) => {
     setEditingShipping(plan);
     setShippingFormData({
-      companyNameAr: plan.companyNameAr,
-      companyNameEn: plan.companyNameEn,
-      price: plan.price,
-      deliveryTimeAr: plan.deliveryTimeAr,
-      deliveryTimeEn: plan.deliveryTimeEn,
-      isActive: plan.isActive
+      companyNameAr: plan.companyNameAr || '',
+      companyNameEn: plan.companyNameEn || '',
+      price: plan.price || 50,
+      rateUnder500: plan.rateUnder500 ?? plan.price ?? 50,
+      rate500To1000: plan.rate500To1000 ?? plan.price ?? 40,
+      rateOver1000: plan.rateOver1000 ?? plan.price ?? 30,
+      regions: plan.regions || [],
+      deliveryTimeAr: plan.deliveryTimeAr || '٢ - ٤ أيام',
+      deliveryTimeEn: plan.deliveryTimeEn || '2 - 4 Days',
+      isActive: plan.isActive ?? true
     });
+    setCustomRegionInput('');
     setShowShippingForm(true);
   };
 
@@ -7273,10 +7296,10 @@ export default function AdminPanel({
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <h3 className="text-xl font-black text-white tracking-tight">
-                      {isArabic ? "شركات وخطط تسعير الشحن" : "Shipping Companies & Plans"}
+                      {isArabic ? "شركات الشحن، أسعار المناطق وحساب الشحنات" : "Shipping Logistics & Tiered Region Rates"}
                     </h3>
                     <p className="text-xs text-zinc-400 mt-1">
-                      {isArabic ? "حدد أسعار وشركات الشحن المتاحة وربطها بالمنتجات أثناء تصنيع المنتجات" : "Determine custom shipping prices, companies, and times for client delivery"}
+                      {isArabic ? "أضف أكثر من منطقة لشركة الشحن، وحدد 3 أسعار مختلفة للطلب (أقل من 500 ج، بين 500 و1000 ج، وأكثر من 1000 ج)." : "Assign multiple covered regions to carriers and set order-tiered shipping rates (<500 EGP, 500-1000 EGP, >1000 EGP)."}
                     </p>
                   </div>
 
@@ -7288,16 +7311,21 @@ export default function AdminPanel({
                           companyNameAr: '',
                           companyNameEn: '',
                           price: 50,
+                          rateUnder500: 50,
+                          rate500To1000: 40,
+                          rateOver1000: 30,
+                          regions: [],
                           deliveryTimeAr: '٢ - ٤ أيام',
                           deliveryTimeEn: '2 - 4 Days',
                           isActive: true
                         });
+                        setCustomRegionInput('');
                         setShowShippingForm(true);
                       }}
                       className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-black text-xs font-black rounded-xl cursor-pointer transition flex items-center gap-2 shadow"
                     >
                       <PlusCircle size={14} />
-                      <span>{isArabic ? "إضافة خطة شحن جديدة" : "Create New Shipping Plan"}</span>
+                      <span>{isArabic ? "إضافة شركة شحن ومناطق جديدة" : "Add Shipping Carrier & Rates"}</span>
                     </button>
                   )}
                 </div>
@@ -7307,61 +7335,243 @@ export default function AdminPanel({
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl space-y-4"
+                    className="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl space-y-6 text-right"
                   >
                     <h4 className="text-sm font-bold text-amber-400 flex items-center gap-2">
                       <Truck size={16} />
-                      <span>{editingShipping ? (isArabic ? "تعديل خطة الشحن" : "Modify Shipping Rates") : (isArabic ? "إضافة شركة شحن جديدة" : "Add Shipping Carrier")}</span>
+                      <span>{editingShipping ? (isArabic ? "تعديل شركة الشحن وأسعار المناطق" : "Modify Carrier & Tier Rates") : (isArabic ? "إضافة شركة شحن وتحديد المناطق والأسعار" : "Add Shipping Carrier & Multi-Region Rates")}</span>
                     </h4>
 
-                    <form onSubmit={handleSaveShippingPlan} className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right">
-                      <div>
-                        <label className="block text-xs font-semibold text-zinc-400 mb-1">اسم شركة الشحن (عربي) *</label>
-                        <input
-                          type="text" required placeholder="مثال: أرامكس، البريد المصري، شحن سريع"
-                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
-                          value={shippingFormData.companyNameAr}
-                          onChange={(e) => setShippingFormData({ ...shippingFormData, companyNameAr: e.target.value })}
-                        />
-                      </div>
-                      <div className="text-left" style={{ direction: 'ltr', textAlign: 'left' }}>
-                        <label className="block text-xs font-semibold text-zinc-400 mb-1 text-left">Carrier Name (English) *</label>
-                        <input
-                          type="text" required placeholder="e.g. Aramex, Egypt Post, Standard Courier"
-                          className="w-full bg-zinc-950 border border-zinc-805 rounded-lg p-2.5 text-xs text-white text-left"
-                          value={shippingFormData.companyNameEn}
-                          onChange={(e) => setShippingFormData({ ...shippingFormData, companyNameEn: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-zinc-400 mb-1">تكلفة الشحن (بالجنيه المصري) *</label>
-                        <input
-                          type="number" min={0} required placeholder="50"
-                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white font-mono"
-                          value={shippingFormData.price}
-                          onChange={(e) => setShippingFormData({ ...shippingFormData, price: Number(e.target.value) })}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-zinc-400 mb-1">وقت التوصيل التقريبي (عربي) *</label>
-                        <input
-                          type="text" required placeholder="مثال: ٢ - ٤ أيام عمل"
-                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
-                          value={shippingFormData.deliveryTimeAr}
-                          onChange={(e) => setShippingFormData({ ...shippingFormData, deliveryTimeAr: e.target.value })}
-                        />
-                      </div>
-                      <div className="text-left" style={{ direction: 'ltr', textAlign: 'left' }}>
-                        <label className="block text-xs font-semibold text-zinc-400 mb-1 text-left">Estimated Delivery Time (English) *</label>
-                        <input
-                          type="text" required placeholder="e.g. 2 - 4 Working Days"
-                          className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white text-left"
-                          value={shippingFormData.deliveryTimeEn}
-                          onChange={(e) => setShippingFormData({ ...shippingFormData, deliveryTimeEn: e.target.value })}
-                        />
+                    <form onSubmit={handleSaveShippingPlan} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-zinc-400 mb-1">اسم شركة الشحن (عربي) *</label>
+                          <input
+                            type="text" required placeholder="مثال: أرامكس، البريد المصري، إكسبريس شحن"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                            value={shippingFormData.companyNameAr}
+                            onChange={(e) => setShippingFormData({ ...shippingFormData, companyNameAr: e.target.value })}
+                          />
+                        </div>
+                        <div className="text-left" style={{ direction: 'ltr', textAlign: 'left' }}>
+                          <label className="block text-xs font-semibold text-zinc-400 mb-1 text-left">Carrier Name (English) *</label>
+                          <input
+                            type="text" required placeholder="e.g. Aramex, Egypt Post, Express Delivery"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white text-left"
+                            value={shippingFormData.companyNameEn}
+                            onChange={(e) => setShippingFormData({ ...shippingFormData, companyNameEn: e.target.value })}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-zinc-400 mb-1">وقت التوصيل التقريبي (عربي) *</label>
+                          <input
+                            type="text" required placeholder="مثال: ٢ - ٤ أيام عمل"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white"
+                            value={shippingFormData.deliveryTimeAr}
+                            onChange={(e) => setShippingFormData({ ...shippingFormData, deliveryTimeAr: e.target.value })}
+                          />
+                        </div>
+                        <div className="text-left" style={{ direction: 'ltr', textAlign: 'left' }}>
+                          <label className="block text-xs font-semibold text-zinc-400 mb-1 text-left">Estimated Delivery Time (English) *</label>
+                          <input
+                            type="text" required placeholder="e.g. 2 - 4 Working Days"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white text-left"
+                            value={shippingFormData.deliveryTimeEn}
+                            onChange={(e) => setShippingFormData({ ...shippingFormData, deliveryTimeEn: e.target.value })}
+                          />
+                        </div>
                       </div>
 
-                      <div className="md:col-span-2 flex items-center justify-between border-t border-zinc-800 pt-4 mt-2">
+                      {/* MULTI REGIONS SELECTION FOR CARRIER */}
+                      <div className="space-y-3 bg-zinc-950 p-4 rounded-2xl border border-zinc-850">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-zinc-800 pb-2">
+                          <div>
+                            <label className="block text-xs font-extrabold text-amber-400">
+                              {isArabic ? "اختيار اسم المناطق والمحافظات لشركة الشحن *" : "Select Covered Regions / Governorates *"}
+                            </label>
+                            <p className="text-[11px] text-zinc-400">
+                              {isArabic ? "يمكنك اختيار أكثر من محافظة أو منطقة لنفس شركة الشحن ليتم حساب الشحن تلقائياً لعنوان العميل." : "Select multiple governorates covered by this carrier to calculate delivery fee."}
+                            </p>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const allGovs = EGYPT_GOVERNORATES.map(g => g.nameAr);
+                                setShippingFormData(p => ({ ...p, regions: allGovs }));
+                              }}
+                              className="px-2.5 py-1 bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 border border-amber-400/30 text-[10px] font-bold rounded-lg cursor-pointer"
+                            >
+                              {isArabic ? "تحديد كل المحافظات" : "Select All"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShippingFormData(p => ({ ...p, regions: [] }))}
+                              className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold rounded-lg cursor-pointer"
+                            >
+                              {isArabic ? "مسح التحديد" : "Clear All"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Governorates Checkbox Badges */}
+                        <div className="flex flex-wrap gap-2 pt-1 max-h-48 overflow-y-auto p-1 custom-scrollbar">
+                          {EGYPT_GOVERNORATES.map((gov) => {
+                            const isSelected = shippingFormData.regions.includes(gov.nameAr);
+                            return (
+                              <button
+                                key={gov.id}
+                                type="button"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setShippingFormData(p => ({
+                                      ...p,
+                                      regions: p.regions.filter(r => r !== gov.nameAr)
+                                    }));
+                                  } else {
+                                    setShippingFormData(p => ({
+                                      ...p,
+                                      regions: [...p.regions, gov.nameAr]
+                                    }));
+                                  }
+                                }}
+                                className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                  isSelected 
+                                    ? "bg-amber-400 text-black border-amber-400 shadow-sm" 
+                                    : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white"
+                                }`}
+                              >
+                                {isSelected && <Check size={12} className="stroke-[3]" />}
+                                <span>{isArabic ? gov.nameAr : gov.nameEn}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Custom Region Input */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-zinc-800/60">
+                          <input
+                            type="text"
+                            placeholder={isArabic ? "أضف منطقة/مدينة مخصصة (مثل: التجمع الخامس، الشيخ زايد)..." : "Add custom city/zone..."}
+                            className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                            value={customRegionInput}
+                            onChange={(e) => setCustomRegionInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (customRegionInput.trim() && !shippingFormData.regions.includes(customRegionInput.trim())) {
+                                  setShippingFormData(p => ({ ...p, regions: [...p.regions, customRegionInput.trim()] }));
+                                  setCustomRegionInput('');
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (customRegionInput.trim() && !shippingFormData.regions.includes(customRegionInput.trim())) {
+                                setShippingFormData(p => ({ ...p, regions: [...p.regions, customRegionInput.trim()] }));
+                                setCustomRegionInput('');
+                              }
+                            }}
+                            className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl cursor-pointer"
+                          >
+                            {isArabic ? "إضافة" : "Add Region"}
+                          </button>
+                        </div>
+
+                        {/* Selected Regions Tag List */}
+                        {shippingFormData.regions.length > 0 && (
+                          <div className="text-xs text-zinc-400 pt-1">
+                            <span className="font-bold text-amber-400 ml-1">
+                              {isArabic ? `المناطق المحددة (${shippingFormData.regions.length}):` : `Selected Regions (${shippingFormData.regions.length}):`}
+                            </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {shippingFormData.regions.map((reg) => (
+                                <span key={reg} className="inline-flex items-center gap-1 bg-zinc-900 text-zinc-200 border border-zinc-800 px-2 py-0.5 rounded text-[11px]">
+                                  <span>{reg}</span>
+                                  <X 
+                                    size={11} 
+                                    className="hover:text-red-400 cursor-pointer" 
+                                    onClick={() => setShippingFormData(p => ({ ...p, regions: p.regions.filter(r => r !== reg) }))} 
+                                  />
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 3 PRICE TIERS ACCORDING TO ORDER TOTAL */}
+                      <div className="space-y-3 bg-zinc-950 p-4 rounded-2xl border border-zinc-850">
+                        <div>
+                          <label className="block text-xs font-extrabold text-amber-400">
+                            {isArabic ? "أسعار الشحن الثلاثة (حسب إجمالي قيمة الأوردر) *" : "3 Order-Tiered Shipping Rates *"}
+                          </label>
+                          <p className="text-[11px] text-zinc-400">
+                            {isArabic ? "يتم احتساب سعر الشحن تلقائياً للعميل حسب إجمالي قيمة السلة:" : "Shipping fee is calculated automatically based on total cart value:"}
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {/* Tier 1: Under 500 EGP */}
+                          <div className="bg-zinc-900 border border-zinc-800 p-3.5 rounded-xl space-y-1.5">
+                            <label className="block text-[11px] font-bold text-zinc-300">
+                              {isArabic ? "١. طلبات أقل من 500 جنيه" : "1. Orders < 500 EGP"}
+                            </label>
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min={0}
+                                required
+                                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-xs text-white font-mono font-extrabold focus:outline-none focus:border-amber-400"
+                                value={shippingFormData.rateUnder500}
+                                onChange={(e) => setShippingFormData({ ...shippingFormData, rateUnder500: Number(e.target.value) })}
+                              />
+                              <span className="text-xs text-zinc-400 font-bold shrink-0">{isArabic ? "ج.م" : "EGP"}</span>
+                            </div>
+                          </div>
+
+                          {/* Tier 2: 500 - 1000 EGP */}
+                          <div className="bg-zinc-900 border border-zinc-800 p-3.5 rounded-xl space-y-1.5">
+                            <label className="block text-[11px] font-bold text-amber-300">
+                              {isArabic ? "٢. طلبات بين 500 و 1000 جنيه" : "2. Orders 500 - 1000 EGP"}
+                            </label>
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min={0}
+                                required
+                                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-xs text-white font-mono font-extrabold focus:outline-none focus:border-amber-400"
+                                value={shippingFormData.rate500To1000}
+                                onChange={(e) => setShippingFormData({ ...shippingFormData, rate500To1000: Number(e.target.value) })}
+                              />
+                              <span className="text-xs text-zinc-400 font-bold shrink-0">{isArabic ? "ج.م" : "EGP"}</span>
+                            </div>
+                          </div>
+
+                          {/* Tier 3: Over 1000 EGP */}
+                          <div className="bg-zinc-900 border border-zinc-800 p-3.5 rounded-xl space-y-1.5">
+                            <label className="block text-[11px] font-bold text-emerald-400">
+                              {isArabic ? "٣. طلبات أكثر من 1000 جنيه" : "3. Orders > 1000 EGP"}
+                            </label>
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min={0}
+                                required
+                                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-xs text-white font-mono font-extrabold focus:outline-none focus:border-amber-400"
+                                value={shippingFormData.rateOver1000}
+                                onChange={(e) => setShippingFormData({ ...shippingFormData, rateOver1000: Number(e.target.value) })}
+                              />
+                              <span className="text-xs text-zinc-400 font-bold shrink-0">{isArabic ? "ج.م" : "EGP"}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
                         <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-zinc-350">
                           <input
                             type="checkbox"
@@ -7369,7 +7579,7 @@ export default function AdminPanel({
                             checked={shippingFormData.isActive}
                             onChange={(e) => setShippingFormData({ ...shippingFormData, isActive: e.target.checked })}
                           />
-                          <span>{isArabic ? "تفعيل هذه الخطة للعملاء حالاً" : "Activate this template plan now"}</span>
+                          <span>{isArabic ? "تفعيل شركة الشحن هذه للعملاء حالاً" : "Activate carrier plan"}</span>
                         </label>
 
                         <div className="flex gap-2">
@@ -7382,9 +7592,9 @@ export default function AdminPanel({
                           </button>
                           <button
                             type="submit"
-                            className="px-5 py-2 bg-amber-400 hover:bg-amber-300 text-black font-black rounded-xl text-xs transition duration-200 cursor-pointer"
+                            className="px-5 py-2 bg-amber-400 hover:bg-amber-300 text-black font-black rounded-xl text-xs transition duration-200 cursor-pointer shadow-lg shadow-amber-500/10"
                           >
-                            {isArabic ? "حفظ وتثبيت الخطة" : "Commit Rate Plan"}
+                            {isArabic ? "حفظ وتثبيت شركة الشحن والأسعار" : "Save Carrier & Rates"}
                           </button>
                         </div>
                       </div>
@@ -7404,41 +7614,74 @@ export default function AdminPanel({
                     {shippingPlans.map((plan) => (
                       <div
                         key={plan.id}
-                        className={`p-5 rounded-2xl border bg-zinc-900 flex flex-col justify-between transition-all ${
+                        className={`p-5 rounded-2xl border bg-zinc-900 flex flex-col justify-between transition-all text-right ${
                           plan.isActive ? 'border-zinc-800' : 'border-red-950/40 opacity-70'
                         }`}
                       >
-                        <div className="space-y-2 text-right">
+                        <div className="space-y-3">
                           <div className="flex justify-between items-start">
                             <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
                               plan.isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
                             }`}>
-                              {plan.isActive ? (isArabic ? 'نشط' : 'Active') : (isArabic ? 'موقف' : 'Inactive')}
+                              {plan.isActive ? (isArabic ? 'نشط ومفعل' : 'Active') : (isArabic ? 'موقف' : 'Inactive')}
                             </span>
-                            <span className="text-lg font-mono font-black text-amber-400">
-                              {plan.price} {isArabic ? "ج.م" : "EGP"}
+                            <span className="text-xs text-zinc-400 flex items-center gap-1 font-mono justify-end">
+                              <span>{isArabic ? plan.deliveryTimeAr : plan.deliveryTimeEn}</span>
+                              <Clock size={12} className="text-zinc-500" />
                             </span>
                           </div>
 
-                          <h4 className="text-sm font-bold text-zinc-150">
+                          <h4 className="text-base font-extrabold text-white">
                             {isArabic ? plan.companyNameAr : plan.companyNameEn}
                           </h4>
-                          <p className="text-xs text-zinc-400 flex items-center gap-1 font-mono justify-end">
-                            <span>{isArabic ? plan.deliveryTimeAr : plan.deliveryTimeEn}</span>
-                            <Clock size={12} className="text-zinc-500" />
-                          </p>
+
+                          {/* Covered Regions */}
+                          <div className="space-y-1 bg-zinc-950 p-2.5 rounded-xl border border-zinc-850 text-xs">
+                            <span className="text-[10px] font-bold text-amber-400 block">
+                              {isArabic ? `المناطق والمحافظات المغطاة (${(plan.regions || []).length}):` : `Covered Regions (${(plan.regions || []).length}):`}
+                            </span>
+                            <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto custom-scrollbar">
+                              {(plan.regions && plan.regions.length > 0) ? (
+                                plan.regions.map(r => (
+                                  <span key={r} className="text-[9.5px] bg-zinc-900 text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-800">
+                                    {r}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-[10px] text-zinc-500">
+                                  {isArabic ? "جميع المناطق والمحافظات" : "All Governorates"}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 3 Price Tiers Display */}
+                          <div className="grid grid-cols-3 gap-1.5 text-center font-mono">
+                            <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-850">
+                              <span className="text-[9px] text-zinc-400 block">{isArabic ? "< 500 ج" : "< 500 EGP"}</span>
+                              <span className="text-xs font-bold text-white">{plan.rateUnder500 ?? plan.price ?? 50} ج.م</span>
+                            </div>
+                            <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-850">
+                              <span className="text-[9px] text-amber-400 block">{isArabic ? "500-1000 ج" : "500-1000"}</span>
+                              <span className="text-xs font-bold text-amber-300">{plan.rate500To1000 ?? plan.price ?? 40} ج.م</span>
+                            </div>
+                            <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-850">
+                              <span className="text-[9px] text-emerald-400 block">{isArabic ? "> 1000 ج" : "> 1000 EGP"}</span>
+                              <span className="text-xs font-bold text-emerald-400">{plan.rateOver1000 ?? plan.price ?? 30} ج.م</span>
+                            </div>
+                          </div>
                         </div>
 
                         <div className="flex gap-2 mt-4 pt-3 border-t border-zinc-800/85">
                           <button
                             onClick={() => handleEditShippingPlan(plan)}
-                            className="p-1 px-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-800 text-zinc-300 hover:text-white rounded-lg transition duration-200 cursor-pointer text-xs"
+                            className="flex-1 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-800 text-zinc-200 hover:text-white rounded-lg transition duration-200 cursor-pointer text-xs font-bold"
                           >
-                            {isArabic ? "تعديل" : "Edit"}
+                            {isArabic ? "تعديل الأسعار والمناطق" : "Edit Plan & Rates"}
                           </button>
                           <button
                             onClick={() => handleDeleteShippingPlan(plan.id)}
-                            className="p-1 px-3 bg-red-950/20 hover:bg-red-950/30 border border-red-950/30 text-red-400 rounded-lg transition duration-200 cursor-pointer text-xs"
+                            className="px-3 py-1.5 bg-red-950/20 hover:bg-red-950/30 border border-red-950/30 text-red-400 rounded-lg transition duration-200 cursor-pointer text-xs"
                           >
                             {isArabic ? "حذف" : "Remove"}
                           </button>

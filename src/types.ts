@@ -33,12 +33,45 @@ export interface ShippingPlan {
   id: string;
   companyNameAr: string;
   companyNameEn: string;
-  price: number;
+  price: number; // fallback default price
+  rateUnder500?: number; // Price for order subtotal < 500 EGP
+  rate500To1000?: number; // Price for order subtotal 500 - 1000 EGP
+  rateOver1000?: number; // Price for order subtotal > 1000 EGP
+  regions?: string[]; // Array of covered region/governorate names
   deliveryTimeAr: string;
   deliveryTimeEn: string;
   isActive: boolean;
   createdAt: number;
 }
+
+export const EGYPT_GOVERNORATES = [
+  { id: 'cairo', nameAr: 'القاهرة', nameEn: 'Cairo' },
+  { id: 'giza', nameAr: 'الجيزة', nameEn: 'Giza' },
+  { id: 'alex', nameAr: 'الإسكندرية', nameEn: 'Alexandria' },
+  { id: 'qalyubia', nameAr: 'القليوبية', nameEn: 'Qalyubia' },
+  { id: 'sharqia', nameAr: 'الشرقية', nameEn: 'Sharqia' },
+  { id: 'dakahlia', nameAr: 'الدقهلية', nameEn: 'Dakahlia' },
+  { id: 'gharbia', nameAr: 'الغربية', nameEn: 'Gharbia' },
+  { id: 'monufia', nameAr: 'المنوفية', nameEn: 'Monufia' },
+  { id: 'beheira', nameAr: 'البحيرة', nameEn: 'Beheira' },
+  { id: 'damietta', nameAr: 'دمياط', nameEn: 'Damietta' },
+  { id: 'portsaid', nameAr: 'بورسعيد', nameEn: 'Port Said' },
+  { id: 'ismailia', nameAr: 'الإسماعيلية', nameEn: 'Ismailia' },
+  { id: 'suez', nameAr: 'السويس', nameEn: 'Suez' },
+  { id: 'faiyum', nameAr: 'الفيوم', nameEn: 'Faiyum' },
+  { id: 'benisuef', nameAr: 'بني سويف', nameEn: 'Beni Suef' },
+  { id: 'minya', nameAr: 'المنيا', nameEn: 'Minya' },
+  { id: 'asyut', nameAr: 'أسيوط', nameEn: 'Asyut' },
+  { id: 'sohag', nameAr: 'سوهاج', nameEn: 'Sohag' },
+  { id: 'qena', nameAr: 'قنا', nameEn: 'Qena' },
+  { id: 'luxor', nameAr: 'الأقصر', nameEn: 'Luxor' },
+  { id: 'aswan', nameAr: 'أسوان', nameEn: 'Aswan' },
+  { id: 'redsea', nameAr: 'البحر الأحمر', nameEn: 'Red Sea' },
+  { id: 'newvalley', nameAr: 'الوادي الجديد', nameEn: 'New Valley' },
+  { id: 'matrouh', nameAr: 'مطروح', nameEn: 'Matrouh' },
+  { id: 'northsinai', nameAr: 'شمال سيناء', nameEn: 'North Sinai' },
+  { id: 'southsinai', nameAr: 'جنوب سيناء', nameEn: 'South Sinai' }
+];
 
 export interface LoyaltyConfig {
   pointsPerEgp: number; // e.g. 1 point per 10 EGP spent
